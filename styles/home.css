@@ -39,15 +39,15 @@ a {
   width: 100vw;
   height: 100vh;
   z-index: 5;
-  background-color: #0e0e0e;
   display: none;
-  font-size: 80px;
-  text-align: center;
+  opacity: 0;
+  transition: opacity 5s;
 }
 
 #visTitle {
   position: absolute;
   width: 100vw;
+  font-size: 80px;
   text-align: center;
 }
 

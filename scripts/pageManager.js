@@ -29,4 +29,6 @@ const launchSetlistItem = function(e) {
     visTitle.innerHTML = ''
     visTitle.appendChild(newContent)
     visualiserContainer.style.display = 'block'
+    visualiserContainer.style.transition = 'opacity 5s'
+    visualiserContainer.style.opacity = 1
 }
