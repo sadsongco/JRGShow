@@ -1,0 +1,62 @@
+@import url("../assets/fonts/CourierPrime-Regular.ttf");
+body {
+  background-color: #000;
+  color: #ccd;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "CourierPrime-Regular", "Courier New", Courier, monospace;
+}
+
+a {
+  color: #ecd;
+}
+
+.setlistItem {
+  display: block;
+  border: 1px solid white;
+}
+
+.setlistItem:hover {
+  background-color: cadetblue;
+  cursor: pointer;
+}
+
+.container {
+  line-height: 1.5;
+  margin: 20px auto 100px auto;
+  padding: 0 10px 30px 10px;
+  width: 50vw;
+  max-width: 70vw;
+  border-bottom: 1px solid #fcd;
+  flex-basis: 100%;
+}
+
+#vis {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 5;
+  background-color: #0e0e0e;
+  display: none;
+  font-size: 80px;
+  text-align: center;
+}
+
+#visTitle {
+  position: absolute;
+  width: 100vw;
+  text-align: center;
+}
+
+#fr {
+  position: absolute;
+  left: 0;
+  bottom: 30px;
+  height: 20px;
+  width: 20px;
+  padding-left: 20px;
+  font-size: 10px;
+}
