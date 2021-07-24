@@ -1,18 +1,8 @@
-const setlist = [
-    "House of Woodcock",
-    "Alma",
-    "Three Miniatures From Water",
-    "Prospectors Arrive",
-    "Future Markets",
-    "De-Tuned Quartet",
-]
+import { setlist } from './modules/setlist.js'
+
+window.name = 'visControl'
 
 const setlistContainer = document.getElementById('setListContainer')
-const visualiserContainer = document.getElementById('vis')
-visualiserContainer.addEventListener('click', (e)=>{
-    visualiserContainer.style.display = 'none'
-})
-const visTitle = document.getElementById('visTitle')
 
 for (let setlistNo in setlist) {
     const newEl = document.createElement('div')
@@ -25,10 +15,16 @@ for (let setlistNo in setlist) {
 }
 
 const launchSetlistItem = function(e) {
-    const newContent = document.createTextNode(setlist[e.target.id])
-    visTitle.innerHTML = ''
-    visTitle.appendChild(newContent)
-    visualiserContainer.style.display = 'block'
-    visualiserContainer.style.transition = 'opacity 5s'
-    visualiserContainer.style.opacity = 1
+    window.open('/vis.html?setno='+e.target.id, 'visualiser')
 }
+
+const channel = new BroadcastChannel('vis-comms')
+
+const keyEvent = function(e) {
+    if (e.key == 'f') channel.postMessage('fullscreen')
+    // channel.postMessage(e.code)
+    // window.open('', 'visualiser')
+}
+
+document.addEventListener('keydown', keyEvent)
+

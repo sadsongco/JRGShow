@@ -31,32 +31,3 @@ a {
   border-bottom: 1px solid #fcd;
   flex-basis: 100%;
 }
-
-#vis {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 5;
-  display: none;
-  opacity: 0;
-  transition: opacity 5s;
-}
-
-#visTitle {
-  position: absolute;
-  width: 100vw;
-  font-size: 80px;
-  text-align: center;
-}
-
-#fr {
-  position: absolute;
-  left: 0;
-  bottom: 30px;
-  height: 20px;
-  width: 20px;
-  padding-left: 20px;
-  font-size: 10px;
-}
