@@ -1,3 +1,3 @@
-export const  BGCOL = [1, 1, 1,]
+export const  BGCOL = [0, 0, 0,]
 
 export default null

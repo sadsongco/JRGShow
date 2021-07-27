@@ -3,17 +3,19 @@ import { setlist } from './modules/setlist.js'
 import randomBoxes from './modules/randomBoxes.js'
 import vidThru from './modules/vidThru.js'
 import bitwise1 from './modules/bitwise1.js'
-import bitwise2 from './modules/bitwise2.js'
+import bitwiseBrighten from './modules/bitwiseBrighten.js'
 import specLoading from './modules/specLoading.js'
 import pixThru from './modules/pixThru.js'
 import vignetteMask from './modules/vignetteMask.js'
 import vignette from './modules/vignette.js'
 import getPixelValues from './modules/getPixelValues.js'
-
+import edgeDetect from './modules/edgeDetect.js'
+import getPixelMatrix from './modules/getPixelMatrix.js'
 
 let cnv, bg, maxIdx
 let vidIn
 const fr = document.getElementById('fr')
+const info = document.getElementById('info')
 const visTitle = document.getElementById('visTitle')
 
 const urlParams = new URLSearchParams(window.location.search)
@@ -30,8 +32,8 @@ let vigMask
 
 window.setup = function() {
     pixelDensity(1)
-    cnv = createCanvas(window.innerWidth, window.innerHeight)
-    console.log(`cnv w: ${cnv.width}, cnv h: ${cnv.height}`)
+    cnv = createCanvas(1920, 1080)
+    // console.log(`cnv w: ${cnv.width}, cnv h: ${cnv.height}`)
     cnv.parent('vis')
     vidIn = createCapture(VIDEO, ()=>{
         vidIn.hide()
@@ -40,48 +42,50 @@ window.setup = function() {
     bg = color(BGCOL)
     bg.setAlpha(255)
     background(bg)
-    bg.setAlpha(28)
+    bg.setAlpha(50)
     frameRate(30)
     maxIdx = cnv.width * cnv.height * 4
     vigMask = vignetteMask(cnv.width, cnv.height)
 }
 
 window.draw = function() {
-    background(255)
+    background(bg)
 
     // const currSin = Math.sin(frameCount/2)
 
-    // randomBoxes()
+    randomBoxes()
 
     vidThru(vidIn)
 
-    loadPixels()
-    vidIn.loadPixels()
+    // loadPixels()
+    // vidIn.loadPixels()
 
     const thresh = map(sin(frameCount/20), -1, 1, 100, 150)
     for (let vy = 0; vy < cnv.height; vy++) {
         for (let vx = 0; vx < cnv.width; vx++) {
             const pixIdx = ((vy * width) + vx) * 4
-
+            
             let [iR, iG, iB] = getPixelValues(pixIdx, vidIn.pixels)
+            
+            // edgeDetect(vx, vy, pixIdx, vidIn.pixels, pixels)
+            
+            // let [iR, iG, iB] = getPixelValues(pixIdx, pixels)
 
-            const idxCoff = (1 - ((maxIdx - pixIdx) / maxIdx)) * 255
-           
+            // bitwiseBrighten(pixIdx, iR, iG, iB, 2, pixels)
+
             // const idxCoff = 1
             
-            bitwise1(pixIdx, iR, iG, iB, thresh, pixels)
+            // bitwise1(pixIdx, iR, iG, iB, thresh, pixels)
 
             // [iR, iG, iB] = getPixelValues(pixIdx, pixels)
             
             // pixThru(pixIdx, iR, iG, iB, pixels)
             
-            // bitwise2(pixIdx, iR, iG, iB, thresh, pixels)
-            
-            // specLoading(pixIdx, iR, iG, iB, thresh, idxCoff, pixels)
+            // specLoading(pixIdx, iR, iG, iB, thresh, maxIdx, pixels)
             
             // pixels[pixIdx + 3] = map((pixIdx + frameCount) % maxIdx, 0, maxIdx, 0, 255)
 
-            vignette(pixIdx, vigMask, pixels)
+            // vignette(pixIdx, vigMask, pixels)
         }
     }
     updatePixels()
@@ -101,14 +105,14 @@ window.keyPressed = function() {
 }
 
 window.windowResized = function(){
-	// when window is resized loop through all visualisations
-	// call their onResize method, if they have it
-	resizeCanvas(window.innerWidth, window.innerHeight);
-    console.log(`cnv w: ${cnv.width}, cnv h: ${cnv.height}`)
-    // background(bg)
-    vidIn.size(window.innerWidth, window.innerHeight)
-    maxIdx = width * height * 4
-    vigMask = vignetteMask(cnv.width, cnv.height)
+	// // when window is resized loop through all visualisations
+	// // call their onResize method, if they have it
+	// resizeCanvas(window.innerWidth, window.innerHeight);
+    // console.log(`cnv w: ${cnv.width}, cnv h: ${cnv.height}`)
+    // // background(bg)
+    // vidIn.size(window.innerWidth, window.innerHeight)
+    // maxIdx = width * height * 4
+    // vigMask = vignetteMask(cnv.width, cnv.height)
 }
 
 window.onload = function() {
