@@ -11,6 +11,7 @@ import vignette from './modules/vignette.js'
 import getPixelValues from './modules/getPixelValues.js'
 import edgeDetect from './modules/edgeDetect.js'
 import getPixelMatrix from './modules/getPixelMatrix.js'
+import ascii from './modules/ascii.js'
 
 let cnv, bg, maxIdx
 let vidIn
@@ -29,6 +30,9 @@ channel.addEventListener('message', (e) => {
 })
 
 let vigMask
+let myAsciiArt, gfx
+const asciiart_width = 240, asciiart_height = 120;
+
 
 window.setup = function() {
     pixelDensity(1)
@@ -39,10 +43,17 @@ window.setup = function() {
         vidIn.hide()
         vidIn.size(cnv.width, cnv.height)
     })
+
+    // graphics helper for ascii
+    gfx = createGraphics(asciiart_width, asciiart_height)
+    gfx.pixelDensity(1)
+    myAsciiArt = new AsciiArt(this)
+    textAlign(CENTER, CENTER); textFont('monospace', 8); textStyle(NORMAL);
+
     bg = color(BGCOL)
     bg.setAlpha(255)
     background(bg)
-    bg.setAlpha(50)
+    // bg.setAlpha(50)
     frameRate(30)
     maxIdx = cnv.width * cnv.height * 4
     vigMask = vignetteMask(cnv.width, cnv.height)
@@ -51,50 +62,55 @@ window.setup = function() {
 window.draw = function() {
     background(bg)
 
+    let ascii_arr;
+    gfx.background(0);
+    gfx.image(vidIn, 0, 0, gfx.width, gfx.height);
+    gfx.filter(POSTERIZE, 5)
+    ascii_arr = myAsciiArt.convert(gfx)
+    myAsciiArt.typeArray2d(ascii_arr, this);
+
     // const currSin = Math.sin(frameCount/2)
 
-    randomBoxes()
+    // randomBoxes()
 
-    vidThru(vidIn)
+    // vidThru(vidIn)
 
     // loadPixels()
     // vidIn.loadPixels()
 
-    const thresh = map(sin(frameCount/20), -1, 1, 100, 150)
-    for (let vy = 0; vy < cnv.height; vy++) {
-        for (let vx = 0; vx < cnv.width; vx++) {
-            const pixIdx = ((vy * width) + vx) * 4
+    // const thresh = map(sin(frameCount/20), -1, 1, 100, 150)
+    // for (let vy = 0; vy < cnv.height; vy++) {
+    //     for (let vx = 0; vx < cnv.width; vx++) {
+    //         const pixIdx = ((vy * width) + vx) * 4
             
-            let [iR, iG, iB] = getPixelValues(pixIdx, vidIn.pixels)
+    //         let [iR, iG, iB] = getPixelValues(pixIdx, vidIn.pixels)
             
-            // edgeDetect(vx, vy, pixIdx, vidIn.pixels, pixels)
+    //         // edgeDetect(vx, vy, pixIdx, vidIn.pixels, pixels)
             
-            // let [iR, iG, iB] = getPixelValues(pixIdx, pixels)
+    //         // let [iR, iG, iB] = getPixelValues(pixIdx, pixels)
 
-            // bitwiseBrighten(pixIdx, iR, iG, iB, 2, pixels)
+    //         // bitwiseBrighten(pixIdx, iR, iG, iB, 2, pixels)
 
-            // const idxCoff = 1
+    //         // const idxCoff = 1
             
-            // bitwise1(pixIdx, iR, iG, iB, thresh, pixels)
+    //         // bitwise1(pixIdx, iR, iG, iB, thresh, pixels)
 
-            // [iR, iG, iB] = getPixelValues(pixIdx, pixels)
+    //         // [iR, iG, iB] = getPixelValues(pixIdx, pixels)
             
-            // pixThru(pixIdx, iR, iG, iB, pixels)
+    //         pixThru(pixIdx, iR, iG, iB, pixels)
             
-            // specLoading(pixIdx, iR, iG, iB, thresh, maxIdx, pixels)
+    //         // specLoading(pixIdx, iR, iG, iB, thresh, maxIdx, pixels)
             
-            // pixels[pixIdx + 3] = map((pixIdx + frameCount) % maxIdx, 0, maxIdx, 0, 255)
+    //         // pixels[pixIdx + 3] = map((pixIdx + frameCount) % maxIdx, 0, maxIdx, 0, 255)
 
-            // vignette(pixIdx, vigMask, pixels)
-        }
-    }
-    updatePixels()
+    //         // vignette(pixIdx, vigMask, pixels)
+    //     }
+    // }
+    // updatePixels()
 
-    randomBoxes()
+    // randomBoxes()
 
     fr.innerText = parseInt(frameRate())
-
-    if (document.hasFocus) window.open('', 'visControl')
 }
 
 window.keyPressed = function() {
@@ -105,14 +121,7 @@ window.keyPressed = function() {
 }
 
 window.windowResized = function(){
-	// // when window is resized loop through all visualisations
-	// // call their onResize method, if they have it
-	// resizeCanvas(window.innerWidth, window.innerHeight);
-    // console.log(`cnv w: ${cnv.width}, cnv h: ${cnv.height}`)
-    // // background(bg)
-    // vidIn.size(window.innerWidth, window.innerHeight)
-    // maxIdx = width * height * 4
-    // vigMask = vignetteMask(cnv.width, cnv.height)
+    ascii.onResize()
 }
 
 window.onload = function() {
