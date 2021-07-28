@@ -62,12 +62,7 @@ window.setup = function() {
 window.draw = function() {
     background(bg)
 
-    let ascii_arr;
-    gfx.background(0);
-    gfx.image(vidIn, 0, 0, gfx.width, gfx.height);
-    gfx.filter(POSTERIZE, 5)
-    ascii_arr = myAsciiArt.convert(gfx)
-    myAsciiArt.typeArray2d(ascii_arr, this);
+    ascii(vidIn, gfx, myAsciiArt, this)
 
     // const currSin = Math.sin(frameCount/2)
 
