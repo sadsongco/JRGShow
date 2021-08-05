@@ -10,16 +10,27 @@ import vignetteMask from './modules/vignetteMask.js'
 import vignette from './modules/vignette.js'
 import getPixelValues from './modules/getPixelValues.js'
 import edgeDetect from './modules/edgeDetect.js'
-import getPixelMatrix from './modules/getPixelMatrix.js'
 import ascii from './modules/ascii.js'
 import circles from './modules/circles.js'
 import boxes from './modules/boxes.js'
+import lines from './modules/lines.js'
+import motion from './modules/motion.js'
+import bitwise2 from './modules/bitwise2.js'
+import threshold from './modules/threshold.js'
 
-let cnv, bg, maxIdx
-let showLoRes, showAscii, showPreRandomBoxes, showPostRandomBoxes, showVidThru, showCircles, showBoxes
+let cnv, bg, maxIdx, procSpeed
+let prevFrame
+let showLoRes, showAscii, showPreRandomBoxes, showPostRandomBoxes,
+    showVidThru, showCircles, showBoxes, showLines,
+    showMotion, showThreshold, showEdge, showBitwise1, showBitwise2,
+    showSpec, showVignette
 let vidIn
-let loResStep
-let dynLoRes
+let loResStep, loResHalfStep
+let loLoRes, hiLoRes, baseLoRes, dynLoRes
+let motionThresh
+
+let loThresh, hiThresh, baseThresh, dynThresh
+
 const fr = document.getElementById('fr')
 const info = document.getElementById('info')
 const visTitle = document.getElementById('visTitle')
@@ -34,24 +45,60 @@ channel.addEventListener('message', (e) => {
     window.open('', 'visControl')
 })
 
-let vigMask
+let vigMask, vigMaskImage
 let myAsciiArt, gfx
 const asciiart_width = 240, asciiart_height = 120;
 
 
 window.setup = function() {
-    showLoRes = false
-    showCircles = false
-    showBoxes = false
-    showAscii = false
-    showPreRandomBoxes = false
-    showPostRandomBoxes = false
+
+    // standalone vis
     showVidThru = false
-    loResStep = 17
+    showAscii = false
+
+    // general settings
+    procSpeed = 30 // higher is slower
+    
+    // general
+    showPreRandomBoxes = true
+
+    // loRes vis
+    
+    showLoRes = false
+    loLoRes = 4
+    hiLoRes = 32
+    baseLoRes = 15
+    loResStep = baseLoRes
+    loResHalfStep = Math.floor(baseLoRes / 2)
     dynLoRes = false
+    
+    showCircles = true
+    showBoxes = false
+    showLines = false
+    showMotion = false
+    motionThresh = 50
+    
+    // hi res settings
+    loThresh = 50
+    hiThresh = 190
+    baseThresh = 100
+    dynThresh = true
+
+    // hi res vis
+    showThreshold = true
+    showEdge = false
+    showBitwise1 = false
+    showBitwise2 = false
+    showSpec = false
+    
+    // global vis
+    showVignette = true
+    
+    // general
+    showPostRandomBoxes = true
+    
     pixelDensity(1)
     cnv = createCanvas(1920, 1080)
-    console.log(`cnv w: ${cnv.width}, cnv h: ${cnv.height}`)
     // noLoop()
     cnv.parent('vis')
     vidIn = createCapture(VIDEO, ()=>{
@@ -72,9 +119,14 @@ window.setup = function() {
     frameRate(30)
     maxIdx = cnv.width * cnv.height * 4
     vigMask = vignetteMask(cnv.width, cnv.height)
+    vigMaskImage = createImage(cnv.width, cnv.height)
+    vigMaskImage.loadPixels()
+    vigMaskImage.pixels = vigMask
+    vigMaskImage.updatePixels()
 }
 
 window.draw = function() {
+    const currSin = Math.sin(frameCount)
     background(bg)
 
     if (showVidThru)
@@ -93,50 +145,79 @@ window.draw = function() {
     vidIn.loadPixels()
     
     if (showLoRes) {
-        if (dynLoRes)
-            loResStep = Math.floor(map(sin(frameCount/100), -1, 1, 8, 32))
+        loResStep = baseLoRes
+        if (dynLoRes) {
+            loResStep = Math.floor(map(sin(frameCount/procSpeed), -1, 1, loLoRes, hiLoRes))
+            loResHalfStep = Math.floor(loResStep / 2)
+        }
         for (let vy = 0; vy < cnv.height; vy += loResStep) {
             for (let vx = 0; vx < cnv.width; vx += loResStep) {
                 const pixIdx = ((vy * width) + vx) * 4
-                
                 let [iR, iG, iB] = getPixelValues(pixIdx, vidIn.pixels)
-
                 if (showCircles)
                     circles(vx, vy, iR, iG, iB, loResStep)
                 
                 if (showBoxes)
                     boxes(vx, vy, iR, iG, iB, loResStep)
-            }
+                
+                if (showLines)
+                    lines(vx, vy, iR, iG, iB, loResStep)
+                
+                if (showMotion)
+                    motion(pixIdx, iR, iG, iB, loResHalfStep, motionThresh, prevFrame, pixels)
+
+                if (showVignette)
+                    vignette(pixIdx, vigMask, pixels)
+                }    
         }
         fr.innerText = parseInt(frameRate())
+        if (showMotion) {
+            prevFrame = vidIn.pixels.slice(0);
+            return updatePixels()
+        }
+        if (showVignette)
+            image(vigMaskImage, 0, 0)
         return 
     }
 
-    // const thresh = map(sin(frameCount/20), -1, 1, 10, 150)
-    const thresh = 200
+    let thresh = baseThresh
+    if (dynThresh)
+        thresh = map(sin(frameCount/procSpeed), -1, 1, loThresh, hiThresh)
+    info.innerText = thresh
+    // const thresh = 200
     for (let vy = 0; vy < cnv.height; vy++) {
         for (let vx = 0; vx < cnv.width; vx++) {
             const pixIdx = ((vy * width) + vx) * 4
+            let r, g, b
             
             let [iR, iG, iB] = getPixelValues(pixIdx, vidIn.pixels)
-            
-            // edgeDetect(vx, vy, pixIdx, vidIn.pixels, pixels)
-            
-            // let [iR, iG, iB] = getPixelValues(pixIdx, pixels)
 
-            // bitwiseBrighten(pixIdx, iR, iG, iB, 2, pixels)
+            if (showThreshold)
+                threshold(pixIdx, iR, iG, iB, thresh, pixels)
+            
+            if (showEdge) {
+                [r, g, b] = edgeDetect(vx, vy, pixIdx, vidIn.pixels, pixels)
+                bitwiseBrighten(pixIdx, r, g, b, 2, pixels)
+            }
+            
+            // [iR, iG, iB] = getPixelValues(pixIdx, pixels)
 
-            // bitwise1(pixIdx, iR, iG, iB, thresh, pixels)
+            if (showBitwise1)
+                bitwise1(pixIdx, iR, iG, iB, thresh, pixels)
+            if (showBitwise2)
+                bitwise2(pixIdx, iR, iG, iB, thresh, pixels)
 
             // [iR, iG, iB] = getPixelValues(pixIdx, pixels)
             
             // pixThru(pixIdx, iR, iG, iB, pixels)
             
-            specLoading(pixIdx, iR, iG, iB, thresh, maxIdx, pixels)
+            if (showSpec)
+                specLoading(pixIdx, iR, iG, iB, thresh, maxIdx, pixels)
             
             // pixels[pixIdx + 3] = map((pixIdx + frameCount) % maxIdx, 0, maxIdx, 0, 255)
 
-            // vignette(pixIdx, vigMask, pixels)
+            if (showVignette)
+                vignette(pixIdx, vigMask, pixels)
         }
     }
     updatePixels()

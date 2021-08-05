@@ -31,6 +31,7 @@ const edgeDetect = function(vx, vy, pixIdx, vidPixels, pixels) {
         (vidPixels[pixLeft + 2] * convMatrix[3]) + (vidPixels[pixIdx + 2] * convMatrix[4]) + (vidPixels[pixRight + 2] * convMatrix[5]) +
         (vidPixels[pixDownLeft + 2] * convMatrix[6]) + (vidPixels[pixDown + 2] * convMatrix[7]) +(vidPixels[pixDownRight + 2] * convMatrix[8])
 
+    return [pixels[pixIdx + 0], pixels[pixIdx + 1], pixels[pixIdx + 2]]
 }
 
 export default edgeDetect;
