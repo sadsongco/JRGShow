@@ -1,4 +1,12 @@
-import { setlist } from './modules/setlist.js'
+// LOAD PARAMETERS
+import { setlist } from './modules/parameters/setlist.js'
+
+// BUILD CONTROLS
+import { threshBase, threshBaseVal, threshDynVal, threshDyn, threshDynMin, threshDynMinVal, threshDinMax, threshDinMaxVal } from './modules/controls/threshControls.js'
+
+// LOAD UTILITIES
+import keyEvent from './modules/util/controlKeyEvents.js'
+
 let currSetId = -1
 let currSetState = 0
 let currVisState = 0
@@ -11,6 +19,8 @@ window.onload = function () {
 
 const setlistContainer = document.getElementById('setListContainer')
 
+
+
 for (let setlistNo in setlist) {
     const newEl = document.createElement('div')
     newEl.id = setlistNo
@@ -22,40 +32,19 @@ for (let setlistNo in setlist) {
 }
 
 const launchSetlistItem = function(e) {
+    let currTrackEl = document.querySelector('.currTrack')
+    if (currTrackEl) currTrackEl.classList.remove('currTrack')
     channel.postMessage({ setItem: e.target.id })
     currSetId = e.target.id
     currSetState = 0
+    currVisState = 0
+    currTrackEl = document.getElementById(e.target.id)
+    currTrackEl.classList.add('currTrack')
 }
 
 const channel = new BroadcastChannel('vis-comms')
 
-const keyEvent = function(e) {
-    if (e.key == 'f') channel.postMessage('fullscreen')
-    if (e.key == 'Enter') {
-        switch(currSetState) {
-            case 0:
-                channel.postMessage({ setItemFadeIn: currSetId })
-                currSetState ++
-                break
-            case 1:
-                channel.postMessage({ setItemFadeOut: currSetId })
-                currSetState = 0
-                break
-        }
-    }
-    if (e.key == 'ArrowRight') {
-        switch(currVisState) {
-            case 0:
-                channel.postMessage({ visFadeIn: currSetId })
-                currVisState ++
-                break
-            case 1:
-                channel.postMessage({ visFadeOut: currSetId })
-                currVisState = 0
-                break
-        }
-    }
-}
-
-document.addEventListener('keydown', keyEvent)
+document.addEventListener('keydown', (e)=>{
+    [currSetState, currVisState] = keyEvent(e, currVisState, currSetState, currSetId)
+}, true)
 

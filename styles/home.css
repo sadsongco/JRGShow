@@ -31,3 +31,8 @@ a {
   border-bottom: 1px solid #fcd;
   flex-basis: 100%;
 }
+
+.currTrack {
+  background: #997627;
+  transition: background 1s ease-in;
+}

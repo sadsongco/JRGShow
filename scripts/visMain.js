@@ -1,22 +1,27 @@
-import { BGCOL } from './modules/vis1.js'
-import { setlist } from './modules/setlist.js'
-import randomBoxes from './modules/randomBoxes.js'
-import vidThru from './modules/vidThru.js'
-import bitwise1 from './modules/bitwise1.js'
-import bitwiseBrighten from './modules/bitwiseBrighten.js'
-import specLoading from './modules/specLoading.js'
-import pixThru from './modules/pixThru.js'
-import vignetteMask from './modules/vignetteMask.js'
-import vignette from './modules/vignette.js'
-import getPixelValues from './modules/getPixelValues.js'
-import edgeDetect from './modules/edgeDetect.js'
-import ascii from './modules/ascii.js'
-import circles from './modules/circles.js'
-import boxes from './modules/boxes.js'
-import lines from './modules/lines.js'
-import motion from './modules/motion.js'
-import bitwise2 from './modules/bitwise2.js'
-import threshold from './modules/threshold.js'
+// LOAD PARAMETERS
+import { BGCOL }        from './modules/parameters/vis1.js'
+import { setlist }      from './modules/parameters/setlist.js'
+
+// LOAD UTILITIES
+import vignetteMask     from './modules/util/vignetteMask.js'
+import getPixelValues   from './modules/util/getPixelValues.js'
+
+// LOAD VISUALISERS
+import randomBoxes      from './modules/visualisers/randomBoxes.js'
+import vidThru          from './modules/visualisers/vidThru.js'
+import bitwise1         from './modules/visualisers/bitwise1.js'
+import bitwiseBrighten  from './modules/visualisers/bitwiseBrighten.js'
+import specLoading      from './modules/visualisers/specLoading.js'
+import pixThru          from './modules/visualisers/pixThru.js'
+import vignette         from './modules/visualisers/vignette.js'
+import edgeDetect       from './modules/visualisers/edgeDetect.js'
+import ascii            from './modules/visualisers/ascii.js'
+import circles          from './modules/visualisers/circles.js'
+import boxes            from './modules/visualisers/boxes.js'
+import lines            from './modules/visualisers/lines.js'
+import motion           from './modules/visualisers/motion.js'
+import bitwise2         from './modules/visualisers/bitwise2.js'
+import threshold        from './modules/visualisers/threshold.js'
 
 let cnv, bg, maxIdx, procSpeed
 let prevFrame
@@ -40,16 +45,39 @@ const canvasContainer = document.getElementById('canvasContainer')
 const channel = new BroadcastChannel('vis-comms')
 channel.addEventListener('message', (e) => {
     console.log(e.data)
-    if (e.data.setItem)
-        displaySetItemName(e.data.setItem)
-        if (e.data.setItemFadeIn)
+    if (e.data.setItem) {
+        if (visTitle.style.opacity != 0) {
+            visTitle.style.opacity = 0
+            visTitle.ontransitionend = () => displayTrackTitle(e.data.setItem)
+        } else {
+            displayTrackTitle(e.data.setItem)
+        }
+        canvasContainer.style.opacity = 0
+    }
+    if (e.data.setItemFadeIn) {
+        e.data.setItem = e.data.setItemFadeIn
         visTitle.style.opacity = 1
+    }
     if (e.data.setItemFadeOut)
         visTitle.style.opacity = 0
     if (e.data.visFadeIn)
         canvasContainer.style.opacity = 1
     if (e.data.visFadeOut)
         canvasContainer.style.opacity = 0
+    if (e.data.threshBase)
+        baseThresh = e.data.threshBase
+    if ('threshDyn' in e.data)
+        dynThresh = e.data.threshDyn
+    if (e.data.threshDynMin) {
+        loThresh = e.data.threshDynMin
+        loResStep = Math.floor(map(sin(frameCount/procSpeed), -1, 1, loLoRes, hiLoRes))
+        loResHalfStep = Math.floor(loResStep / 2)
+    }
+    if (e.data.threshDynMax) {
+        hiThresh = e.data.threshDynMax
+        loResStep = Math.floor(map(sin(frameCount/procSpeed), -1, 1, loLoRes, hiLoRes))
+        loResHalfStep = Math.floor(loResStep / 2)
+    }
     window.open('', 'visControl')
 })
 
@@ -90,7 +118,7 @@ window.setup = function() {
     loThresh = 50
     hiThresh = 190
     baseThresh = 100
-    dynThresh = true
+    dynThresh = false
 
     // hi res vis
     showThreshold = true
@@ -123,7 +151,7 @@ window.setup = function() {
     bg = color(BGCOL)
     bg.setAlpha(255)
     background(bg)
-    // bg.setAlpha(50)
+    bg.setAlpha(50)
     frameRate(30)
     maxIdx = cnv.width * cnv.height * 4
     vigMask = vignetteMask(cnv.width, cnv.height)
@@ -249,7 +277,8 @@ window.onload = function() {
     window.open('', 'visControl')
 }
 
-const displaySetItemName = function(id) {
+const displayTrackTitle = function(id) {
+    console.log('DISPLAY SET TITLE, id=', id)
     visTitle.innerHTML = ''
     const setName = document.createTextNode(setlist[id])
     visTitle.appendChild(setName)
