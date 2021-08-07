@@ -33,15 +33,23 @@ let loThresh, hiThresh, baseThresh, dynThresh
 
 const fr = document.getElementById('fr')
 const info = document.getElementById('info')
+const setStatus = document.getElementById('setStatus')
 const visTitle = document.getElementById('visTitle')
-
-const urlParams = new URLSearchParams(window.location.search)
-const setno = urlParams.get('setno')
-const setName = document.createTextNode(setlist[setno])
-visTitle.appendChild(setName)
+const canvasContainer = document.getElementById('canvasContainer')
 
 const channel = new BroadcastChannel('vis-comms')
 channel.addEventListener('message', (e) => {
+    console.log(e.data)
+    if (e.data.setItem)
+        displaySetItemName(e.data.setItem)
+        if (e.data.setItemFadeIn)
+        visTitle.style.opacity = 1
+    if (e.data.setItemFadeOut)
+        visTitle.style.opacity = 0
+    if (e.data.visFadeIn)
+        canvasContainer.style.opacity = 1
+    if (e.data.visFadeOut)
+        canvasContainer.style.opacity = 0
     window.open('', 'visControl')
 })
 
@@ -100,7 +108,7 @@ window.setup = function() {
     pixelDensity(1)
     cnv = createCanvas(1920, 1080)
     // noLoop()
-    cnv.parent('vis')
+    cnv.parent('canvasContainer')
     vidIn = createCapture(VIDEO, ()=>{
         vidIn.hide()
         vidIn.size(cnv.width, cnv.height)
@@ -229,10 +237,8 @@ window.draw = function() {
 }
 
 window.keyPressed = function() {
-    if (key === 'f') {
-        let fs = fullscreen()
-        fullscreen(!fs)
-    }
+    if (key === 'f')
+        fullscreen(1)
 }
 
 window.windowResized = function(){
@@ -241,4 +247,10 @@ window.windowResized = function(){
 
 window.onload = function() {
     window.open('', 'visControl')
+}
+
+const displaySetItemName = function(id) {
+    visTitle.innerHTML = ''
+    const setName = document.createTextNode(setlist[id])
+    visTitle.appendChild(setName)
 }

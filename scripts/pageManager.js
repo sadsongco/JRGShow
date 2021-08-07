@@ -1,6 +1,13 @@
 import { setlist } from './modules/setlist.js'
+let currSetId = -1
+let currSetState = 0
+let currVisState = 0
 
 window.name = 'visControl'
+
+window.onload = function () {
+    window.open('/vis.html', 'visualiser')
+}
 
 const setlistContainer = document.getElementById('setListContainer')
 
@@ -15,15 +22,39 @@ for (let setlistNo in setlist) {
 }
 
 const launchSetlistItem = function(e) {
-    window.open('/vis.html?setno='+e.target.id, 'visualiser')
+    channel.postMessage({ setItem: e.target.id })
+    currSetId = e.target.id
+    currSetState = 0
 }
 
 const channel = new BroadcastChannel('vis-comms')
 
 const keyEvent = function(e) {
     if (e.key == 'f') channel.postMessage('fullscreen')
-    // channel.postMessage(e.code)
-    // window.open('', 'visualiser')
+    if (e.key == 'Enter') {
+        switch(currSetState) {
+            case 0:
+                channel.postMessage({ setItemFadeIn: currSetId })
+                currSetState ++
+                break
+            case 1:
+                channel.postMessage({ setItemFadeOut: currSetId })
+                currSetState = 0
+                break
+        }
+    }
+    if (e.key == 'ArrowRight') {
+        switch(currVisState) {
+            case 0:
+                channel.postMessage({ visFadeIn: currSetId })
+                currVisState ++
+                break
+            case 1:
+                channel.postMessage({ visFadeOut: currSetId })
+                currVisState = 0
+                break
+        }
+    }
 }
 
 document.addEventListener('keydown', keyEvent)
