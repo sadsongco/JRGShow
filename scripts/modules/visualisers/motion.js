@@ -8,9 +8,9 @@ const motion = function(pixIdx, iR, iG, iB, loResHalfStep, motionThresh, prevFra
 
     if (motion) {
         for (let i = -loResHalfStep; i < loResHalfStep; i ++) {
-            pixels[pixIdx + (i*4) + 0] = iR
-            pixels[pixIdx + (i*4) + 1] = iG
-            pixels[pixIdx + (i*4) + 2] = iB
+            pixels[pixIdx + (i*4) + 0] = 255
+            pixels[pixIdx + (i*4) + 1] = 255
+            pixels[pixIdx + (i*4) + 2] = 255
             pixels[pixIdx + (i*4) + 3] = 255
         }
     } else {
@@ -18,7 +18,7 @@ const motion = function(pixIdx, iR, iG, iB, loResHalfStep, motionThresh, prevFra
             pixels[pixIdx + (i*4) + 0] = iR
             pixels[pixIdx + (i*4) + 1] = iG
             pixels[pixIdx + (i*4) + 2] = iB
-            pixels[pixIdx + (i*4) + 3] = (frameCount % 150) + 12
+            pixels[pixIdx + (i*4) + 3] = 100
         }
     }
 }
