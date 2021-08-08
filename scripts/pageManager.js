@@ -10,6 +10,7 @@ import keyEvent from './modules/util/controlKeyEvents.js'
 let currSetId = -1
 let currSetState = 0
 let currVisState = 0
+let scriptTextRun = false
 
 window.name = 'visControl'
 
@@ -18,8 +19,8 @@ window.onload = function () {
 }
 
 const setlistContainer = document.getElementById('setListContainer')
-
-
+const scriptTextRunEl = document.getElementById('scriptTextRunning')
+scriptTextRunEl.innerText = "Script Text Stopped"
 
 for (let setlistNo in setlist) {
     const newEl = document.createElement('div')
@@ -32,9 +33,14 @@ for (let setlistNo in setlist) {
 }
 
 const launchSetlistItem = function(e) {
+    if (e.target.id === currSetId)
+        return
     let currTrackEl = document.querySelector('.currTrack')
     if (currTrackEl) currTrackEl.classList.remove('currTrack')
-    channel.postMessage({ setItem: e.target.id })
+    channel.postMessage({
+        changeTrack: true,
+        setItem: e.target.id,
+    })
     currSetId = e.target.id
     currSetState = 0
     currVisState = 0
@@ -45,6 +51,10 @@ const launchSetlistItem = function(e) {
 const channel = new BroadcastChannel('vis-comms')
 
 document.addEventListener('keydown', (e)=>{
-    [currSetState, currVisState] = keyEvent(e, currVisState, currSetState, currSetId)
+    [currSetState, currVisState, scriptTextRun] = keyEvent(e, currVisState, currSetState, currSetId, scriptTextRun)
+    if (scriptTextRun)
+        scriptTextRunEl.innerText = "Script Text Running"
+    else
+        scriptTextRunEl.innerText = "Script Text Stopped"
 }, true)
 

@@ -1,10 +1,13 @@
 // LOAD PARAMETERS
-import { BGCOL }        from './modules/parameters/vis1.js'
+import {    BGCOL,
+            activeVis } from './modules/parameters/visParams.js'
 import { setlist }      from './modules/parameters/setlist.js'
 
 // LOAD UTILITIES
 import vignetteMask     from './modules/util/vignetteMask.js'
 import getPixelValues   from './modules/util/getPixelValues.js'
+import resetActiveVis   from './modules/util/resetActiveVis.js'
+import prepareVis       from './modules/util/prepareVis.js'
 
 // LOAD VISUALISERS
 import vidThru          from './modules/visualisers/vidThru.js'
@@ -27,6 +30,10 @@ import threshold        from './modules/visualisers/threshold.js'
 import scriptTextFull   from './modules/visualisers/scriptText.js'
 
 // GLOBAL VARIABLES
+const visVars = {
+    bgOpacity: 0,
+    scriptTextRun: false,
+}
 let cnv, maxIdx
 let vidIn
 let prevFrame
@@ -35,14 +42,10 @@ let vigMask, vigMaskImage
 const asciiart_width = 240, asciiart_height = 120;
 let scriptFont
 let scriptVis
+let currTrack
 
 // VISUALISER FLAGS
-let showLoRes, showAscii, showPreRandomBoxes, showPostRandomBoxes,
-    showVidThru, showVidThruPoster, showVidThruHalf,
-    showCircles, showBoxes, showLines,
-    showMotion, showThreshold, showEdge, showBitwise1, showBitwise2,
-    showSpec, showVignette,
-    showFullScript, showHalfScript
+
 
 // BACKGROUND FLAGS AND VARIABLES
 let bgs = [], bgOpacity
@@ -63,31 +66,38 @@ const setStatus = document.getElementById('setStatus')
 const visTitle = document.getElementById('visTitle')
 const canvasContainer = document.getElementById('canvasContainer')
 
-let scriptLines
+// let scriptLines
 
 // CONTROLLER / VISUALISER COMMUNICATION
 const channel = new BroadcastChannel('vis-comms')
 channel.addEventListener('message', (e) => {
-    console.log(e.data)
-    if (e.data.setItem) {
+    // console.log(e.data)
+    if (e.data.changeTrack) {
+        if (currTrack !== e.data.setItem)
+            currTrack = e.data.setItem
         if (visTitle.style.opacity != 0) {
             visTitle.style.opacity = 0
-            visTitle.ontransitionend = () => displayTrackTitle(e.data.setItem)
+            visTitle.ontransitionend = () => displayTrackTitle(currTrack)
         } else {
-            displayTrackTitle(e.data.setItem)
+            displayTrackTitle(currTrack)
         }
-        canvasContainer.style.opacity = 0
+        if (canvasContainer.style.opacity != 0) {
+            canvasContainer.style.opacity = 0
+            canvasContainer.ontransitionend = () => prepareVis(currTrack, activeVis, scriptVis, scriptText, visVars)
+        } else {
+            prepareVis(currTrack, activeVis, scriptVis, scriptText, visVars)
+        }
     }
-    if (e.data.setItemFadeIn) {
-        e.data.setItem = e.data.setItemFadeIn
+    if (e.data.setItemFadeIn)
         visTitle.style.opacity = 1
-    }
     if (e.data.setItemFadeOut)
         visTitle.style.opacity = 0
     if (e.data.visFadeIn)
         canvasContainer.style.opacity = 1
     if (e.data.visFadeOut)
         canvasContainer.style.opacity = 0
+    if ('toggleScriptText' in e.data)
+        visVars.scriptTextRun = e.data.toggleScriptText
     if (e.data.threshBase)
         baseThresh = e.data.threshBase
     if ('threshDyn' in e.data)
@@ -116,25 +126,18 @@ window.preload = function() {
 window.setup = function() {
 
     // set up script variables and object
-    scriptLines = scriptText.length
+    // scriptLines = scriptText.length
     scriptVis = new scriptTextFull()
-    scriptVis.init(scriptText, 80, 560, 28, 22)
+    // scriptVis.init(scriptText, 80, 560, 28, 22)
     textFont(scriptFont)
+    // scriptTextRun = false
 
-    // standalone vis
-    showVidThru =           false
-    showVidThruPoster =     false
-    showVidThruHalf =       false
-    showAscii =             true
+    resetActiveVis(activeVis)
 
     // general settings
     procSpeed =             30 // higher is slower
     
-    // general
-    showPreRandomBoxes =    false
-
     // loRes vis settings
-    showLoRes =             false
     loLoRes =               4
     hiLoRes =               32
     baseLoRes =             15
@@ -142,12 +145,6 @@ window.setup = function() {
     loResHalfStep =         Math.floor(baseLoRes / 2)
     dynLoRes =              false
     lineSpeed =             10 // higher is slower
-
-    // loRes vis flags
-    showCircles =           false
-    showBoxes =             false
-    showLines =             false
-    showMotion =            false
     motionThresh =          50
     
     // hi res settings
@@ -155,21 +152,6 @@ window.setup = function() {
     hiThresh =              190
     baseThresh =            100
     dynThresh =             false
-
-    // hi res vis flags
-    showThreshold =         false
-    showEdge =              false
-    showBitwise1 =          false
-    showBitwise2 =          false
-    showSpec =              false
-    showFullScript =        false
-    showHalfScript =        false
-    
-    // global vis flags
-    showVignette =          true
-    
-    // general flags
-    showPostRandomBoxes =   false
 
     // background flags
     bgOpacity =             0
@@ -211,32 +193,34 @@ window.setup = function() {
 
 // p5.js draw loop
 window.draw = function() {
-
+    fr.innerText = parseInt(frameRate())
     const currSin = Math.sin(frameCount)
-    background(bgs[bgOpacity])
+    background(bgs[visVars.bgOpacity])
 
-    if (showFullScript && frameCount > frameRate() * 5 && frameCount % int(frameRate()/4) === 0)
+    if (activeVis.showFullScript && visVars.scriptTextRun && frameCount % int(frameRate()/4) === 0)
         return scriptVis.draw(scriptText, 40)
     
-    if (showHalfScript) {
+    if (activeVis.showHalfScript) {
         vidThruHalf(vidIn)
-        if (frameCount > frameRate() * 5 && frameCount % int(frameRate()/4) === 0)
+        if (visVars.scriptTextRun && frameCount % int(frameRate()/4) === 0)
             return scriptVis.draw(scriptText, 40)
     }
 
-    if (showVidThru)
+    if (activeVis.showVidThru)
         return vidThru(vidIn)
 
-    if (showVidThruPoster)
+    if (activeVis.showVidThruPoster)
         return vidThruPoster(vidIn)
 
-    if (showVidThruHalf)
+    if (activeVis.showVidThruHalf)
         return vidThruHalf(vidIn)
 
-    if (showAscii)
+    // resetActiveVis(activeVis)
+    // activeVis.showAscii = true
+    if (activeVis.showAscii)
         return ascii(vidIn, gfx, myAsciiArt, this)
 
-    if (showPreRandomBoxes)
+    if (activeVis.showPreRandomBoxes)
         randomBoxes()
     
     loadPixels()
@@ -246,7 +230,7 @@ window.draw = function() {
        LO RES VISUALISER
        ***************** */
     
-    if (showLoRes) {
+    if (activeVis.showLoRes) {
         loResStep = baseLoRes
         if (dynLoRes) {
             loResStep = Math.floor(map(sin(frameCount/procSpeed), -1, 1, loLoRes, hiLoRes))
@@ -256,28 +240,28 @@ window.draw = function() {
             for (let vx = 0; vx < cnv.width; vx += loResStep) {
                 const pixIdx = ((vy * width) + vx) * 4
                 let [iR, iG, iB] = getPixelValues(pixIdx, vidIn.pixels)
-                if (showCircles)
-                    circles(vx, vy, iR, iG, iB, loResStep, showVignette, vigMask)
+                if (activeVis.showCircles)
+                    circles(vx, vy, iR, iG, iB, loResStep, activeVis.showVignette, vigMask)
                 
-                if (showBoxes)
-                    boxes(vx, vy, iR, iG, iB, loResStep, showVignette, vigMask)
+                if (activeVis.showBoxes)
+                    boxes(vx, vy, iR, iG, iB, loResStep, activeVis.showVignette, vigMask)
                 
-                if (showLines)
-                    lines(vx, vy, iR, iG, iB, loResStep, lineSpeed, showVignette, vigMask)
+                if (activeVis.showLines)
+                    lines(vx, vy, iR, iG, iB, loResStep, lineSpeed, activeVis.showVignette, vigMask)
                 
-                if (showMotion)
+                if (activeVis.showMotion)
                     motion(pixIdx, iR, iG, iB, loResHalfStep, motionThresh, prevFrame, pixels)
 
-                if (showVignette)
+                if (activeVis.showVignette)
                     vignette(pixIdx, vigMask, pixels)
                 }    
         }
         fr.innerText = parseInt(frameRate())
-        if (showMotion) {
+        if (activeVis.showMotion) {
             prevFrame = vidIn.pixels.slice(0);
             return updatePixels()
         }
-        if (showVignette)
+        if (activeVis.showVignette)
             image(vigMaskImage, 0, 0)
         return 
     }
@@ -297,52 +281,37 @@ window.draw = function() {
             
             let [iR, iG, iB] = getPixelValues(pixIdx, vidIn.pixels)
 
-            if (showThreshold)
+            if (activeVis.showThreshold)
                 threshold(pixIdx, iR, iG, iB, thresh, pixels)
             
-            if (showEdge) {
+            if (activeVis.showEdge) {
                 [r, g, b] = edgeDetect(vx, vy, pixIdx, vidIn.pixels, pixels)
                 bitwiseBrighten(pixIdx, r, g, b, 2, pixels)
             }
             
-            // [iR, iG, iB] = getPixelValues(pixIdx, pixels)
-
-            if (showBitwise1)
+            if (activeVis.showBitwise1)
                 bitwise1(pixIdx, iR, iG, iB, thresh, pixels)
-            if (showBitwise2)
+            if (activeVis.showBitwise2)
                 bitwise2(pixIdx, iR, iG, iB, thresh, pixels)
 
-            // [iR, iG, iB] = getPixelValues(pixIdx, pixels)
-            
             // pixThru(pixIdx, iR, iG, iB, pixels)
             
-            if (showSpec)
+            if (activeVis.showSpec)
                 specLoading(pixIdx, iR, iG, iB, thresh, maxIdx, pixels)
             
-            // pixels[pixIdx + 3] = map((pixIdx + frameCount) % maxIdx, 0, maxIdx, 0, 255)
-
-            if (showVignette)
+            if (activeVis.showVignette)
                 vignette(pixIdx, vigMask, pixels)
         }
     }
     updatePixels()
 
-    if (showPostRandomBoxes)
+    if (activeVis.showPostRandomBoxes)
         randomBoxes()
-
-    fr.innerText = parseInt(frameRate())
 }
 
 window.keyPressed = function() {
     if (key === 'f')
         fullscreen(1)
-}
-
-window.windowResized = function(){
-    // ascii.onResize()
-}
-
-window.onload = function() {
     window.open('', 'visControl')
 }
 
