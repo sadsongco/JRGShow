@@ -1,4 +1,4 @@
-const edgeDetect = function(vx, vy, pixIdx, vidPixels, pixels) {
+const edgeDetect = function(vx, vy, pixIdx, vidPixels, brighten, pixels) {
     // const dim = 3
     // const centre = Math.floor(dim/2)
     const convMatrix = [
@@ -30,6 +30,11 @@ const edgeDetect = function(vx, vy, pixIdx, vidPixels, pixels) {
         (vidPixels[pixUpLeft + 2] * convMatrix[0]) + (vidPixels[pixUp + 2] * convMatrix[1]) +(vidPixels[pixUpRight + 2] * convMatrix[2]) +
         (vidPixels[pixLeft + 2] * convMatrix[3]) + (vidPixels[pixIdx + 2] * convMatrix[4]) + (vidPixels[pixRight + 2] * convMatrix[5]) +
         (vidPixels[pixDownLeft + 2] * convMatrix[6]) + (vidPixels[pixDown + 2] * convMatrix[7]) +(vidPixels[pixDownRight + 2] * convMatrix[8])
+
+    pixels[pixIdx + 0] = pixels[pixIdx + 0] << brighten
+    pixels[pixIdx + 1] = pixels[pixIdx + 1] << brighten
+    pixels[pixIdx + 2] = pixels[pixIdx + 2] << brighten
+    pixels[pixIdx + 3] = 255
 
     return [pixels[pixIdx + 0], pixels[pixIdx + 1], pixels[pixIdx + 2]]
 }

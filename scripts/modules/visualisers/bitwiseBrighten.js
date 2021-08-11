@@ -2,6 +2,7 @@ const bitwiseBrighten = function(pixIdx, iR, iG, iB, brighten=1, pixels) {
     pixels[pixIdx + 0] = iR << brighten
     pixels[pixIdx + 1] = iG << brighten
     pixels[pixIdx + 2] = iB << brighten
+    pixels[pixIdx + 3] = 255
 
     return [pixels[pixIdx + 0], pixels[pixIdx + 1], pixels[pixIdx + 2]]
 }

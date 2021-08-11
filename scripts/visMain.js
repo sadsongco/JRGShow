@@ -8,6 +8,8 @@ import vignetteMask     from './modules/util/vignetteMask.js'
 import getPixelValues   from './modules/util/getPixelValues.js'
 import resetActiveVis   from './modules/util/resetActiveVis.js'
 import prepareVis       from './modules/util/prepareVis.js'
+// import resetPixels      from './modules/util/resetPixels.js'
+
 
 // LOAD VISUALISERS
 import vidThru          from './modules/visualisers/vidThru.js'
@@ -20,14 +22,15 @@ import specLoading      from './modules/visualisers/specLoading.js'
 import pixThru          from './modules/visualisers/pixThru.js'
 import vignette         from './modules/visualisers/vignette.js'
 import edgeDetect       from './modules/visualisers/edgeDetect.js'
-import ascii            from './modules/visualisers/ascii.js'
+import Ascii            from './modules/visualisers/ascii.js'
 import circles          from './modules/visualisers/circles.js'
 import boxes            from './modules/visualisers/boxes.js'
 import lines            from './modules/visualisers/lines.js'
 import motion           from './modules/visualisers/motion.js'
 import bitwise2         from './modules/visualisers/bitwise2.js'
 import threshold        from './modules/visualisers/threshold.js'
-import scriptTextFull   from './modules/visualisers/scriptText.js'
+import ScriptTextFull   from './modules/visualisers/scriptText.js'
+import GradReveal       from './modules/visualisers/gradReveal.js'
 
 // GLOBAL VARIABLES
 const visVars = {
@@ -37,18 +40,18 @@ const visVars = {
 let cnv, maxIdx
 let vidIn
 let prevFrame
-let myAsciiArt, gfx
+let asciiVis, context
 let vigMask, vigMaskImage
-const asciiart_width = 240, asciiart_height = 120;
+let asciiart_width, asciiart_height, asciiCof
 let scriptFont
-let scriptVis
+let scriptVis, gradRevealVis
 let currTrack
 
 // VISUALISER FLAGS
 
 
 // BACKGROUND FLAGS AND VARIABLES
-let bgs = [], bgOpacity
+// let bgs = []
     
 // VISUALISER ADJUSTABLE VARIABLES
 let procSpeed
@@ -73,6 +76,7 @@ const channel = new BroadcastChannel('vis-comms')
 channel.addEventListener('message', (e) => {
     // console.log(e.data)
     if (e.data.changeTrack) {
+        asciiVis.init(context, asciiart_width, asciiart_height)
         if (currTrack !== e.data.setItem)
             currTrack = e.data.setItem
         if (visTitle.style.opacity != 0) {
@@ -83,9 +87,13 @@ channel.addEventListener('message', (e) => {
         }
         if (canvasContainer.style.opacity != 0) {
             canvasContainer.style.opacity = 0
-            canvasContainer.ontransitionend = () => prepareVis(currTrack, activeVis, scriptVis, scriptText, visVars)
+            canvasContainer.ontransitionend = () => {
+                resetActiveVis(activeVis)
+                prepareVis(currTrack, activeVis, scriptVis, scriptText, visVars, asciiVis)
+            }
         } else {
-            prepareVis(currTrack, activeVis, scriptVis, scriptText, visVars)
+            resetActiveVis(activeVis)
+            prepareVis(currTrack, activeVis, scriptVis, scriptText, visVars, asciiVis)
         }
     }
     if (e.data.setItemFadeIn)
@@ -124,18 +132,12 @@ window.preload = function() {
 
 // p5.js setup
 window.setup = function() {
-
-    // set up script variables and object
-    // scriptLines = scriptText.length
-    scriptVis = new scriptTextFull()
-    // scriptVis.init(scriptText, 80, 560, 28, 22)
-    textFont(scriptFont)
-    // scriptTextRun = false
-
     resetActiveVis(activeVis)
-
+    
     // general settings
     procSpeed =             30 // higher is slower
+    currTrack =             -1
+    visVars.bgOpacity =     255
     
     // loRes vis settings
     loLoRes =               4
@@ -146,18 +148,20 @@ window.setup = function() {
     dynLoRes =              false
     lineSpeed =             10 // higher is slower
     motionThresh =          50
+    asciiCof =              12 // higher numbers = lower res ascii
     
     // hi res settings
     loThresh =              50
     hiThresh =              190
     baseThresh =            100
     dynThresh =             false
-
+    
     // background flags
-    bgOpacity =             0
     
     pixelDensity(1)
     cnv = createCanvas(1920, 1080)
+    asciiart_width = Math.floor(cnv.width / asciiCof)
+    asciiart_height = Math.floor(cnv.height / asciiCof)
     // noLoop()
     cnv.parent('canvasContainer')
     vidIn = createCapture(VIDEO, ()=>{
@@ -165,19 +169,19 @@ window.setup = function() {
         vidIn.size(cnv.width, cnv.height)
     })
 
-    // graphics helper for ascii
-    gfx = createGraphics(asciiart_width, asciiart_height)
-    gfx.pixelDensity(1)
-    myAsciiArt = new AsciiArt(this)
-    textAlign(CENTER, CENTER); textFont('monospace', 8); textStyle(NORMAL);
+    /* ****** CREATE VISUALISER OBJECTS ******* */
+    
+    // set up Ascii vis object
+    asciiVis = new Ascii()
+    context = this
+    asciiVis.init(context, asciiart_width, asciiart_height)
+    
+    // set up Script vis object
+    scriptVis = new ScriptTextFull()
+    textFont(scriptFont)
 
-    // common background settings
-    bgs[0] = color(BGCOL)
-    bgs[0].setAlpha(255)
-    bgs[1] = color(BGCOL)
-    bgs[1].setAlpha(50)
-    bgs[2] = color(BGCOL)
-    bgs[2].setAlpha(5)
+    // set up gradReveal object
+    gradRevealVis = new GradReveal()
 
     frameRate(24)
     maxIdx = cnv.width * cnv.height * 4
@@ -195,36 +199,37 @@ window.setup = function() {
 window.draw = function() {
     fr.innerText = parseInt(frameRate())
     const currSin = Math.sin(frameCount)
-    background(bgs[visVars.bgOpacity])
-
+    background(0, 0, 0, visVars.bgOpacity)
+    
     if (activeVis.showFullScript && visVars.scriptTextRun && frameCount % int(frameRate()/4) === 0)
         return scriptVis.draw(scriptText, 40)
     
     if (activeVis.showHalfScript) {
         vidThruHalf(vidIn)
         if (visVars.scriptTextRun && frameCount % int(frameRate()/4) === 0)
-            return scriptVis.draw(scriptText, 40)
+        return scriptVis.draw(scriptText, 40)
     }
-
+    
     if (activeVis.showVidThru)
         return vidThru(vidIn)
-
+    
     if (activeVis.showVidThruPoster)
         return vidThruPoster(vidIn)
-
+    
     if (activeVis.showVidThruHalf)
         return vidThruHalf(vidIn)
-
+    
     // resetActiveVis(activeVis)
-    // activeVis.showAscii = true
+    // if (currTrack < 0 || frameCount > 600)
+    //     activeVis.showAscii = true
+    vidIn.loadPixels()
     if (activeVis.showAscii)
-        return ascii(vidIn, gfx, myAsciiArt, this)
-
+        return asciiVis.draw(vidIn)
+    
     if (activeVis.showPreRandomBoxes)
         randomBoxes()
     
     loadPixels()
-    vidIn.loadPixels()
 
     /* *****************
        LO RES VISUALISER
@@ -269,11 +274,13 @@ window.draw = function() {
     let thresh = baseThresh
     if (dynThresh)
         thresh = map(sin(frameCount/procSpeed), -1, 1, loThresh, hiThresh)
-    info.innerText = thresh
+    // info.innerText = thresh
 
     /* *****************
        HI RES VISUALISER
-       ***************** */    
+    /  ***************** */
+    
+
     for (let vy = 0; vy < cnv.height; vy++) {
         for (let vx = 0; vx < cnv.width; vx++) {
             const pixIdx = ((vy * width) + vx) * 4
@@ -284,26 +291,37 @@ window.draw = function() {
             if (activeVis.showThreshold)
                 threshold(pixIdx, iR, iG, iB, thresh, pixels)
             
-            if (activeVis.showEdge) {
-                [r, g, b] = edgeDetect(vx, vy, pixIdx, vidIn.pixels, pixels)
-                bitwiseBrighten(pixIdx, r, g, b, 2, pixels)
-            }
+            // activeVis.showEdge = true
+            if (activeVis.showEdge)
+                edgeDetect(vx, vy, pixIdx, vidIn.pixels, 2, pixels)
             
             if (activeVis.showBitwise1)
                 bitwise1(pixIdx, iR, iG, iB, thresh, pixels)
             if (activeVis.showBitwise2)
                 bitwise2(pixIdx, iR, iG, iB, thresh, pixels)
-
-            // pixThru(pixIdx, iR, iG, iB, pixels)
+            if (activeVis.showPixThru)
+                pixThru(pixIdx, iR, iG, iB, pixels)
             
             if (activeVis.showSpec)
                 specLoading(pixIdx, iR, iG, iB, thresh, maxIdx, pixels)
             
             if (activeVis.showVignette)
                 vignette(pixIdx, vigMask, pixels)
+
+            if (activeVis.showGradReveal)
+                gradRevealVis.draw(pixIdx, iR, iG, iB, pixels)
+            // if (pixels[pixIdx + 3] > 30) {
+            //     pixels[pixIdx + 0] = iR
+            //     pixels[pixIdx + 1] = iG
+            //     pixels[pixIdx + 2] = iB
+            //     pixels[pixIdx + 3] = pixels[pixIdx + 3] << 1
+            // }
         }
     }
     updatePixels()
+    // background(0, 0, 0, 5)
+    // activeVis.showPostRandomBoxes = true
+    // info.innerText = visVars.bgOpacity
 
     if (activeVis.showPostRandomBoxes)
         randomBoxes()

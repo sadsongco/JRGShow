@@ -53,8 +53,8 @@ const channel = new BroadcastChannel('vis-comms')
 document.addEventListener('keydown', (e)=>{
     [currSetState, currVisState, scriptTextRun] = keyEvent(e, currVisState, currSetState, currSetId, scriptTextRun)
     if (scriptTextRun)
-        scriptTextRunEl.innerText = "Script Text Running"
+        scriptTextRunEl.innerText = "Script Text Running [arrow left]"
     else
-        scriptTextRunEl.innerText = "Script Text Stopped"
+        scriptTextRunEl.innerText = "Script Text Stopped [arrow left]"
 }, true)
 

@@ -12,6 +12,7 @@ export let activeVis = {
     showBoxes: false,
     showLines: false,
     showMotion: false,
+    showPixThru: false,
     showThreshold: false,
     showEdge: false,
     showBitwise1: false,
@@ -19,7 +20,8 @@ export let activeVis = {
     showSpec: false,
     showVignette: false,
     showFullScript: false,
-    showHalfScript: false
+    showHalfScript: false,
+    showGradReveal: false,
 }
 
 export default null
