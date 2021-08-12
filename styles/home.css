@@ -15,6 +15,7 @@ a {
 .setlistItem {
   display: block;
   border: 1px solid white;
+  transition: background 0.5s;
 }
 
 .setlistItem:hover {
@@ -32,7 +33,13 @@ a {
   flex-basis: 100%;
 }
 
-.currTrack {
+.currTrack,
+.currTrack:hover {
   background: #997627;
-  transition: background 1s ease-in;
+  transition: background 0.5s ease-in;
+}
+
+.visLoading,
+.visLoading:hover {
+  background: #aa2222;
 }

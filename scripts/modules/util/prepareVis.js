@@ -41,6 +41,47 @@ const prepareVis = function(setItem, activeVis, scriptVis, scriptText, visVars, 
             asciiVis.setBright(1)
             break
             
+        case 6:
+            visVars.bgOpacity = 255
+            activeVis.showBitwise1 = true
+            break
+        
+        case 7:
+            visVars.bgOpacity = 255
+            activeVis.showBitwise2 = true
+            break
+
+        case 8:
+            visVars.bgOpacity = 255
+            activeVis.showSpec = true
+            break
+        
+        case 9:
+            visVars.bgOpacity = 255
+            activeVis.showEdge = true
+            break;
+
+        case 10:
+            visVars.bgOpacity = 255
+            activeVis.showLoRes = true
+            activeVis.showMotion = true
+            break
+
+        case 11:
+            visVars.bgOpacity = 255
+            activeVis.showThreshold = true
+            break
+
+        case 12:
+            activeVis.showLoRes = true
+            activeVis.showBoxes = true
+            break
+        
+        case 13:
+            activeVis.showLoRes = true
+            activeVis.showLines = true
+            break
+        
         default:
             break
     }

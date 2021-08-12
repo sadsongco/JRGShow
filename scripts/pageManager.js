@@ -6,6 +6,7 @@ import { threshBase, threshBaseVal, threshDynVal, threshDyn, threshDynMin, thres
 
 // LOAD UTILITIES
 import keyEvent from './modules/util/controlKeyEvents.js'
+import processVisMessage from './modules/util/processVisMessage.js'
 
 let currSetId = -1
 let currSetState = 0
@@ -27,7 +28,7 @@ for (let setlistNo in setlist) {
     newEl.id = setlistNo
     newEl.classList.add('setlistItem')
     newEl.addEventListener('click', (e)=>launchSetlistItem(e))
-    const newContent = document.createTextNode(setlist[setlistNo])
+    const newContent = document.createTextNode((parseInt(setlistNo) + 1) + ' - ' + setlist[setlistNo])
     newEl.appendChild(newContent)
     setlistContainer.appendChild(newEl)
 }
@@ -49,6 +50,7 @@ const launchSetlistItem = function(e) {
 }
 
 const channel = new BroadcastChannel('vis-comms')
+channel.addEventListener('message', (e)=> processVisMessage(e))
 
 document.addEventListener('keydown', (e)=>{
     [currSetState, currVisState, scriptTextRun] = keyEvent(e, currVisState, currSetState, currSetId, scriptTextRun)

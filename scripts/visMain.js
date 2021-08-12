@@ -88,6 +88,9 @@ const channel = new BroadcastChannel('vis-comms')
 channel.addEventListener('message', (e) => {
     // console.log(e.data)
     if (e.data.changeTrack) {
+        channel.postMessage({
+            visTransition: true
+        })
         asciiVis.init(context, asciiart_width, asciiart_height)
         if (currTrack !== e.data.setItem)
             currTrack = e.data.setItem
@@ -100,12 +103,11 @@ channel.addEventListener('message', (e) => {
         if (canvasContainer.style.opacity != 0) {
             canvasContainer.style.opacity = 0
             canvasContainer.ontransitionend = () => {
-                resetActiveVis(activeVis)
-                prepareVis(currTrack, activeVis, scriptVis, scriptText, visVars, asciiVis)
+                if (canvasContainer.style.opacity != 0 || e.data.setItem === -1) return
+                updateVis(e)
             }
         } else {
-            resetActiveVis(activeVis)
-            prepareVis(currTrack, activeVis, scriptVis, scriptText, visVars, asciiVis)
+            updateVis(e)
         }
     }
     if (e.data.setItemFadeIn)
@@ -339,14 +341,29 @@ window.draw = function() {
         randomBoxes()
 }
 
-window.keyPressed = function() {
+window.keyPressed = function(e) {
+    e.preventDefault()
     if (key === 'f')
         fullscreen(1)
-    window.open('', 'visControl')
+    else if (key === 'escape')
+        fullscreen(0)
+    else
+        fullscreen(1)
+    return window.open('', 'visControl')
 }
 
 const displayTrackTitle = function(id) {
     visTitle.innerHTML = ''
     const setName = document.createTextNode(setlist[id])
     visTitle.appendChild(setName)
+}
+
+const updateVis = function(e) {
+    console.log('IN updateVis')
+    channel.postMessage({
+        visTransition: false
+    })
+    resetActiveVis(activeVis)
+    prepareVis(currTrack, activeVis, scriptVis, scriptText, visVars, asciiVis)
+    e.data.setItem = -1
 }

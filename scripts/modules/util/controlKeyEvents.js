@@ -1,8 +1,8 @@
 const channel = new BroadcastChannel('vis-comms')
 
 const keyEvent = function(e, currVisState, currSetState, currSetId, scriptTextRun) {
-    if (e.key == 'f') channel.postMessage('fullscreen')
-    if (e.key == 'Enter') {
+    if (e.key == 'f') channel.postMessage('fullscreen') // this doesn't work
+    if (e.key == 't') { // toggle title
         e.preventDefault()
         switch(currSetState) {
             case 0:
@@ -21,7 +21,7 @@ const keyEvent = function(e, currVisState, currSetState, currSetId, scriptTextRu
                 break
         }
     }
-    if (e.key == 'ArrowRight') {
+    if (e.key == 'ArrowRight') { // toggle vis
         e.preventDefault()
         switch(currVisState) {
             case 0:
@@ -40,10 +40,9 @@ const keyEvent = function(e, currVisState, currSetState, currSetId, scriptTextRu
                 break
         }
     }
-    if (e.key == 'ArrowLeft') {
+    if (e.key == 'ArrowLeft') { // start animation running
         e.preventDefault()
         scriptTextRun = !scriptTextRun
-        console.log(scriptTextRun)
         channel.postMessage({
             toggleScriptText: scriptTextRun
         })
