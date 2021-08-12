@@ -38,7 +38,8 @@ const ascii = function () {
                 tempWeight = (vidIn.pixels[pixIdx + 0] + vidIn.pixels[pixIdx + 1] + vidIn.pixels[pixIdx + 2])/tempMaxWeight
                 tempWeight = Math.floor(tempWeight * tempRange)
                 fill(vidIn.pixels[pixIdx + 0] << this.brighten, vidIn.pixels[pixIdx + 1] << this.brighten, vidIn.pixels[pixIdx + 2] << this.brighten)
-                text(char(weightTable[tempWeight].code), xpos, ypos)
+                if (weightTable[tempWeight])
+                    text(char(weightTable[tempWeight].code), xpos, ypos)
             }
         }
     }

@@ -12,25 +12,37 @@ import prepareVis       from './modules/util/prepareVis.js'
 
 
 // LOAD VISUALISERS
-import vidThru          from './modules/visualisers/vidThru.js'
-import vidThruPoster    from './modules/visualisers/vidThruPoster.js'
-import vidThruHalf      from './modules/visualisers/vidThruHalf.js'
-import randomBoxes      from './modules/visualisers/randomBoxes.js'
-import bitwise1         from './modules/visualisers/bitwise1.js'
-import bitwiseBrighten  from './modules/visualisers/bitwiseBrighten.js'
-import specLoading      from './modules/visualisers/specLoading.js'
-import pixThru          from './modules/visualisers/pixThru.js'
-import vignette         from './modules/visualisers/vignette.js'
-import edgeDetect       from './modules/visualisers/edgeDetect.js'
-import Ascii            from './modules/visualisers/ascii.js'
-import circles          from './modules/visualisers/circles.js'
-import boxes            from './modules/visualisers/boxes.js'
-import lines            from './modules/visualisers/lines.js'
-import motion           from './modules/visualisers/motion.js'
-import bitwise2         from './modules/visualisers/bitwise2.js'
-import threshold        from './modules/visualisers/threshold.js'
-import ScriptTextFull   from './modules/visualisers/scriptText.js'
-import GradReveal       from './modules/visualisers/gradReveal.js'
+
+// straight video
+import vidThru          from './modules/visualisers/straightVideo/vidThru.js'
+import vidThruPoster    from './modules/visualisers/straightVideo/vidThruPoster.js'
+import vidThruHalf      from './modules/visualisers/straightVideo/vidThruHalf.js'
+import pixThru          from './modules/visualisers/straightVideo/pixThru.js'
+
+// text
+import Ascii            from './modules/visualisers/text/ascii.js'
+import ScriptTextFull   from './modules/visualisers/text/scriptText.js'
+
+// lo res
+import circles          from './modules/visualisers/loRes/circles.js'
+import boxes            from './modules/visualisers/loRes/boxes.js'
+import lines            from './modules/visualisers/loRes/lines.js'
+
+// bitwise
+import bitwise1         from './modules/visualisers/bitwise/bitwise1.js'
+import bitwise2         from './modules/visualisers/bitwise/bitwise2.js'
+import bitwiseBrighten  from './modules/visualisers/bitwise/bitwiseBrighten.js'
+import specLoading      from './modules/visualisers/bitwise/specLoading.js'
+
+// hi res
+import edgeDetect       from './modules/visualisers/hiRes/edgeDetect.js'
+import motion           from './modules/visualisers/hiRes/motion.js'
+import threshold        from './modules/visualisers/hiRes/threshold.js'
+import GradReveal       from './modules/visualisers/hiRes/gradReveal.js'
+
+// common
+import randomBoxes      from './modules/visualisers/common/randomBoxes.js'
+import vignette         from './modules/visualisers/common/vignette.js'
 
 // GLOBAL VARIABLES
 const visVars = {
