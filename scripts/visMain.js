@@ -13,6 +13,9 @@ import prepareVis       from './modules/util/prepareVis.js'
 
 // LOAD VISUALISERS
 
+// initial test card
+import TestCard         from './modules/visualisers/testCard.js'
+
 // straight video
 import vidThru          from './modules/visualisers/straightVideo/vidThru.js'
 import vidThruPoster    from './modules/visualisers/straightVideo/vidThruPoster.js'
@@ -47,7 +50,9 @@ import vignette         from './modules/visualisers/common/vignette.js'
 // GLOBAL VARIABLES
 const visVars = {
     bgOpacity: 0,
-    scriptTextRun: false,
+    run: false,
+    testCard: false,
+    resetPixels: false,
 }
 let cnv, maxIdx
 let vidIn
@@ -72,7 +77,7 @@ let loLoRes, hiLoRes, baseLoRes, dynLoRes
 let motionThresh
 let loThresh, hiThresh, baseThresh, dynThresh
 let lineSpeed
-let scriptText
+let scriptText, testCard
 
 // TARGET HTML ELEMENTS
 const fr = document.getElementById('fr')
@@ -86,12 +91,13 @@ const canvasContainer = document.getElementById('canvasContainer')
 // CONTROLLER / VISUALISER COMMUNICATION
 const channel = new BroadcastChannel('vis-comms')
 channel.addEventListener('message', (e) => {
-    // console.log(e.data)
+    if (!isLooping())
+        loop()
     if (e.data.changeTrack) {
         channel.postMessage({
             visTransition: true
         })
-        asciiVis.init(context, asciiart_width, asciiart_height)
+        // asciiVis.init(context, asciiart_width, asciiart_height)
         if (currTrack !== e.data.setItem)
             currTrack = e.data.setItem
         if (visTitle.style.opacity != 0) {
@@ -119,7 +125,7 @@ channel.addEventListener('message', (e) => {
     if (e.data.visFadeOut)
         canvasContainer.style.opacity = 0
     if ('toggleScriptText' in e.data)
-        visVars.scriptTextRun = e.data.toggleScriptText
+        visVars.run = e.data.toggleScriptText
     if (e.data.threshBase)
         baseThresh = e.data.threshBase
     if ('threshDyn' in e.data)
@@ -139,6 +145,8 @@ channel.addEventListener('message', (e) => {
 
 // p5.js preload
 window.preload = function() {
+    testCard = new TestCard()
+    testCard.init()
     scriptText = loadStrings('./assets/scriptText/TWBB.txt', ()=>{console.log('text loaded')}, ()=>{console.log('error loading text')});
     scriptFont = loadFont('./assets/fonts/CourierPrime-Regular.ttf')
 }
@@ -196,6 +204,7 @@ window.setup = function() {
 
     // set up gradReveal object
     gradRevealVis = new GradReveal()
+    gradRevealVis.init()
 
     frameRate(24)
     maxIdx = cnv.width * cnv.height * 4
@@ -206,42 +215,55 @@ window.setup = function() {
     vigMaskImage.loadPixels()
     vigMaskImage.pixels = vigMask
     vigMaskImage.updatePixels()
+
+    // start on noloop
+    // if (visVars.testCard)
+    //     noLoop()
+    visVars.bgOpacity = 0
 }
 
 
 // p5.js draw loop
 window.draw = function() {
+    if (visVars.resetPixels) {
+        loadPixels()
+        for (const i in pixels)
+            pixels[i] = 0
+        updatePixels()
+        visVars.resetPixels = false
+    }
     fr.innerText = parseInt(frameRate())
-    const currSin = Math.sin(frameCount)
+    info.innerText = visVars.bgOpacity
     background(0, 0, 0, visVars.bgOpacity)
-    
-    if (activeVis.showFullScript && visVars.scriptTextRun && frameCount % int(frameRate()/4) === 0)
+
+    if (visVars.testCard) {
+        return testCard.draw()
+    }
+    if (activeVis.showFullScript && visVars.run && frameCount % int(frameRate()/4) === 0)
         return scriptVis.draw(scriptText, 40)
     
     if (activeVis.showHalfScript) {
         vidThruHalf(vidIn)
-        if (visVars.scriptTextRun && frameCount % int(frameRate()/4) === 0)
+        if (visVars.run && frameCount % int(frameRate()/4) === 0)
         return scriptVis.draw(scriptText, 40)
     }
-    
     if (activeVis.showVidThru)
         return vidThru(vidIn)
     
+    // return vidThruPoster(vidIn)
     if (activeVis.showVidThruPoster)
         return vidThruPoster(vidIn)
     
     if (activeVis.showVidThruHalf)
         return vidThruHalf(vidIn)
     
-    // resetActiveVis(activeVis)
-    // if (currTrack < 0 || frameCount > 600)
-    //     activeVis.showAscii = true
     vidIn.loadPixels()
+
     if (activeVis.showAscii)
         return asciiVis.draw(vidIn)
     
     if (activeVis.showPreRandomBoxes)
-        randomBoxes()
+        randomBoxes(visVars.run)
     
     loadPixels()
 
@@ -301,7 +323,7 @@ window.draw = function() {
             let r, g, b
             
             let [iR, iG, iB] = getPixelValues(pixIdx, vidIn.pixels)
-
+             
             if (activeVis.showThreshold)
                 threshold(pixIdx, iR, iG, iB, thresh, pixels)
             
@@ -311,34 +333,28 @@ window.draw = function() {
             
             if (activeVis.showBitwise1)
                 bitwise1(pixIdx, iR, iG, iB, thresh, pixels)
+
             if (activeVis.showBitwise2)
                 bitwise2(pixIdx, iR, iG, iB, thresh, pixels)
+
             if (activeVis.showPixThru)
                 pixThru(pixIdx, iR, iG, iB, pixels)
             
             if (activeVis.showSpec)
                 specLoading(pixIdx, iR, iG, iB, thresh, maxIdx, pixels)
-            
-            if (activeVis.showVignette)
-                vignette(pixIdx, vigMask, pixels)
 
             if (activeVis.showGradReveal)
                 gradRevealVis.draw(pixIdx, iR, iG, iB, pixels)
-            // if (pixels[pixIdx + 3] > 30) {
-            //     pixels[pixIdx + 0] = iR
-            //     pixels[pixIdx + 1] = iG
-            //     pixels[pixIdx + 2] = iB
-            //     pixels[pixIdx + 3] = pixels[pixIdx + 3] << 1
-            // }
+            
+            if (activeVis.showVignette)
+                vignette(pixIdx, vigMask, pixels)
+            
         }
     }
     updatePixels()
-    // background(0, 0, 0, 5)
-    // activeVis.showPostRandomBoxes = true
-    // info.innerText = visVars.bgOpacity
 
     if (activeVis.showPostRandomBoxes)
-        randomBoxes()
+        randomBoxes(visVars.run)
 }
 
 window.keyPressed = function(e) {
@@ -359,11 +375,16 @@ const displayTrackTitle = function(id) {
 }
 
 const updateVis = function(e) {
-    console.log('IN updateVis')
     channel.postMessage({
         visTransition: false
     })
+    if (visVars.testCard)
+        visVars.testCard = false
+    console.log('before:', activeVis)
     resetActiveVis(activeVis)
+    console.log('after:', activeVis)
     prepareVis(currTrack, activeVis, scriptVis, scriptText, visVars, asciiVis)
+    // clear pixel array
+    visVars.resetPixels = true
     e.data.setItem = -1
 }

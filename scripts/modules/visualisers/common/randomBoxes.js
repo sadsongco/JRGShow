@@ -1,4 +1,6 @@
-const randomBoxes = function() {
+const randomBoxes = function(run) {
+    if (!run)
+        return
     noStroke()
     fill(random(0, 255), random(0, 255), random(0, 255), random(0, 100))
     const x = random(30, width-30)

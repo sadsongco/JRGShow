@@ -3,7 +3,6 @@ const prepareVis = function(setItem, activeVis, scriptVis, scriptText, visVars, 
     console.log('prepareVis')
     switch(parseInt(setItem)) {
         case 0:
-            background(0)
             visVars.bgOpacity = 255
             activeVis.showAscii = true
             break
@@ -21,17 +20,18 @@ const prepareVis = function(setItem, activeVis, scriptVis, scriptText, visVars, 
             break
 
         case 3:
-            background(0)
-            visVars.scriptTextRun = false
+            // background(0)
+            visVars.run = false
             visVars.bgOpacity = 5
             activeVis['showHalfScript'] = true
             scriptVis.init(scriptText, 80, 590, 28, 22)
             break
 
         case 4:
-            background(0, 0, 0, 0)
-            visVars.bgOpacity = 0.5
-            activeVis['showRandomPreBoxes'] = true
+            // background(0, 0, 0, 255)
+            // background(0, 0, 0, 0)
+            visVars.bgOpacity = 0
+            activeVis['showPreRandomBoxes'] = true
             activeVis['showGradReveal'] = true
             break
 
@@ -42,6 +42,7 @@ const prepareVis = function(setItem, activeVis, scriptVis, scriptText, visVars, 
             break
             
         case 6:
+            // background(0)
             visVars.bgOpacity = 255
             activeVis.showBitwise1 = true
             break
@@ -78,6 +79,7 @@ const prepareVis = function(setItem, activeVis, scriptVis, scriptText, visVars, 
             break
         
         case 13:
+            visVars.bgOpacity = 5
             activeVis.showLoRes = true
             activeVis.showLines = true
             break

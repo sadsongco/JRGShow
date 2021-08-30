@@ -2,7 +2,7 @@
 import { setlist } from './modules/parameters/setlist.js'
 
 // BUILD CONTROLS
-import { threshBase, threshBaseVal, threshDynVal, threshDyn, threshDynMin, threshDynMinVal, threshDinMax, threshDinMaxVal } from './modules/controls/threshControls.js'
+import { threshBase, threshBaseVal, threshDynVal, threshDyn } from './modules/controls/threshControls.js'
 
 // LOAD UTILITIES
 import keyEvent from './modules/util/controlKeyEvents.js'
@@ -11,7 +11,7 @@ import processVisMessage from './modules/util/processVisMessage.js'
 let currSetId = -1
 let currSetState = 0
 let currVisState = 0
-let scriptTextRun = false
+let run = false
 
 window.name = 'visControl'
 
@@ -20,8 +20,8 @@ window.onload = function () {
 }
 
 const setlistContainer = document.getElementById('setListContainer')
-const scriptTextRunEl = document.getElementById('scriptTextRunning')
-scriptTextRunEl.innerText = "Script Text Stopped"
+const runEl = document.getElementById('visRunning')
+runEl.innerText = "Visualiser Stopped"
 
 for (let setlistNo in setlist) {
     const newEl = document.createElement('div')
@@ -53,10 +53,10 @@ const channel = new BroadcastChannel('vis-comms')
 channel.addEventListener('message', (e)=> processVisMessage(e))
 
 document.addEventListener('keydown', (e)=>{
-    [currSetState, currVisState, scriptTextRun] = keyEvent(e, currVisState, currSetState, currSetId, scriptTextRun)
-    if (scriptTextRun)
-        scriptTextRunEl.innerText = "Script Text Running [arrow left]"
+    [currSetState, currVisState, run] = keyEvent(e, currVisState, currSetState, currSetId, run)
+    if (run)
+        runEl.innerText = "Visualiser Running [arrow left]"
     else
-        scriptTextRunEl.innerText = "Script Text Stopped [arrow left]"
+        runEl.innerText = "Visualiser Stopped [arrow left]"
 }, true)
 
