@@ -11,6 +11,8 @@ import processVisMessage from './modules/util/processVisMessage.js'
 let currSetId = -1
 let currSetState = 0
 let currVisState = 0
+let currSourceState = 0
+let currFeatState = 0
 let run = false
 
 window.name = 'visControl'
@@ -23,12 +25,13 @@ const setlistContainer = document.getElementById('setListContainer')
 const runEl = document.getElementById('visRunning')
 runEl.innerText = "Visualiser Stopped"
 
-for (let setlistNo in setlist) {
+for (let id in setlist) {
+    const setlistItem = setlist[id]
     const newEl = document.createElement('div')
-    newEl.id = setlistNo
+    newEl.id = id
     newEl.classList.add('setlistItem')
     newEl.addEventListener('click', (e)=>launchSetlistItem(e))
-    const newContent = document.createTextNode((parseInt(setlistNo) + 1) + ' - ' + setlist[setlistNo])
+    const newContent = document.createTextNode((parseInt(setlistItem.id) + 1) + ' - ' + setlistItem.title)
     newEl.appendChild(newContent)
     setlistContainer.appendChild(newEl)
 }
@@ -53,7 +56,7 @@ const channel = new BroadcastChannel('vis-comms')
 channel.addEventListener('message', (e)=> processVisMessage(e))
 
 document.addEventListener('keydown', (e)=>{
-    [currSetState, currVisState, run] = keyEvent(e, currVisState, currSetState, currSetId, run)
+    [currSetState, currSourceState, currFeatState, currVisState, run] = keyEvent(e, currVisState, currSetState, currSourceState, currFeatState, currSetId, run)
     if (run)
         runEl.innerText = "Visualiser Running [arrow left]"
     else

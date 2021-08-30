@@ -1,5 +1,5 @@
-const randomBoxes = function(run) {
-    if (!run)
+const randomBoxes = function(run, rand) {
+    if (!run || rand)
         return
     noStroke()
     fill(random(0, 255), random(0, 255), random(0, 255), random(0, 100))

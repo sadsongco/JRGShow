@@ -12,8 +12,31 @@
 
 #visTitle {
   position: absolute;
+  top: 5vh;
   width: 100vw;
   font-size: 80px;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 3s ease-in-out;
+  z-index: 2;
+}
+
+#visSource {
+  position: absolute;
+  top: 28vh;
+  width: 100vw;
+  font-size: 60px;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 3s ease-in-out;
+  z-index: 2;
+}
+
+#visFeat {
+  position: absolute;
+  top: 60vh;
+  width: 100vw;
+  font-size: 60px;
   text-align: center;
   opacity: 0;
   transition: opacity 3s ease-in-out;

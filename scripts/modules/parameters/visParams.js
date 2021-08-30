@@ -17,6 +17,7 @@ export let activeVis = {
     showEdge: false,
     showBitwise1: false,
     showBitwise2: false,
+    showBitwiseBrighten: false,
     showSpec: false,
     showVignette: false,
     showFullScript: false,

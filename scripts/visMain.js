@@ -51,8 +51,10 @@ import vignette         from './modules/visualisers/common/vignette.js'
 const visVars = {
     bgOpacity: 0,
     run: false,
-    testCard: false,
+    testCard: true,
     resetPixels: false,
+    brighten: 1,
+    bw: false,
 }
 let cnv, maxIdx
 let vidIn
@@ -64,12 +66,6 @@ let scriptFont
 let scriptVis, gradRevealVis
 let currTrack
 
-// VISUALISER FLAGS
-
-
-// BACKGROUND FLAGS AND VARIABLES
-// let bgs = []
-    
 // VISUALISER ADJUSTABLE VARIABLES
 let procSpeed
 let loResStep, loResHalfStep
@@ -78,15 +74,16 @@ let motionThresh
 let loThresh, hiThresh, baseThresh, dynThresh
 let lineSpeed
 let scriptText, testCard
+let randy = []
 
 // TARGET HTML ELEMENTS
-const fr = document.getElementById('fr')
-const info = document.getElementById('info')
-const setStatus = document.getElementById('setStatus')
+// const fr = document.getElementById('fr')
+// const info = document.getElementById('info')
+// const setStatus = document.getElementById('setStatus')
 const visTitle = document.getElementById('visTitle')
+const visSource = document.getElementById('visSource')
+const visFeat = document.getElementById('visFeat')
 const canvasContainer = document.getElementById('canvasContainer')
-
-// let scriptLines
 
 // CONTROLLER / VISUALISER COMMUNICATION
 const channel = new BroadcastChannel('vis-comms')
@@ -97,15 +94,22 @@ channel.addEventListener('message', (e) => {
         channel.postMessage({
             visTransition: true
         })
-        // asciiVis.init(context, asciiart_width, asciiart_height)
-        if (currTrack !== e.data.setItem)
-            currTrack = e.data.setItem
+        if (currTrack.id !== e.data.setItem)
+            currTrack.id = e.data.setItem
         if (visTitle.style.opacity != 0) {
             visTitle.style.opacity = 0
-            visTitle.ontransitionend = () => displayTrackTitle(currTrack)
+            visSource.style.opacity = 0
+            visFeat.style.opacity = 0
+            visTitle.ontransitionend = () => {
+                displayTrackTitle(currTrack.id)
+                displayTrackSource(currTrack.id)
+                displayTrackFeat(currTrack.id)
+            }
         } else {
-            displayTrackTitle(currTrack)
-        }
+            displayTrackTitle(currTrack.id)
+            displayTrackSource(currTrack.id)
+            displayTrackFeat(currTrack.id)
+    }
         if (canvasContainer.style.opacity != 0) {
             canvasContainer.style.opacity = 0
             canvasContainer.ontransitionend = () => {
@@ -115,11 +119,20 @@ channel.addEventListener('message', (e) => {
         } else {
             updateVis(e)
         }
+        return
     }
     if (e.data.setItemFadeIn)
         visTitle.style.opacity = 1
     if (e.data.setItemFadeOut)
         visTitle.style.opacity = 0
+    if (e.data.setSourceFadeIn) 
+        visSource.style.opacity = 1
+    if (e.data.setSourceFadeOut)
+        visSource.style.opacity = 0
+    if (e.data.setFeatFadeIn)
+        visFeat.style.opacity = 1
+    if (e.data.setFeatFadeOut)
+        visFeat.style.opacity = 0
     if (e.data.visFadeIn)
         canvasContainer.style.opacity = 1
     if (e.data.visFadeOut)
@@ -158,7 +171,7 @@ window.setup = function() {
     
     // general settings
     procSpeed =             30 // higher is slower
-    currTrack =             -1
+    currTrack =             {}
     visVars.bgOpacity =     255
     
     // loRes vis settings
@@ -177,6 +190,14 @@ window.setup = function() {
     hiThresh =              190
     baseThresh =            100
     dynThresh =             false
+
+    // computationally cheap 50/50 random generator
+    for (let i = 0; i < 1000; i ++) {
+        if (random(0, 1) > 0.5)
+            randy.push(true)
+        else
+            randy.push(false)
+    }
     
     // background flags
     
@@ -217,9 +238,8 @@ window.setup = function() {
     vigMaskImage.updatePixels()
 
     // start on noloop
-    // if (visVars.testCard)
-    //     noLoop()
-    visVars.bgOpacity = 0
+    if (visVars.testCard)
+        noLoop()
 }
 
 
@@ -232,9 +252,10 @@ window.draw = function() {
         updatePixels()
         visVars.resetPixels = false
     }
-    fr.innerText = parseInt(frameRate())
-    info.innerText = visVars.bgOpacity
+    // fr.innerText = parseInt(frameRate())
+    // info.innerText = visVars.bgOpacity
     background(0, 0, 0, visVars.bgOpacity)
+    const currRandy = randy.pop()
 
     if (visVars.testCard) {
         return testCard.draw()
@@ -248,9 +269,8 @@ window.draw = function() {
         return scriptVis.draw(scriptText, 40)
     }
     if (activeVis.showVidThru)
-        return vidThru(vidIn)
+        return vidThru(vidIn, visVars.bw)
     
-    // return vidThruPoster(vidIn)
     if (activeVis.showVidThruPoster)
         return vidThruPoster(vidIn)
     
@@ -260,10 +280,10 @@ window.draw = function() {
     vidIn.loadPixels()
 
     if (activeVis.showAscii)
-        return asciiVis.draw(vidIn)
+        return asciiVis.draw(vidIn, visVars.bw)
     
     if (activeVis.showPreRandomBoxes)
-        randomBoxes(visVars.run)
+        randomBoxes(visVars.run, currRandy)
     
     loadPixels()
 
@@ -297,7 +317,7 @@ window.draw = function() {
                     vignette(pixIdx, vigMask, pixels)
                 }    
         }
-        fr.innerText = parseInt(frameRate())
+        // fr.innerText = parseInt(frameRate())
         if (activeVis.showMotion) {
             prevFrame = vidIn.pixels.slice(0);
             return updatePixels()
@@ -338,14 +358,17 @@ window.draw = function() {
                 bitwise2(pixIdx, iR, iG, iB, thresh, pixels)
 
             if (activeVis.showPixThru)
-                pixThru(pixIdx, iR, iG, iB, pixels)
+                pixThru(pixIdx, iR, iG, iB, visVars.bw, pixels)
             
             if (activeVis.showSpec)
                 specLoading(pixIdx, iR, iG, iB, thresh, maxIdx, pixels)
 
+            if (activeVis.showBitwiseBrighten)
+                bitwiseBrighten(pixIdx, iR, iG, iB, visVars.brighten, visVars.bw, pixels)
+            
             if (activeVis.showGradReveal)
                 gradRevealVis.draw(pixIdx, iR, iG, iB, pixels)
-            
+
             if (activeVis.showVignette)
                 vignette(pixIdx, vigMask, pixels)
             
@@ -354,7 +377,9 @@ window.draw = function() {
     updatePixels()
 
     if (activeVis.showPostRandomBoxes)
-        randomBoxes(visVars.run)
+        randomBoxes(visVars.run, currRandy)
+
+    randy.unshift(currRandy)
 }
 
 window.keyPressed = function(e) {
@@ -366,12 +391,25 @@ window.keyPressed = function(e) {
     else
         fullscreen(1)
     return window.open('', 'visControl')
+
 }
 
 const displayTrackTitle = function(id) {
     visTitle.innerHTML = ''
-    const setName = document.createTextNode(setlist[id])
+    const setName = document.createTextNode(setlist[id].title)
     visTitle.appendChild(setName)
+}
+
+const displayTrackSource = function(id) {
+    visSource.innerHTML = ''
+    const setName = document.createTextNode(setlist[id].source)
+    visSource.appendChild(setName)
+}
+
+const displayTrackFeat = function(id) {
+    visFeat.innerHTML = ''
+    const setName = document.createTextNode(setlist[id].feat)
+    visFeat.appendChild(setName)
 }
 
 const updateVis = function(e) {
