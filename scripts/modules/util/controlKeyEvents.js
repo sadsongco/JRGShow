@@ -39,6 +39,26 @@ const keyEvent = function(e, currVisState, currSetState, currSourceState, currFe
                 break
         }
     }
+    if (e.key == 'p' || e.key == 'o' || e.key == 'i') {
+        e.preventDefault()
+        let scoreTrig = false
+        switch(e.key) {
+            case 'p':
+                scoreTrig = 'pno'
+                break
+            case 'o':
+                scoreTrig = 'vlns'
+                break
+            case 'i':
+                scoreTrig = 'cll'
+                break
+            default:
+                return
+        }
+        channel.postMessage({
+            scoreTrig: scoreTrig
+        })
+    }
     if (e.key == 'c') { // toggle source
         e.preventDefault()
         switch(currFeatState) {

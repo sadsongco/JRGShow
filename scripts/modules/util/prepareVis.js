@@ -1,6 +1,5 @@
 const prepareVis = function(setItem, activeVis, scriptVis, scriptText, visVars, asciiVis) {
     // clear the canvas
-    console.log('prepareVis')
     switch(parseInt(setItem.id)) {
         case 0:
             // Intro
@@ -11,12 +10,13 @@ const prepareVis = function(setItem, activeVis, scriptVis, scriptText, visVars, 
             visVars.bgOpacity = 255
             visVars.bw = true
             activeVis.showPixThru = true
+            activeVis.showVignette = true
             break
 
         case 2:
             // Alma
-            visVars.bgOpacity = 5
-            visVars.showBitwise2 = true
+            visVars.bgOpacity = 7
+            activeVis.showScore = true
             break
 
         case 3:   
@@ -70,6 +70,7 @@ const prepareVis = function(setItem, activeVis, scriptVis, scriptText, visVars, 
             visVars.bgOpacity = 255
             visVars.bw = false
             activeVis.showPixThru = true
+            activeVis.showVignette = true
             break
 
         case 11:
@@ -110,13 +111,10 @@ const prepareVis = function(setItem, activeVis, scriptVis, scriptText, visVars, 
             // Electric Counterpoint III
             visVars.bgOpacity = 255
             activeVis.showBitwiseBrighten = true
-            activeVis.showVignette = true
             break
         case 17:
-            // 88
-            visVars.bgOpacity = 255
-            visVars.bw = true
-            activeVis.showBitwiseBrighten = true
+            // outro
+            break
         
         default:
             break

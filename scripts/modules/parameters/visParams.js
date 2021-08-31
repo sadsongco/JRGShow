@@ -19,10 +19,11 @@ export let activeVis = {
     showBitwise2: false,
     showBitwiseBrighten: false,
     showSpec: false,
+    showGradReveal: false,
     showVignette: false,
     showFullScript: false,
     showHalfScript: false,
-    showGradReveal: false,
+    showScore: false,
 }
 
 export default null

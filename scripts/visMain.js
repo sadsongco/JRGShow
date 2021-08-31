@@ -25,6 +25,7 @@ import pixThru          from './modules/visualisers/straightVideo/pixThru.js'
 // text
 import Ascii            from './modules/visualisers/text/ascii.js'
 import ScriptTextFull   from './modules/visualisers/text/scriptText.js'
+import Score            from './modules/visualisers/text/score.js'
 
 // lo res
 import circles          from './modules/visualisers/loRes/circles.js'
@@ -64,7 +65,9 @@ let vigMask, vigMaskImage
 let asciiart_width, asciiart_height, asciiCof
 let scriptFont
 let scriptVis, gradRevealVis
+let scoreVis
 let currTrack
+let vignetteImage
 
 // VISUALISER ADJUSTABLE VARIABLES
 let procSpeed
@@ -74,6 +77,7 @@ let motionThresh
 let loThresh, hiThresh, baseThresh, dynThresh
 let lineSpeed
 let scriptText, testCard
+let scoreTrig = false
 let randy = []
 
 // TARGET HTML ELEMENTS
@@ -88,15 +92,21 @@ const canvasContainer = document.getElementById('canvasContainer')
 // CONTROLLER / VISUALISER COMMUNICATION
 const channel = new BroadcastChannel('vis-comms')
 channel.addEventListener('message', (e) => {
-    if (!isLooping())
-        loop()
+    console.log(e.data)
     if (e.data.changeTrack) {
+        // if this is our first track change from the test card,
+        // make sure we're looping 
+        if (!isLooping())
+            loop()
         channel.postMessage({
             visTransition: true
         })
         if (currTrack.id !== e.data.setItem)
             currTrack.id = e.data.setItem
-        if (visTitle.style.opacity != 0) {
+        if (visTitle.style.opacity != 0
+            || visSource.style.opacity != 0
+            || visFeat.style.opacity != 0
+            ) {
             visTitle.style.opacity = 0
             visSource.style.opacity = 0
             visFeat.style.opacity = 0
@@ -105,11 +115,22 @@ channel.addEventListener('message', (e) => {
                 displayTrackSource(currTrack.id)
                 displayTrackFeat(currTrack.id)
             }
+            visSource.ontransitionend = () => {
+                displayTrackTitle(currTrack.id)
+                displayTrackSource(currTrack.id)
+                displayTrackFeat(currTrack.id)
+            }
+            visFeat.ontransitionend = () => {
+                displayTrackTitle(currTrack.id)
+                displayTrackSource(currTrack.id)
+                displayTrackFeat(currTrack.id)
+            }
         } else {
+
             displayTrackTitle(currTrack.id)
             displayTrackSource(currTrack.id)
             displayTrackFeat(currTrack.id)
-    }
+        }
         if (canvasContainer.style.opacity != 0) {
             canvasContainer.style.opacity = 0
             canvasContainer.ontransitionend = () => {
@@ -125,16 +146,17 @@ channel.addEventListener('message', (e) => {
         visTitle.style.opacity = 1
     if (e.data.setItemFadeOut)
         visTitle.style.opacity = 0
-    if (e.data.setSourceFadeIn) 
+    if (e.data.setSourceFadeIn && visSource.innerHTML != '') 
         visSource.style.opacity = 1
     if (e.data.setSourceFadeOut)
         visSource.style.opacity = 0
-    if (e.data.setFeatFadeIn)
+    if (e.data.setFeatFadeIn && visFeat.innerHTML != '')
         visFeat.style.opacity = 1
     if (e.data.setFeatFadeOut)
         visFeat.style.opacity = 0
-    if (e.data.visFadeIn)
+    if (e.data.visFadeIn) {
         canvasContainer.style.opacity = 1
+    }
     if (e.data.visFadeOut)
         canvasContainer.style.opacity = 0
     if ('toggleScriptText' in e.data)
@@ -143,16 +165,18 @@ channel.addEventListener('message', (e) => {
         baseThresh = e.data.threshBase
     if ('threshDyn' in e.data)
         dynThresh = e.data.threshDyn
-    if (e.data.threshDynMin) {
-        loThresh = e.data.threshDynMin
-        loResStep = Math.floor(map(sin(frameCount/procSpeed), -1, 1, loLoRes, hiLoRes))
-        loResHalfStep = Math.floor(loResStep / 2)
-    }
-    if (e.data.threshDynMax) {
-        hiThresh = e.data.threshDynMax
-        loResStep = Math.floor(map(sin(frameCount/procSpeed), -1, 1, loLoRes, hiLoRes))
-        loResHalfStep = Math.floor(loResStep / 2)
-    }
+    if ('scoreTrig' in e.data)
+        scoreTrig = e.data.scoreTrig
+    // if (e.data.threshDynMin) {
+    //     loThresh = e.data.threshDynMin
+    //     loResStep = Math.floor(map(sin(frameCount/procSpeed), -1, 1, loLoRes, hiLoRes))
+    //     loResHalfStep = Math.floor(loResStep / 2)
+    // }
+    // if (e.data.threshDynMax) {
+    //     hiThresh = e.data.threshDynMax
+    //     loResStep = Math.floor(map(sin(frameCount/procSpeed), -1, 1, loLoRes, hiLoRes))
+    //     loResHalfStep = Math.floor(loResStep / 2)
+    // }
     window.open('', 'visControl')
 })
 
@@ -162,6 +186,10 @@ window.preload = function() {
     testCard.init()
     scriptText = loadStrings('./assets/scriptText/TWBB.txt', ()=>{console.log('text loaded')}, ()=>{console.log('error loading text')});
     scriptFont = loadFont('./assets/fonts/CourierPrime-Regular.ttf')
+    scoreVis = new Score()
+    scoreVis.init()
+    // image for vignette
+    vignetteImage = loadImage('./assets/images/common/vignette.png')
 }
 
 
@@ -198,7 +226,7 @@ window.setup = function() {
         else
             randy.push(false)
     }
-    
+
     // background flags
     
     pixelDensity(1)
@@ -269,7 +297,7 @@ window.draw = function() {
         return scriptVis.draw(scriptText, 40)
     }
     if (activeVis.showVidThru)
-        return vidThru(vidIn, visVars.bw)
+        return vidThru(vidIn, visVars.bw, visVars.vignette, vignetteImage)
     
     if (activeVis.showVidThruPoster)
         return vidThruPoster(vidIn)
@@ -277,6 +305,12 @@ window.draw = function() {
     if (activeVis.showVidThruHalf)
         return vidThruHalf(vidIn)
     
+    // activeVis.showScore = true
+    if (activeVis.showScore) {
+        scoreVis.draw(scoreTrig)
+        return scoreTrig = false
+    }
+
     vidIn.loadPixels()
 
     if (activeVis.showAscii)
@@ -369,6 +403,7 @@ window.draw = function() {
             if (activeVis.showGradReveal)
                 gradRevealVis.draw(pixIdx, iR, iG, iB, pixels)
 
+
             if (activeVis.showVignette)
                 vignette(pixIdx, vigMask, pixels)
             
@@ -388,10 +423,7 @@ window.keyPressed = function(e) {
         fullscreen(1)
     else if (key === 'escape')
         fullscreen(0)
-    else
-        fullscreen(1)
-    return window.open('', 'visControl')
-
+    // return window.open('', 'visControl')
 }
 
 const displayTrackTitle = function(id) {
@@ -418,9 +450,7 @@ const updateVis = function(e) {
     })
     if (visVars.testCard)
         visVars.testCard = false
-    console.log('before:', activeVis)
     resetActiveVis(activeVis)
-    console.log('after:', activeVis)
     prepareVis(currTrack, activeVis, scriptVis, scriptText, visVars, asciiVis)
     // clear pixel array
     visVars.resetPixels = true
