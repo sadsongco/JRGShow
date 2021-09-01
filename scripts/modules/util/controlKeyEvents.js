@@ -39,26 +39,6 @@ const keyEvent = function(e, currVisState, currSetState, currSourceState, currFe
                 break
         }
     }
-    if (e.key == 'p' || e.key == 'o' || e.key == 'i') {
-        e.preventDefault()
-        let scoreTrig = false
-        switch(e.key) {
-            case 'p':
-                scoreTrig = 'pno'
-                break
-            case 'o':
-                scoreTrig = 'vlns'
-                break
-            case 'i':
-                scoreTrig = 'cll'
-                break
-            default:
-                return
-        }
-        channel.postMessage({
-            scoreTrig: scoreTrig
-        })
-    }
     if (e.key == 'c') { // toggle source
         e.preventDefault()
         switch(currFeatState) {
@@ -69,16 +49,45 @@ const keyEvent = function(e, currVisState, currSetState, currSourceState, currFe
                 })
                 currFeatState ++
                 break
-            case 1:
-                channel.postMessage({
-                    setFeatFadeOut: true,
-                    setItem: currSetId
-                })
-                currFeatState = 0
-                break
+                case 1:
+                    channel.postMessage({
+                        setFeatFadeOut: true,
+                        setItem: currSetId
+                    })
+                    currFeatState = 0
+                    break
+                }
+            }
+        if (e.key == 'p' || e.key == 'o' || e.key == 'i' || e.key == 'u') {
+            e.preventDefault()
+            let scoreTrig = false
+            switch(e.key) {
+                case 'p':
+                    scoreTrig = 'pno'
+                    break
+                case 'o':
+                    scoreTrig = 'vlns'
+                    break
+                case 'i':
+                    scoreTrig = 'cll'
+                    break
+                case 'u':
+                    scoreTrig = 'full'
+                    break
+                default:
+                    return
+            }
+            channel.postMessage({
+                scoreTrig: scoreTrig
+            })
         }
-    }
-    if (e.key == 'ArrowRight') { // toggle vis
+        if (e.key == 'y') {
+            e.preventDefault()
+            channel.postMessage({
+                yellowTrig: true
+            })
+        }
+        if (e.key == 'ArrowRight') { // toggle vis
         e.preventDefault()
         switch(currVisState) {
             case 0:

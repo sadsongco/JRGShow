@@ -24,6 +24,7 @@ export let activeVis = {
     showFullScript: false,
     showHalfScript: false,
     showScore: false,
+    showDetuned: false,
 }
 
 export default null

@@ -26,6 +26,7 @@ import pixThru          from './modules/visualisers/straightVideo/pixThru.js'
 import Ascii            from './modules/visualisers/text/ascii.js'
 import ScriptTextFull   from './modules/visualisers/text/scriptText.js'
 import Score            from './modules/visualisers/text/score.js'
+import DetunedQuintet   from './modules/visualisers/text/detunedQuintet.js'
 
 // lo res
 import circles          from './modules/visualisers/loRes/circles.js'
@@ -66,6 +67,7 @@ let asciiart_width, asciiart_height, asciiCof
 let scriptFont
 let scriptVis, gradRevealVis
 let scoreVis
+let detunedVis
 let currTrack
 let vignetteImage
 
@@ -78,6 +80,7 @@ let loThresh, hiThresh, baseThresh, dynThresh
 let lineSpeed
 let scriptText, testCard
 let scoreTrig = false
+let yellowTrig = false
 let randy = []
 
 // TARGET HTML ELEMENTS
@@ -92,7 +95,7 @@ const canvasContainer = document.getElementById('canvasContainer')
 // CONTROLLER / VISUALISER COMMUNICATION
 const channel = new BroadcastChannel('vis-comms')
 channel.addEventListener('message', (e) => {
-    console.log(e.data)
+    // console.log(e.data)
     if (e.data.changeTrack) {
         // if this is our first track change from the test card,
         // make sure we're looping 
@@ -167,6 +170,8 @@ channel.addEventListener('message', (e) => {
         dynThresh = e.data.threshDyn
     if ('scoreTrig' in e.data)
         scoreTrig = e.data.scoreTrig
+    if (e.data.yellowTrig)
+        yellowTrig = e.data.yellowTrig
     // if (e.data.threshDynMin) {
     //     loThresh = e.data.threshDynMin
     //     loResStep = Math.floor(map(sin(frameCount/procSpeed), -1, 1, loLoRes, hiLoRes))
@@ -188,6 +193,8 @@ window.preload = function() {
     scriptFont = loadFont('./assets/fonts/CourierPrime-Regular.ttf')
     scoreVis = new Score()
     scoreVis.init()
+    detunedVis = new DetunedQuintet
+    detunedVis.init()
     // image for vignette
     vignetteImage = loadImage('./assets/images/common/vignette.png')
 }
@@ -311,6 +318,10 @@ window.draw = function() {
         return scoreTrig = false
     }
 
+    if (activeVis.showDetuned) {
+        detunedVis.drawBG(yellowTrig)
+    }
+
     vidIn.loadPixels()
 
     if (activeVis.showAscii)
@@ -403,13 +414,16 @@ window.draw = function() {
             if (activeVis.showGradReveal)
                 gradRevealVis.draw(pixIdx, iR, iG, iB, pixels)
 
-
+            if (activeVis.showDetuned)
+                detunedVis.draw(pixIdx, iR, iG, iB, pixels)
+            
             if (activeVis.showVignette)
                 vignette(pixIdx, vigMask, pixels)
             
         }
     }
     updatePixels()
+    yellowTrig = false
 
     if (activeVis.showPostRandomBoxes)
         randomBoxes(visVars.run, currRandy)

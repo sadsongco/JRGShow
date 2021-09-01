@@ -1,5 +1,6 @@
 const prepareVis = function(setItem, activeVis, scriptVis, scriptText, visVars, asciiVis) {
     // clear the canvas
+    // console.log(setItem.id)
     switch(parseInt(setItem.id)) {
         case 0:
             // Intro
@@ -63,6 +64,7 @@ const prepareVis = function(setItem, activeVis, scriptVis, scriptText, visVars, 
         
         case 9:
             // Detuned Quartet
+            activeVis.showDetuned = true
             break;
 
         case 10:
@@ -88,7 +90,7 @@ const prepareVis = function(setItem, activeVis, scriptVis, scriptText, visVars, 
         case 13:
             // Vocalise
             visVars.bgOpacity = 255
-            activeVis.showVidThruPoster = true
+            activeVis.showAscii = true
             break
         
 
@@ -115,7 +117,18 @@ const prepareVis = function(setItem, activeVis, scriptVis, scriptText, visVars, 
         case 17:
             // outro
             break
-        
+        case 18:
+            // de-tuned into
+            break
+        case 19:
+            // de-tuned outro
+            break
+        case 20:
+            // Shostakovich
+            break
+        case 21:
+            // Berio duet
+            break
         default:
             break
     }

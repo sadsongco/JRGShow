@@ -28,7 +28,7 @@ runEl.innerText = "Visualiser Stopped"
 for (let id in setlist) {
     const setlistItem = setlist[id]
     const newEl = document.createElement('div')
-    newEl.id = id
+    newEl.id = setlist[id].id
     newEl.classList.add('setlistItem')
     newEl.addEventListener('click', (e)=>launchSetlistItem(e))
     const newContent = document.createTextNode((parseInt(setlistItem.id) + 1) + ' - ' + setlistItem.title)

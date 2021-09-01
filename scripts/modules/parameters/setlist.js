@@ -23,52 +23,46 @@ export const setlist = [
         feat: "We will be playing a selection of tunes from film scores and by other composers. Let's all hope Slayer don't make a sudden guest appearance on the main stage. Ready? Then let's play some music."
     },
     {
-        title: "House of Woodcock",
-        id: 1,
-        source: "Phantom Thread",
+        title: "For The Hungry Boy",
+        id: 10,
+        source: "from Phantom Thread (2017)",
         feat: ""
-    },
-    {
-        title: "Alma",
-        id: 2,
-        source: "Phantom Thread",
-        feat: ""
-    },
-    {
-        title: "Three Miniatures From Water",
-        id: 3,
-        source: "",
-        feat: "Eloisa-Fleur	Thom - Violin"
     },
     {
         title: "Prospectors Arrive",
         id: 4,
-        source: "There Will Be Blood",
-        feat: ""
-    },
-    {
-        title: "Future Markets",
-        id: 5,
-        source: "There Will Be Blood",
+        source: "from There Will Be Blood (2007)",
         feat: ""
     },
     {
         title: "88",
         id: 6,
-        source: "",
+        source: "(2015)",
         feat: "Katherine Tinker - Piano"
     },
     {
-        title: "Sweetness Of Freddie",
-        id: 7,
-        source: "The Master",
-
+        title: "Alma",
+        id: 2,
+        source: "from Phantom Thread (2017)",
+        feat: ""
     },
     {
-        title: "Prospector's Quartet",
-        id: 8,
-        source: "There Will Be Blood",
+        title: "String Quartet no. 8 - Allegro Molto",
+        id : 20,
+        source: "Shostakovich (12 - 14 July, 1960)",
         feat: ""
+    },
+    {
+        title: "Three Miniatures From Water",
+        id: 3,
+        source: "(2018)",
+        feat: "Eloisa-Fleur	Thom - Violin"
+    },
+    {
+        title: "De-tuned intro",
+        id: 18,
+        source: "de-tuned text 1",
+        feat: "de-tuned text 2"
     },
     {
         title: "Detuned Quartet",
@@ -77,10 +71,10 @@ export const setlist = [
         feat: ""
     },
     {
-        title: "For The Hungry Boy",
-        id: 10,
-        source: "Phantom Thread",
-        feat: ""
+        title: "De-tuned outro",
+        id: 19,
+        source: "de-tuned text 1",
+        feat: "de-tuned text 2"
     },
     {
         title: "Sandalwood",
@@ -95,28 +89,52 @@ export const setlist = [
         feat: ""
     },
     {
+        title: "Prospector's Quartet",
+        id: 8,
+        source: "There Will Be Blood",
+        feat: ""
+    },
+    {
         title: "Vocalise",
         id: 13,
-        source: "Olivier Messiaen",
+        source: "by Olivier Messiaen (1935)",
         feat: "Jonny Greenwood - Ondes Martenot"
+    },
+    {
+        title: "Violin Duet",
+        id : 21,
+        source: "Berio (1979 - 1983)",
+        feat: ""
     },
     {
         title: "Electric Counterpoint I",
         id: 14,
-        source: "Steve Reich",
+        source: "by Steve Reich (1987)",
         feat: "Jonny Greenwood - Guitar"
     },
     {
-        title: "Electric Counterpoint II - Electric Boogaloo",
+        title: "Electric Counterpoint II",
         id: 15,
-        source: "Steve Reich",
+        source: "Steve Reich (1987)",
         feat: "Jonny Greenwood - Guitar"
     },
     {
         title: "Electric Counterpoint III",
         id: 16,
-        source: "Steve Reich",
+        source: "Steve Reich (1987)",
         feat: "Jonny Greenwood - Guitar"
+    },
+    {
+        title: "Future Markets",
+        id: 5,
+        source: "There Will Be Blood",
+        feat: ""
+    },
+    {
+        title: "House of Woodcock",
+        id: 1,
+        source: "from Phantom Thread (2017)",
+        feat: ""
     },
     {
         title: "Thank you for watching us. It was an honour to play for you.",
