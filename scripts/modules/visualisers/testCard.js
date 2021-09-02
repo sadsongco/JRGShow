@@ -4,7 +4,7 @@ const TestCard = function() {
 
     this.init = function() {
         testImage = loadImage(
-            './assets/images/test/testpattern.png',
+            './assets/images/test/testpattern.jpg',
             ()=>console.log('testpattern loaded'),
             ()=>console.log('testpattern loading failed')
         )

@@ -25,13 +25,13 @@ const setlistContainer = document.getElementById('setListContainer')
 const runEl = document.getElementById('visRunning')
 runEl.innerText = "Visualiser Stopped"
 
-for (let id in setlist) {
-    const setlistItem = setlist[id]
+for (let index in setlist) {
+    const setlistItem = setlist[index]
     const newEl = document.createElement('div')
-    newEl.id = setlist[id].id
+    newEl.id = index
     newEl.classList.add('setlistItem')
     newEl.addEventListener('click', (e)=>launchSetlistItem(e))
-    const newContent = document.createTextNode((parseInt(setlistItem.id) + 1) + ' - ' + setlistItem.title)
+    const newContent = document.createTextNode((parseInt(index) + 1) + ' - ' + setlistItem.title + ` (${setlistItem.id})`)
     newEl.appendChild(newContent)
     setlistContainer.appendChild(newEl)
 }

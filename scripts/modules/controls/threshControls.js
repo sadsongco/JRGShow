@@ -1,5 +1,4 @@
 const channel = new BroadcastChannel('vis-comms')
-console.log('threshControls')
 export const threshBase = document.getElementById('threshBase')
 threshBase.addEventListener('input', (e)=>{
     channel.postMessage({ threshBase: e.target.value })

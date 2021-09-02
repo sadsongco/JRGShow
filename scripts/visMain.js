@@ -8,6 +8,7 @@ import vignetteMask     from './modules/util/vignetteMask.js'
 import getPixelValues   from './modules/util/getPixelValues.js'
 import resetActiveVis   from './modules/util/resetActiveVis.js'
 import prepareVis       from './modules/util/prepareVis.js'
+import { htmlToElement }    from './modules/util/utils.js'
 // import resetPixels      from './modules/util/resetPixels.js'
 
 
@@ -104,8 +105,8 @@ channel.addEventListener('message', (e) => {
         channel.postMessage({
             visTransition: true
         })
-        if (currTrack.id !== e.data.setItem)
-            currTrack.id = e.data.setItem
+        if (currTrack !== e.data.setItem)
+            currTrack = e.data.setItem
         if (visTitle.style.opacity != 0
             || visSource.style.opacity != 0
             || visFeat.style.opacity != 0
@@ -114,25 +115,25 @@ channel.addEventListener('message', (e) => {
             visSource.style.opacity = 0
             visFeat.style.opacity = 0
             visTitle.ontransitionend = () => {
-                displayTrackTitle(currTrack.id)
-                displayTrackSource(currTrack.id)
-                displayTrackFeat(currTrack.id)
+                displayTrackTitle(currTrack)
+                displayTrackSource(currTrack)
+                displayTrackFeat(currTrack)
             }
             visSource.ontransitionend = () => {
-                displayTrackTitle(currTrack.id)
-                displayTrackSource(currTrack.id)
-                displayTrackFeat(currTrack.id)
+                displayTrackTitle(currTrack)
+                displayTrackSource(currTrack)
+                displayTrackFeat(currTrack)
             }
             visFeat.ontransitionend = () => {
-                displayTrackTitle(currTrack.id)
-                displayTrackSource(currTrack.id)
-                displayTrackFeat(currTrack.id)
+                displayTrackTitle(currTrack)
+                displayTrackSource(currTrack)
+                displayTrackFeat(currTrack)
             }
         } else {
 
-            displayTrackTitle(currTrack.id)
-            displayTrackSource(currTrack.id)
-            displayTrackFeat(currTrack.id)
+            displayTrackTitle(currTrack)
+            displayTrackSource(currTrack)
+            displayTrackFeat(currTrack)
         }
         if (canvasContainer.style.opacity != 0) {
             canvasContainer.style.opacity = 0
@@ -184,6 +185,36 @@ channel.addEventListener('message', (e) => {
     // }
     window.open('', 'visControl')
 })
+
+// helper function for capturing from specific video source
+// https://editor.p5js.org/codingtrain/sketches/JjRoa1lWO
+const devices = [];
+
+function gotDevices(deviceInfos) {
+  for (let i = 0; i !== deviceInfos.length; ++i) {
+    const deviceInfo = deviceInfos[i];
+    if (deviceInfo.kind == 'videoinput') {
+      devices.push({
+        label: deviceInfo.label,
+        id: deviceInfo.deviceId
+      });
+    }
+  }
+  console.log(devices);
+  let supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
+  console.log(supportedConstraints);
+  var constraints = {
+    video: {
+      deviceId: {
+        exact: devices[0].id
+      },
+    }
+  };
+  vidIn = createCapture(constraints, ()=>{
+    vidIn.hide()
+    vidIn.size(cnv.width, cnv.height)
+  })
+}
 
 // p5.js preload
 window.preload = function() {
@@ -242,10 +273,15 @@ window.setup = function() {
     asciiart_height = Math.floor(cnv.height / asciiCof)
     // noLoop()
     cnv.parent('canvasContainer')
-    vidIn = createCapture(VIDEO, ()=>{
-        vidIn.hide()
-        vidIn.size(cnv.width, cnv.height)
-    })
+
+    // set up camera to capture from other source
+    navigator.mediaDevices.enumerateDevices()
+    .then(gotDevices)
+    // vidIn = createCapture(VIDEO, ()=>{
+    //     vidIn.hide()
+    //     vidIn.size(cnv.width, cnv.height)
+    // })
+    // console.log(setlist)
 
     /* ****** CREATE VISUALISER OBJECTS ******* */
     
@@ -442,19 +478,22 @@ window.keyPressed = function(e) {
 
 const displayTrackTitle = function(id) {
     visTitle.innerHTML = ''
-    const setName = document.createTextNode(setlist[id].title)
+    const title = setlist[id].title.replace(/(?:\r\n|\r|\n)/g, '<br>');
+    const setName = htmlToElement(title)
     visTitle.appendChild(setName)
 }
 
 const displayTrackSource = function(id) {
     visSource.innerHTML = ''
-    const setName = document.createTextNode(setlist[id].source)
+    const source = setlist[id].source.replace(/(?:\r\n|\r|\n)/g, '<br>');
+    const setName = htmlToElement(source)
     visSource.appendChild(setName)
 }
 
 const displayTrackFeat = function(id) {
     visFeat.innerHTML = ''
-    const setName = document.createTextNode(setlist[id].feat)
+    const feat = setlist[id].feat.replace(/(?:\r\n|\r|\n)/g, '<br>');
+    const setName = htmlToElement(feat)
     visFeat.appendChild(setName)
 }
 
@@ -465,7 +504,9 @@ const updateVis = function(e) {
     if (visVars.testCard)
         visVars.testCard = false
     resetActiveVis(activeVis)
-    prepareVis(currTrack, activeVis, scriptVis, scriptText, visVars, asciiVis)
+    console.log(currTrack)
+    console.log(setlist[currTrack])
+    prepareVis(setlist[currTrack], activeVis, scriptVis, scriptText, visVars, asciiVis)
     // clear pixel array
     visVars.resetPixels = true
     e.data.setItem = -1

@@ -9,9 +9,9 @@ const prepareVis = function(setItem, activeVis, scriptVis, scriptText, visVars, 
         case 1:
             // House Of Woodcock
             visVars.bgOpacity = 255
-            visVars.bw = true
+            // visVars.bw = true
             activeVis.showPixThru = true
-            activeVis.showVignette = true
+            // activeVis.showVignette = true
             break
 
         case 2:

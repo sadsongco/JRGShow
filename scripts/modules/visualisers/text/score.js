@@ -8,9 +8,9 @@ const Score = function() {
     }
     const dirs = {
         vlns: 36,
-        cll: 16,
+        cll: 20,
         pno: 37,
-        full: 2,
+        full: 8,
     }
     const fixedOffset = {
         vlns: [-300, -200],

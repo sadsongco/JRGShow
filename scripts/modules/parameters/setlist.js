@@ -1,26 +1,9 @@
-// export const setlist = [
-//     "Electric Counterpoint",
-//     "House of Woodcock",
-//     "Alma",
-//     "Three Miniatures From Water",
-//     "Prospectors Arrive",
-//     "Future Markets",
-//     "De-Tuned Quartet",
-//     "Sweetness Of Freddie",
-//     "Prospector's Quartet",
-//     "There Will Be Blood",
-//     "For The Hungry Boy",
-//     "Sandalwood",
-//     "Phantom Thread",
-//     "Vocalise",
-// ]
-
 export const setlist = [
     {
-        title: "Hello. Thank you for being here.        Tonight you will be watching:",
+        title: "Hello!\n\nThey offered me a microphone  -  but I’m much happier typing. And playing.\n\nThank you for being here.",
         id: 0,
-        source: "Jonny Greenwood - Guitar, Katherine Tinker - Piano, Eloisa-Fleur Thom - Violin, Alessandro Ruisi - Violin, Luba Tunnicliffe - viola, Max Ruisi - cello and Dave Brown - Double Bass",
-        feat: "We will be playing a selection of tunes from film scores and by other composers. Let's all hope Slayer don't make a sudden guest appearance on the main stage. Ready? Then let's play some music."
+        source: "Tonight you will be watching:\n\nKatherine Tinker - Piano\nEloisa-Fleur Thom - Violin\nAlessandro Ruisi - Violin\n Luba Tunnicliffe - viola\nMax Ruisi - cello\nDave Brown - Double Bass",
+        feat: "They have all worked with me on soundtracks and Radiohead records - I admire them very much. I’m excited that you’re going to hear them.\n\nWe’ll do a selection of cues from my film scores, some new music (some written for these players), and a few things by 20th / 21st Century composers we love: Steve Reich, Luciano Berio, Dimitri Shostakovich and Olivier Messiaen.\n\nOK - we’ll start with:"
     },
     {
         title: "For The Hungry Boy",
@@ -56,13 +39,13 @@ export const setlist = [
         title: "Three Miniatures From Water",
         id: 3,
         source: "(2018)",
-        feat: "Eloisa-Fleur	Thom - Violin"
+        feat: "Eloisa-Fleur Thom - Violin"
     },
     {
-        title: "De-tuned intro",
+        title: "This next piece is called\nThere Will Be Blood.",
         id: 18,
-        source: "de-tuned text 1",
-        feat: "de-tuned text 2"
+        source: "The players have to detune their lowest strings for this cue: it takes a short while - thanks for waiting.",
+        feat: "..."
     },
     {
         title: "Detuned Quartet",
@@ -71,16 +54,16 @@ export const setlist = [
         feat: ""
     },
     {
-        title: "De-tuned outro",
+        title: "The trouble with detuning is the need for retuning...",
         id: 19,
-        source: "de-tuned text 1",
-        feat: "de-tuned text 2"
+        source: "We hope you're enjoying the show.",
+        feat: "... nearly there..."
     },
     {
         title: "Sandalwood",
         id: 11,
         source: "Phantom Thread",
-        feat: ""
+        feat: "Dave Brown - Double Bass"
     },
     {
         title: "Phantom Thread Duet",
@@ -101,9 +84,9 @@ export const setlist = [
         feat: "Jonny Greenwood - Ondes Martenot"
     },
     {
-        title: "Violin Duet",
+        title: "Duetti XX - Edoardo",
         id : 21,
-        source: "Berio (1979 - 1983)",
+        source: "Luciano Berio (1980)",
         feat: ""
     },
     {
@@ -137,10 +120,10 @@ export const setlist = [
         feat: ""
     },
     {
-        title: "Thank you for watching us. It was an honour to play for you.",
+        title: "Dave Brown - Double Bass\nMax Ruisi - cello\nLuba Tunnicliffe - viola\nAlessandro Ruisi - Violin\nEloisa-Fleur Thom - Violin\nKatherine Tinker - Piano\nJonny Greenwood - Guitar, Ondes Martenot, Tampura",
         id: 17,
-        source: "See ya later END OF THE ROAD FESTIVAL",
-        feat: "[crowd goes bananas as artist mentions the name of where they are]"
+        source: "Thank you for watching.",
+        feat: "x"
     },
 ]
 
