@@ -91,6 +91,7 @@ let randy = []
 const visTitle = document.getElementById('visTitle')
 const visSource = document.getElementById('visSource')
 const visFeat = document.getElementById('visFeat')
+const busyEl = document.getElementById('busy')
 const canvasContainer = document.getElementById('canvasContainer')
 
 // CONTROLLER / VISUALISER COMMUNICATION
@@ -114,6 +115,7 @@ channel.addEventListener('message', (e) => {
             visTitle.style.opacity = 0
             visSource.style.opacity = 0
             visFeat.style.opacity = 0
+            busyEl.style.opacity = 0
             visTitle.ontransitionend = () => {
                 displayTrackTitle(currTrack)
                 displayTrackSource(currTrack)
@@ -158,9 +160,8 @@ channel.addEventListener('message', (e) => {
         visFeat.style.opacity = 1
     if (e.data.setFeatFadeOut)
         visFeat.style.opacity = 0
-    if (e.data.visFadeIn) {
+    if (e.data.visFadeIn)
         canvasContainer.style.opacity = 1
-    }
     if (e.data.visFadeOut)
         canvasContainer.style.opacity = 0
     if ('toggleScriptText' in e.data)
@@ -173,6 +174,12 @@ channel.addEventListener('message', (e) => {
         scoreTrig = e.data.scoreTrig
     if (e.data.yellowTrig)
         yellowTrig = e.data.yellowTrig
+    if (e.data.busyFade) {
+        if (busyEl.style.opacity == 1)
+            busyEl.style.opacity = 0
+        else
+            busyEl.style.opacity = 1
+    }
     // if (e.data.threshDynMin) {
     //     loThresh = e.data.threshDynMin
     //     loResStep = Math.floor(map(sin(frameCount/procSpeed), -1, 1, loLoRes, hiLoRes))
@@ -504,8 +511,6 @@ const updateVis = function(e) {
     if (visVars.testCard)
         visVars.testCard = false
     resetActiveVis(activeVis)
-    console.log(currTrack)
-    console.log(setlist[currTrack])
     prepareVis(setlist[currTrack], activeVis, scriptVis, scriptText, visVars, asciiVis)
     // clear pixel array
     visVars.resetPixels = true

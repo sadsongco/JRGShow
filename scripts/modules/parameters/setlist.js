@@ -15,13 +15,13 @@ export const setlist = [
         title: "Prospectors Arrive",
         id: 4,
         source: "from There Will Be Blood (2007)",
-        feat: ""
+        feat: "Jonny Greenwood - ondes martenot"
     },
     {
         title: "88",
         id: 6,
         source: "(2015)",
-        feat: "Katherine Tinker - Piano"
+        feat: "Katherine Tinker - piano"
     },
     {
         title: "Alma",
@@ -39,7 +39,7 @@ export const setlist = [
         title: "Three Miniatures From Water",
         id: 3,
         source: "(2018)",
-        feat: "Eloisa-Fleur Thom - Violin"
+        feat: "Eloisa-Fleur Thom - violin"
     },
     {
         title: "This next piece is called\nThere Will Be Blood.",
@@ -48,9 +48,9 @@ export const setlist = [
         feat: "..."
     },
     {
-        title: "Detuned Quartet",
+        title: "There Will Be Blood (Detuned Quintet)",
         id: 9,
-        source: "There Will Be Blood",
+        source: "from There Will Be Blood (2007)",
         feat: ""
     },
     {
@@ -62,56 +62,56 @@ export const setlist = [
     {
         title: "Sandalwood",
         id: 11,
-        source: "Phantom Thread",
-        feat: "Dave Brown - Double Bass"
+        source: "from Phantom Thread (2017)",
+        feat: "Dave Brown - double bass"
     },
     {
         title: "Phantom Thread Duet",
         id: 12,
-        source: "Phantom Thread",
-        feat: ""
+        source: "from Phantom Thread (2017)",
+        feat: "Eloisa-Fleur Thom - violin\nJonny Greenwood - piano"
     },
     {
         title: "Prospector's Quartet",
         id: 8,
-        source: "There Will Be Blood",
+        source: "from There Will Be Blood (2007)",
         feat: ""
     },
     {
         title: "Vocalise",
         id: 13,
         source: "by Olivier Messiaen (1935)",
-        feat: "Jonny Greenwood - Ondes Martenot"
+        feat: "Jonny Greenwood - ondes martenot"
     },
     {
         title: "Duetti XX - Edoardo",
         id : 21,
         source: "Luciano Berio (1980)",
-        feat: ""
+        feat: "Eloisa-Fleur Thom - violin\nAlessandro Ruisi - violin"
     },
     {
         title: "Electric Counterpoint I",
         id: 14,
         source: "by Steve Reich (1987)",
-        feat: "Jonny Greenwood - Guitar"
+        feat: "Jonny Greenwood - guitar"
     },
     {
         title: "Electric Counterpoint II",
         id: 15,
         source: "Steve Reich (1987)",
-        feat: "Jonny Greenwood - Guitar"
+        feat: "Jonny Greenwood - guitar"
     },
     {
         title: "Electric Counterpoint III",
         id: 16,
         source: "Steve Reich (1987)",
-        feat: "Jonny Greenwood - Guitar"
+        feat: "Jonny Greenwood - guitar"
     },
     {
         title: "Future Markets",
         id: 5,
-        source: "There Will Be Blood",
-        feat: ""
+        source: "from There Will Be Blood (2007)",
+        feat: "Max Ruisi - cello"
     },
     {
         title: "House of Woodcock",
@@ -120,7 +120,7 @@ export const setlist = [
         feat: ""
     },
     {
-        title: "Dave Brown - Double Bass\nMax Ruisi - cello\nLuba Tunnicliffe - viola\nAlessandro Ruisi - Violin\nEloisa-Fleur Thom - Violin\nKatherine Tinker - Piano\nJonny Greenwood - Guitar, Ondes Martenot, Tampura",
+        title: "Dave Brown - double bass\nMax Ruisi - cello\nLuba Tunnicliffe - viola\nAlessandro Ruisi - violin\nEloisa-Fleur Thom - violin\nKatherine Tinker - piano\nJonny Greenwood - guitar, ondes martenot, tampura",
         id: 17,
         source: "Thank you for watching.",
         feat: "x"

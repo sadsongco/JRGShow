@@ -49,7 +49,6 @@ const ascii = function () {
 
     this.setBright = function(level) {
         this.brighten = level
-        console.log(this.brighten)
     }
 }
 

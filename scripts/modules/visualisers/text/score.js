@@ -23,7 +23,6 @@ const Score = function() {
         for (const [key, value] of Object.entries(dirs)) {
             for (let i = 1; i <= value; i ++) {
                 const imgPath = scoreImgPath + key + '/' + key + i + '.png'
-                console.log(imgPath)
                 imgs[key][i-1] = (
                     loadImage(imgPath)
                 )
@@ -33,7 +32,6 @@ const Score = function() {
 
     this.draw = function(trigger=false) {
         if (trigger) {
-            console.log(trigger)
             const imgToDraw = imgs[trigger].shift()
             if (imgToDraw.width > width)
                 imgToDraw.resize(width - 200, 0)

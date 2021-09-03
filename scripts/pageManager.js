@@ -31,7 +31,7 @@ for (let index in setlist) {
     newEl.id = index
     newEl.classList.add('setlistItem')
     newEl.addEventListener('click', (e)=>launchSetlistItem(e))
-    const newContent = document.createTextNode((parseInt(index) + 1) + ' - ' + setlistItem.title + ` (${setlistItem.id})`)
+    const newContent = document.createTextNode((parseInt(index) + 1) + ' - ' + setlistItem.title)
     newEl.appendChild(newContent)
     setlistContainer.appendChild(newEl)
 }

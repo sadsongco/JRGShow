@@ -8,10 +8,10 @@ const prepareVis = function(setItem, activeVis, scriptVis, scriptText, visVars, 
 
         case 1:
             // House Of Woodcock
-            visVars.bgOpacity = 255
-            // visVars.bw = true
+            visVars.bgOpacity = 180
+            visVars.bw = true
             activeVis.showPixThru = true
-            // activeVis.showVignette = true
+            activeVis.showVignette = true
             break
 
         case 2:
@@ -36,7 +36,7 @@ const prepareVis = function(setItem, activeVis, scriptVis, scriptText, visVars, 
 
         case 5:
             // Future Markets
-            visVars.bgOpacity = 59
+            visVars.bgOpacity = 200
             activeVis.showSpec = true
             break
             
@@ -70,9 +70,8 @@ const prepareVis = function(setItem, activeVis, scriptVis, scriptText, visVars, 
         case 10:
             // For The Hungry Boy
             visVars.bgOpacity = 255
-            visVars.bw = false
             activeVis.showPixThru = true
-            activeVis.showVignette = true
+            // activeVis.showVignette = true
             break
 
         case 11:
@@ -122,9 +121,13 @@ const prepareVis = function(setItem, activeVis, scriptVis, scriptText, visVars, 
             break
         case 19:
             // de-tuned outro
+
             break
         case 20:
             // Shostakovich
+            visVars.bgOpacity = 40
+            activeVis.showBitwise1 = true
+            activeVis.showVignette = true
             break
         case 21:
             // Berio duet

@@ -87,6 +87,12 @@ const keyEvent = function(e, currVisState, currSetState, currSourceState, currFe
                 yellowTrig: true
             })
         }
+        if (e.key == 'a' && currSetId == 9) {
+            e.preventDefault()
+            channel.postMessage({
+                busyFade: true
+            })
+        }
         if (e.key == 'ArrowRight') { // toggle vis
         e.preventDefault()
         switch(currVisState) {
