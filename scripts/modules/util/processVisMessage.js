@@ -8,8 +8,7 @@ const processVisMessage = function(e) {
         else
         currTrackEl.classList.remove('visLoading')
         currTrackEl.classList.add('currTrack')
-}
-
+    }
 }
 
 export default processVisMessage

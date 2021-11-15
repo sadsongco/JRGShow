@@ -275,7 +275,7 @@ window.setup = function() {
     // background flags
     
     pixelDensity(1)
-    cnv = createCanvas(1920, 1080)
+    cnv = createCanvas(1080, 720)
     asciiart_width = Math.floor(cnv.width / asciiCof)
     asciiart_height = Math.floor(cnv.height / asciiCof)
     // noLoop()
