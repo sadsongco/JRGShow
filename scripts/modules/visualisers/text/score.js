@@ -1,5 +1,5 @@
 const Score = function() {
-    const scoreImgPath = '../../assets/images/score/'
+    const scoreImgPath = './assets/images/score/'
     const imgs = {
         vlns : [],
         cll: [],

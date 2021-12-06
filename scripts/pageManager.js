@@ -18,7 +18,7 @@ let run = false
 window.name = 'visControl'
 
 window.onload = function () {
-    window.open('/vis.html', 'visualiser')
+    window.open('./vis.html', 'visualiser')
 }
 
 const setlistContainer = document.getElementById('setListContainer')

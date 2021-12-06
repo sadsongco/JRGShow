@@ -1,5 +1,5 @@
 const DetunedQuintet = function() {
-    const backgroundImagePath = "../../assets/images/score/DeTunedBackdrop.png"
+    const backgroundImagePath = "./assets/images/score/DeTunedBackdrop.png"
     let bgImg
     let yellowAmt = 0
     let maxYellow = 100
