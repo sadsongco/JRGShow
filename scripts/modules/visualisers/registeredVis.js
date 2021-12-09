@@ -1,0 +1,23 @@
+export const visList = [
+    {name: "bitwise1"},
+    {name: "bitwise2"},
+    {name: "bitwiseBrighten"},
+    {name: "specLoading"},
+    {name: "randomBoxes"},
+    {name: "vignette"},
+    {name: "edgeDetect"},
+    {name: "gradReveal"},
+    {name: "motion"},
+    {name: "threshold"},
+    {name: "boxes"},
+    {name: "circles"},
+    {name: "lines"},
+    {name: "pixThru"},
+    {name: "vidThru"},
+    {name: "vidThruHalf"},
+    {name: "vidThruPoster"},
+    {name: "ascii"},
+    {name: "detunedQuintet"},
+    {name: "score"},
+    {name: "scriptText"}
+]

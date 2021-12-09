@@ -1,0 +1,157 @@
+:root {
+  --text-col: #0a0a0a;
+  --bg-col: rgb(183, 236, 234);
+  --arrow-col: green;
+}
+
+header {
+  display: flex;
+  justify-content: center;
+  z-index: 1;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+}
+
+/* rows of stuff */
+
+.row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 2;
+}
+
+.toprow {
+  height: 10em;
+}
+.middlerow {
+  height: 10em;
+}
+.bottomrow {
+  height: 20em;
+}
+
+/* vis modules */
+
+.vis-modules {
+  position: relative;
+  width: 75%;
+  height: 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 3;
+}
+.vis-module {
+  position: relative;
+  width: 20%;
+  height: 90%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--text-col);
+  font-weight: 800;
+  background-color: var(--bg-col);
+  border: 2px solid white;
+  border-radius: 20px;
+}
+.vis-module::before {
+  content: "";
+  position: absolute;
+  width: 60%;
+  height: 90%;
+  top: 50%;
+  left: -66%;
+  border-top: 2px dashed var(--arrow-col);
+}
+.vis-module::after {
+  content: "";
+  position: absolute;
+  top: calc(50% - 10px);
+  width: 0;
+  height: 0;
+  left: -13px;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 10px solid var(--arrow-col);
+}
+.vis-module:first-of-type::before {
+  border: none;
+}
+.vis-module:first-of-type::after {
+  border: none;
+}
+.vis-output {
+  width: 100%;
+}
+
+/* selectors and output */
+
+.module-selector,
+.module-output {
+  width: 15%;
+  height: 90%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#module-selector {
+  display: flex;
+  justify-content: space-around;
+  align-items: stretch;
+  flex-direction: column;
+  background-color: var(--bg-col);
+}
+
+/* routing lines */
+
+#mod-1-out {
+  width: 91%;
+  left: 15%;
+  opacity: 0;
+}
+#mod-2-out {
+  width: 56%;
+  left: 50%;
+  opacity: 0;
+}
+#mod-3-out {
+  width: 22%;
+  left: 84%;
+}
+.mod-out {
+  position: absolute;
+  top: -3%;
+  height: 53%;
+  border-left: 2px dashed var(--arrow-col);
+  border-bottom: 2px dashed var(--arrow-col);
+}
+.mod-out::after {
+  content: "";
+  position: absolute;
+  top: 90%;
+  width: 0;
+  height: 0;
+  left: calc(100% - 4px);
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 10px solid var(--arrow-col);
+}
+
+/* parameters and preview */
+
+.parameters {
+  width: 45%;
+  height: 90%;
+  background-color: var(--bg-col);
+}
+.preview {
+  width: 45%;
+  height: 90%;
+  background-color: var(--bg-col);
+}
