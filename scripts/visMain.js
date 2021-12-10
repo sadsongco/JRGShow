@@ -94,6 +94,33 @@ const visFeat = document.getElementById('visFeat')
 const busyEl = document.getElementById('busy')
 const canvasContainer = document.getElementById('canvasContainer')
 
+// get data from persistent storage
+let openRequest = indexedDB.open('visSettings', 1);
+openRequest.onupgradeneeded = () => {
+    console.log('onupgradeneeded');
+    console.log(openRequest);
+    // let db = openRequest.result;
+    // if (!db.objectStoreNames.contains('setlist'))
+    //     db.createObjectStore('setlist', {keyPath: 'id'});
+}
+openRequest.onerror = () => {
+    console.log('onerror');
+    console.log(openRequest);
+}
+openRequest.onsuccess = () => {
+    let db = openRequest.result;
+    let transaction = db.transaction('visChains', 'readwrite');
+    let setlistDB = transaction.objectStore('visChains');
+    let setlist = setlistDB.getAll()
+    setlist.onsuccess = () => {
+        console.log('Setlist: ', setlist.result);
+    }
+    console.log('success');
+    console.log(db);
+}
+
+
+
 // CONTROLLER / VISUALISER COMMUNICATION
 const channel = new BroadcastChannel('vis-comms')
 channel.addEventListener('message', (e) => {

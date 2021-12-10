@@ -31,3 +31,39 @@ saveSettingsEl.appendChild(saveSettingsButton);
 const setlistName = document.createElement('input');
 setlistName.setAttribute("type", "text");
 saveSettingsEl.appendChild(setlistName);
+
+
+// persistent storage
+let openRequest = indexedDB.open('visSettings', 1);
+openRequest.onupgradeneeded = () => {
+    console.log(`DB onupgrade: ${openRequest.result.name}`);
+    let db = openRequest.result;
+    if (!db.objectStoreNames.contains('visChains'))
+        db.createObjectStore('visChains', {keyPath: 'id'});
+}
+openRequest.onerror = () => {
+    console.log(`Database Error: ${openRequest.result}`);
+}
+openRequest.onsuccess = () => {
+    let db = openRequest.result;
+    console.log(openRequest.result)
+    console.log(`DB open: ${openRequest.result.name}`);
+    let transaction = db.transaction('visChains', 'readwrite');
+    let visChains = transaction.objectStore('visChains');
+    let visChain = {
+        id: 1,
+        setlistId: 1,
+        chain: [
+            {moduleName: 'bitwise1'}
+        ]
+    }
+    let request = visChains.put(visChain);
+    request.onsuccess = () => {
+        console.log(`vis chain added: ${request.result}`);
+    }
+    request.onerror = () => {
+        console.log(`Error: ${request.error}`);
+    }
+}
+
+// let deleteRequest = indexedDB.deleteDatabase('visSettings');

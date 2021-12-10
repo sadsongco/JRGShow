@@ -18,7 +18,41 @@ let run = false
 window.name = 'visControl'
 
 window.onload = function () {
-    window.open('./vis.html', 'visualiser')
+    // persistent storage
+    let openRequest = indexedDB.open('visSettings', 1);
+    openRequest.onupgradeneeded = () => {
+        console.log('onupgradeneeded');
+        console.log(openRequest);
+        let db = openRequest.result;
+        if (!db.objectStoreNames.contains('setlist'))
+            db.createObjectStore('setlist', {keyPath: 'id'});
+    }
+    openRequest.onerror = () => {
+        console.log('onerror');
+        console.log(openRequest);
+    }
+    openRequest.onsuccess = () => {
+        let db = openRequest.result;
+        console.log('success');
+        console.log(db);
+        let transaction = db.transaction('setlist', 'readwrite');
+        let setlist = transaction.objectStore('setlist');
+        let setlistItem = {
+            id: 1,
+            position: 1,
+            name: "Supper's Ready"
+        }
+        let request = setlist.put(setlistItem);
+        request.onsuccess = () => {
+            console.log(`setlist item added: ${request.result}`);
+            window.open('./vis.html', 'visualiser')
+        }
+        request.onerror = () => {
+            console.log(`Error: ${request.error}`);
+        }
+    }
+
+    // let deleteRequest = indexedDB.deleteDatabase('visSettings');
 }
 
 const setlistContainer = document.getElementById('setListContainer')
