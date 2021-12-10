@@ -42,7 +42,6 @@ window.onload = function () {
             console.log(`Database error: ${outputResQuery.error}`);
         }
     }
-
 }
 
 const setlistContainer = document.getElementById('setListContainer')

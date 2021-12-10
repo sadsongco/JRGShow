@@ -12,6 +12,35 @@ a {
   color: #ecd;
 }
 
+header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #2a2a2a;
+}
+
+button {
+  font-size: 1em;
+  padding: 0.8em 1.8em;
+  margin: 4px 0;
+  color: #fff;
+  background-color: #673ab7;
+  border: 2px solid white;
+  border-radius: 10px;
+}
+
+select,
+input {
+  font-size: 1.2em;
+  padding: 5px;
+  margin: 3px;
+}
+
+input {
+  font-size: 0.8em;
+  font-family: "CourierPrime-Regular", "Courier New", Courier, monospace;
+}
+
 .setlistItem {
   display: block;
   border: 1px solid white;

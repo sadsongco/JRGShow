@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./styles/home.css">
     <link rel="stylesheet" href="./styles/creator.css">
+    <script src="./assets/lib/p5.js"></script>
+    <script src="./assets/lib/p5.asciiart.min.js"></script>
     <title>Vis Creator Sandbox</title>
 </head>
 <body>
@@ -20,9 +22,11 @@
                 <div id="module-1" class="vis-module">
     
                 </div>
+                <div id="module-1-path" class="audio-path"></div>
                 <div id="module-2" class="vis-module">
     
                 </div>
+                <div id="module-2-path" class="audio-path"></div>
                 <div id="module-3" class="vis-module">
     
                 </div>
@@ -35,18 +39,16 @@
         </section>
         <section class="row middlerow">
             <section class="vis-modules">
-                <div id="mod-1-out" class="mod-out">
-                    
+                <div id="module-1-out" class="mod-out">
                 </div>
-                <div id="mod-2-out" class="mod-out">
-                    
+                <div id="module-2-out" class="mod-out">
                 </div>
-                <div id="mod-3-out" class="mod-out">
+                <div id="module-3-out" class="mod-out">
                     
                 </div>
             </section>
             <section class="module-output">
-                <div id="output" class="vis-module vis-output">
+                <div id="output" class="vis-output">
                     <p>
                         Vis Output
                     </p>
@@ -58,11 +60,16 @@
 
             </section>
             <div class="preview" id="preview">
-
+                <h2>Output Preview</h2>
             </div>
         </section>
         <div class="saveSettings" id="saveSettings">
-
+            <label for="trackName">Track Name:</label>
+            <input type="text" size="30" id="trackName" />
+            <label for="trackSource">Track Source:</label>
+            <input type="text" size="30" id="trackSource" />
+            <label for="trackFeatured">Featured Performer:</label>
+            <input type="text" size="40" id="trackFeatured" />
         </div>
     </main>
     <script type="module" src="./scripts/creator.js"></script>

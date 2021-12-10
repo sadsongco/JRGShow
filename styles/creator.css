@@ -1,7 +1,8 @@
 :root {
   --text-col: #0a0a0a;
-  --bg-col: rgb(183, 236, 234);
+  --bg-col: #f5f5f5;
   --arrow-col: green;
+  --selected-col: blue;
 }
 
 header {
@@ -30,10 +31,13 @@ main {
   height: 10em;
 }
 .middlerow {
-  height: 10em;
+  height: 8em;
 }
 .bottomrow {
-  height: 20em;
+  height: auto;
+  padding: 5px;
+  border-top: 1px solid white;
+  border-bottom: 1px solid white;
 }
 
 /* vis modules */
@@ -59,35 +63,48 @@ main {
   background-color: var(--bg-col);
   border: 2px solid white;
   border-radius: 20px;
+  opacity: 0.3;
 }
-.vis-module::before {
-  content: "";
+.audio-path {
   position: absolute;
-  width: 60%;
-  height: 90%;
-  top: 50%;
-  left: -66%;
+  width: 12.3%;
   border-top: 2px dashed var(--arrow-col);
 }
-.vis-module::after {
+.audio-path::after {
   content: "";
   position: absolute;
   top: calc(50% - 10px);
+  left: calc(100% - 7px);
   width: 0;
   height: 0;
-  left: -13px;
   border-top: 10px solid transparent;
   border-bottom: 10px solid transparent;
   border-left: 10px solid var(--arrow-col);
 }
-.vis-module:first-of-type::before {
-  border: none;
+#module-1-path {
+  left: 27%;
 }
-.vis-module:first-of-type::after {
-  border: none;
+#module-2-path {
+  left: 60.5%;
 }
 .vis-output {
+  position: relative;
   width: 100%;
+  height: 90%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--text-col);
+  font-weight: 800;
+  background-color: var(--bg-col);
+  border: 2px solid white;
+  border-radius: 20px;
+}
+.slot-selected {
+  border: 3px solid var(--selected-col);
+}
+.slot-filled {
+  opacity: 1;
 }
 
 /* selectors and output */
@@ -105,29 +122,27 @@ main {
   justify-content: space-around;
   align-items: stretch;
   flex-direction: column;
-  background-color: var(--bg-col);
+  /* background-color: var(--bg-col); */
 }
 
 /* routing lines */
 
-#mod-1-out {
+#module-1-out {
   width: 91%;
   left: 15%;
-  opacity: 0;
 }
-#mod-2-out {
-  width: 56%;
+#module-2-out {
+  width: 55.5%;
   left: 50%;
-  opacity: 0;
 }
-#mod-3-out {
-  width: 22%;
-  left: 84%;
+#module-3-out {
+  width: 22.5%;
+  left: 83%;
 }
 .mod-out {
-  position: absolute;
-  top: -3%;
   height: 53%;
+  position: absolute;
+  top: -2%;
   border-left: 2px dashed var(--arrow-col);
   border-bottom: 2px dashed var(--arrow-col);
 }
@@ -146,12 +161,13 @@ main {
 /* parameters and preview */
 
 .parameters {
-  width: 45%;
+  /* width: 45%;
   height: 90%;
-  background-color: var(--bg-col);
+  background-color: var(--bg-col); */
 }
 .preview {
-  width: 45%;
-  height: 90%;
-  background-color: var(--bg-col);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
 }
