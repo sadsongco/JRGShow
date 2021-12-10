@@ -51,6 +51,10 @@ import randomBoxes      from './modules/visualisers/common/randomBoxes.js'
 import vignette         from './modules/visualisers/common/vignette.js'
 
 // GLOBAL VARIABLES
+
+// input device, output resolution
+let inputDevice, outputRes
+
 const visVars = {
     bgOpacity: 0,
     run: false,
@@ -93,33 +97,6 @@ const visSource = document.getElementById('visSource')
 const visFeat = document.getElementById('visFeat')
 const busyEl = document.getElementById('busy')
 const canvasContainer = document.getElementById('canvasContainer')
-
-// get data from persistent storage
-let openRequest = indexedDB.open('visSettings', 1);
-openRequest.onupgradeneeded = () => {
-    console.log('onupgradeneeded');
-    console.log(openRequest);
-    // let db = openRequest.result;
-    // if (!db.objectStoreNames.contains('setlist'))
-    //     db.createObjectStore('setlist', {keyPath: 'id'});
-}
-openRequest.onerror = () => {
-    console.log('onerror');
-    console.log(openRequest);
-}
-openRequest.onsuccess = () => {
-    let db = openRequest.result;
-    let transaction = db.transaction('visChains', 'readwrite');
-    let setlistDB = transaction.objectStore('visChains');
-    let setlist = setlistDB.getAll()
-    setlist.onsuccess = () => {
-        console.log('Setlist: ', setlist.result);
-    }
-    console.log('success');
-    console.log(db);
-}
-
-
 
 // CONTROLLER / VISUALISER COMMUNICATION
 const channel = new BroadcastChannel('vis-comms')
@@ -220,36 +197,6 @@ channel.addEventListener('message', (e) => {
     window.open('', 'visControl')
 })
 
-// helper function for capturing from specific video source
-// https://editor.p5js.org/codingtrain/sketches/JjRoa1lWO
-const devices = [];
-
-function gotDevices(deviceInfos) {
-  for (let i = 0; i !== deviceInfos.length; ++i) {
-    const deviceInfo = deviceInfos[i];
-    if (deviceInfo.kind == 'videoinput') {
-      devices.push({
-        label: deviceInfo.label,
-        id: deviceInfo.deviceId
-      });
-    }
-  }
-  console.log(devices);
-  let supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
-  console.log(supportedConstraints);
-  var constraints = {
-    video: {
-      deviceId: {
-        exact: devices[0].id
-      },
-    }
-  };
-  vidIn = createCapture(constraints, ()=>{
-    vidIn.hide()
-    vidIn.size(cnv.width, cnv.height)
-  })
-}
-
 // p5.js preload
 window.preload = function() {
     testCard = new TestCard()
@@ -262,11 +209,47 @@ window.preload = function() {
     detunedVis.init()
     // image for vignette
     vignetteImage = loadImage('./assets/images/common/vignette.png')
+
+    // get data from persistent storage
+    let openRequest = indexedDB.open('visDB', 1);
+    openRequest.onupgradeneeded = () => {
+        console.log('onupgradeneeded');
+        console.log(openRequest);
+    }
+    openRequest.onerror = () => {
+        console.log('onerror');
+        console.log(openRequest.error);
+    }
+    openRequest.onsuccess = () => {
+        const db = openRequest.result;
+        // get input device
+        const inputDeviceTransaction = db.transaction('inputDevice', 'readwrite');
+        const inputDevices = inputDeviceTransaction.objectStore('inputDevice');
+        const inputDeviceQuery = inputDevices.get(1)
+        inputDeviceQuery.onsuccess = () => {
+            inputDevice = inputDeviceQuery.result.inputDevice;
+        }
+        inputDeviceQuery.onerror = () => {
+            console.log(`Database error: ${inputDeviceQuery.error}`);
+        }
+        // get output resolution
+        const outputResTransaction = db.transaction('outputResolution', 'readwrite');
+        const outputResos = outputResTransaction.objectStore('outputResolution');
+        const outputResQuery = outputResos.get(1)
+        outputResQuery.onsuccess = () => {
+            outputRes = outputResQuery.result.outputResolution;
+        }
+        outputResQuery.onerror = () => {
+            console.log(`Database error: ${outputResQuery.error}`);
+        }
+    }
 }
 
 
 // p5.js setup
 window.setup = function() {
+    console.log(inputDevice)
+    console.log(outputRes)
     resetActiveVis(activeVis)
     
     // general settings
@@ -299,22 +282,18 @@ window.setup = function() {
             randy.push(false)
     }
 
-    // background flags
-    
+    // create and place the canvas
     pixelDensity(1)
-    cnv = createCanvas(1080, 720)
+    cnv = createCanvas(outputRes.w, outputRes.h)
     asciiart_width = Math.floor(cnv.width / asciiCof)
     asciiart_height = Math.floor(cnv.height / asciiCof)
-    // noLoop()
     cnv.parent('canvasContainer')
 
-    // set up camera to capture from other source
-    navigator.mediaDevices.enumerateDevices()
-    .then(gotDevices)
-    // vidIn = createCapture(VIDEO, ()=>{
-    //     vidIn.hide()
-    //     vidIn.size(cnv.width, cnv.height)
-    // })
+    // set up camera to capture from input source
+    vidIn = createCapture(inputDevice.constraints, ()=>{
+        vidIn.hide()
+        vidIn.size(cnv.width, cnv.height)
+    })
     // console.log(setlist)
 
     /* ****** CREATE VISUALISER OBJECTS ******* */
@@ -332,7 +311,7 @@ window.setup = function() {
     gradRevealVis = new GradReveal()
     gradRevealVis.init()
 
-    frameRate(24)
+    // frameRate(24)
     maxIdx = cnv.width * cnv.height * 4
 
     // set up vignette

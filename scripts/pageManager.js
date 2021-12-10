@@ -18,41 +18,31 @@ let run = false
 window.name = 'visControl'
 
 window.onload = function () {
-    // persistent storage
-    let openRequest = indexedDB.open('visSettings', 1);
+    // get output resolution from db and open a visualiser window
+    let openRequest = indexedDB.open('visDB', 1);
     openRequest.onupgradeneeded = () => {
         console.log('onupgradeneeded');
         console.log(openRequest);
-        let db = openRequest.result;
-        if (!db.objectStoreNames.contains('setlist'))
-            db.createObjectStore('setlist', {keyPath: 'id'});
     }
     openRequest.onerror = () => {
         console.log('onerror');
-        console.log(openRequest);
+        console.log(openRequest.error);
     }
     openRequest.onsuccess = () => {
-        let db = openRequest.result;
-        console.log('success');
-        console.log(db);
-        let transaction = db.transaction('setlist', 'readwrite');
-        let setlist = transaction.objectStore('setlist');
-        let setlistItem = {
-            id: 1,
-            position: 1,
-            name: "Supper's Ready"
+        const db = openRequest.result;
+        // get output resolution
+        const outputResTransaction = db.transaction('outputResolution', 'readwrite');
+        const outputResos = outputResTransaction.objectStore('outputResolution');
+        const outputResQuery = outputResos.get(1)
+        outputResQuery.onsuccess = () => {
+            const outputRes = outputResQuery.result.outputResolution;
+            window.open('./vis.html', '_blank', `width=${outputRes.w}, height=${outputRes.h}`);
         }
-        let request = setlist.put(setlistItem);
-        request.onsuccess = () => {
-            console.log(`setlist item added: ${request.result}`);
-            window.open('./vis.html', 'visualiser')
-        }
-        request.onerror = () => {
-            console.log(`Error: ${request.error}`);
+        outputResQuery.onerror = () => {
+            console.log(`Database error: ${outputResQuery.error}`);
         }
     }
 
-    // let deleteRequest = indexedDB.deleteDatabase('visSettings');
 }
 
 const setlistContainer = document.getElementById('setListContainer')
