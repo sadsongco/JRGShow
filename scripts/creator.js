@@ -1,6 +1,7 @@
 // import registered visualisers
 import { visList } from "./modules/visualisers/registeredVis.js";
 import getPixelValues   from './modules/util/getPixelValues.js'
+import newGetPixelValues from './modules/util/newGetPixelValues.js'
 
 let visualiserModules = {};
 
@@ -23,16 +24,16 @@ const addModule = (e) => {
     selectedSlot.filled = true;
     selectedSlot.classList.add('slot-filled');
     setOutputPath();
-    updateModelChain();
+    updateModuleChain();
 }
 
-const updateModelChain = () => {
-    modelChain = []
+const updateModuleChain = () => {
+    moduleChain = []
     for (let modSlot of modSlots) {
         if (modSlot.filled)
-            modelChain.push(visModules[modSlot.innerText])
+            moduleChain.push(visModules[modSlot.innerText])
     }
-    console.log(modelChain)
+    console.log(moduleChain)
 }
 
 const selectSlot = (slot) => {
@@ -47,7 +48,7 @@ const clearSlot = () => {
     selectedSlot.filled = false;
     selectedSlot.classList.remove('slot-filled');
     setOutputPath();
-    updateModelChain();
+    updateModuleChain();
 }
 
 const deselectAll = () => {
@@ -154,7 +155,7 @@ selectedSlot = modSlot;
 setOutputPath();
 
 // track module chain
-let modelChain = []
+let moduleChain = []
 
 // p5js preview visualiser
 
@@ -216,23 +217,25 @@ window.setup = function() {
         }
         frameRate(10)
     }
+    for (let module of moduleChain)
+        console.log(module.name)
 }
-const thresh = 10;
 window.draw = function() {
-    background(150);
-    vidIn.loadPixels();
-    for (let vy = 0; vy < cnv.height; vy++) {
-        for (let vx = 0; vx < cnv.width; vx++) {
-            const pixIdx = ((vy * width) + vx) * 4
-            let [iR, iG, iB] = getPixelValues(pixIdx, vidIn.pixels)
-            [
-                vidIn.pixels[pixIdx + 0],
-                vidIn.pixels[pixIdx + 1],
-                vidIn.pixels[pixIdx + 2],
-                vidIn.pixels[pixIdx + 3]
-            ] = visualiserModules['bitwiseN'].pixProcess(pixIdx, iR, iG, iB, thresh, pixels)
-        }
-    }
-    vidIn.updatePixels();
     image(vidIn, 0, 0, cnv.width, cnv.height);
+    if (moduleChain.length > 0) {
+        loadPixels()
+        for (let vy = 0; vy < cnv.height; vy++) {
+            for (let vx = 0; vx < cnv.width; vx++) {
+                const pixIdx = ((vy * width) + vx) * 4
+                let pixVals = newGetPixelValues(pixIdx, vidIn.pixels)
+                const kwargs = {
+                    param0: 200,
+                }
+                // for (const module of moduleChain)
+                    // visualiserModules[module.name].processVis(pixIdx, pixVals, kwargs);
+                visualiserModules['bitwiseN'].processVis(pixIdx, pixVals, kwargs);
+            }
+        }
+        updatePixels()
+    }
 }

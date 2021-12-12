@@ -1,4 +1,4 @@
-const getPixelValues = function(pixIdx) {
+const newGetPixelValues = function(pixIdx) {
     // if (random(0, 1) > 0.99999)
     //     console.log(pixels[pixIdx])
     const iR = pixels[pixIdx + 0]
@@ -7,4 +7,4 @@ const getPixelValues = function(pixIdx) {
     return [iR, iG, iB]
 }
 
-export default getPixelValues
+export default newGetPixelValues
