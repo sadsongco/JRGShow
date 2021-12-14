@@ -1,9 +1,9 @@
 export const setlist = [
     {
-        title: "Hello!\n\nThey offered me a microphone  -  but I’m much happier typing. And playing.\n\nThank you for being here.",
+        title: "Hello!\n\nThey offered me a microphone - but I'm much happier typing. And playing.\n\nThank you for being here.",
         id: 0,
         source: "Tonight you will be watching:\n\nKatherine Tinker - Piano\nEloisa-Fleur Thom - Violin\nAlessandro Ruisi - Violin\n Luba Tunnicliffe - viola\nMax Ruisi - cello\nDave Brown - Double Bass",
-        feat: "They have all worked with me on soundtracks and Radiohead records - I admire them very much. I’m excited that you’re going to hear them.\n\nWe’ll do a selection of cues from my film scores, some new music (some written for these players), and a few things by 20th / 21st Century composers we love: Steve Reich, Luciano Berio, Dimitri Shostakovich and Olivier Messiaen.\n\nOK - we’ll start with:"
+        feat: "They have all worked with me on soundtracks and Radiohead records - I admire them very much. I'm excited that you're going to hear them.\n\nWe'll do a selection of cues from my film scores, some new music (some written for these players), and a few things by 20th / 21st Century composers we love: Steve Reich, Luciano Berio, Dimitri Shostakovich and Olivier Messiaen.\n\nOK - we'll start with:"
     },
     {
         title: "For The Hungry Boy",

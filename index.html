@@ -5,40 +5,33 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./styles/home.css">
-    <title>JRG - Show Visuals - Setlist Home</title>
+    <link rel="stylesheet" href="./styles/init.css">
+    <title>Visualiser Setup</title>
 </head>
 <body>
-    <div class="container">    
-        <h1>JRG END OF THE ROAD FESTIVAL SHOW VISUALS - SETLIST HOME</h1>
-        <p>
-            Click on name to load song. <br>
-            Right arrow: fade in / out <br>
-            Left arrow: start vis running <br>
-            T: fade title in / out | S: fade source in / out | C: fade featured artist in / out <br>
-        </p>
-        <div id="setListContainer"></div>
-        <div id="threshControls">
-            <fieldset id="threshControlSet">
-                <legend>Threshold controls</legend>
-                <label for="threshBase">Base Threshold</label>
-                <input id="threshBase"
-                    type="range"
-                    min="0"
-                    max="255"
-                    step="1"
-                    value="100"
-                    style="width: 255px;">
-                <span id="threshBaseVal"></span>
-                <br />
-                <label for="threshDyn">Dynamic Threshold</label>
-                <input id="threshDyn"
-                    type="checkbox">
-                <span id="threshDynVal">OFF</span>
-            </fieldset>
-        </div>
-        <div id="loResControls"></div>
-        <div id="visRunning"></div>
-    </div>
-    <script type="module" src="./scripts/pageManager.js"></script>
+    <header>
+        <h1>
+            Select Source / Output
+        </h1>
+    </header>
+    <main>
+        <section>
+            <div id="vidsrc" class="vidSelector">
+                <h2>
+                    Select Video Source:
+                </h2>
+            </div>
+            <div id="vidres" class="vidSelector">
+                <h2>
+                    Select Output Resolution
+                </h2>
+            </div>
+        </section>
+        <section class="launch">
+            <div id="launch">
+            </div>
+        </section>
+    </main>
+    <script type="module" src="./scripts/init.js"></script>
 </body>
 </html>

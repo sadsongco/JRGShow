@@ -1,4 +1,14 @@
 @import url("../assets/fonts/CourierPrime-Regular.ttf");
+html {
+  box-sizing: border-box;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
 body {
   background-color: #000;
   color: #ccd;
@@ -6,6 +16,13 @@ body {
   padding: 0;
   box-sizing: border-box;
   font-family: "CourierPrime-Regular", "Courier New", Courier, monospace;
+}
+
+main {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  padding: 3em 1em;
 }
 
 a {
@@ -19,8 +36,10 @@ header {
   background-color: #2a2a2a;
 }
 
-button {
+button,
+a.button {
   font-size: 1em;
+  text-decoration: none;
   padding: 0.8em 1.8em;
   margin: 4px 0;
   color: #fff;

@@ -87,7 +87,7 @@ const launchVis = () => {
         }
         writeSettings.put(inputDevice);
     }
-    window.location.href = "/index.html";
+    window.location.href = "/hub.html";
 }
 
 // set up camera to capture from other source

@@ -1,7 +1,6 @@
 // import registered visualisers
 import { visList } from "./modules/visualisers/registeredVis.js";
 import getPixelValues   from './modules/util/getPixelValues.js'
-import newGetPixelValues from './modules/util/newGetPixelValues.js'
 
 let visualiserModules = {};
 
@@ -16,8 +15,6 @@ const importModules = async() => {
         }
     }
 }
-
-importModules()
 
 const addModule = (e) => {
     selectedSlot.innerText = moduleSelector.value;
@@ -163,7 +160,12 @@ let inputDevice, outputRes, cnv, vidIn;
 let asciiart_width, asciiart_height;
 const asciiCof = 12;
 
+let tempVidThru, tempRandomBoxes;
+
 window.preload = function() {
+    importModules()
+    tempVidThru = new VidThru;
+    tempRandomBoxes = new RandomBoxes;
 }
 
 window.setup = function() {
@@ -221,21 +223,51 @@ window.setup = function() {
         console.log(module.name)
 }
 window.draw = function() {
-    image(vidIn, 0, 0, cnv.width, cnv.height);
+    background(0, 0, 0, 50);
+    for (const module of moduleChain)
+        if (typeof visualiserModules[module.name].processFramePre == 'function') visualiserModules[module.name].processFramePre(vidIn);
+    // tempRandomBoxes.processFrame();
+    // image(vidIn, 0, 0, cnv.width, cnv.height);
     if (moduleChain.length > 0) {
         loadPixels()
+        vidIn.loadPixels()
         for (let vy = 0; vy < cnv.height; vy++) {
             for (let vx = 0; vx < cnv.width; vx++) {
                 const pixIdx = ((vy * width) + vx) * 4
-                let pixVals = newGetPixelValues(pixIdx, vidIn.pixels)
+                let pixVals = getPixelValues(pixIdx, vidIn.pixels)
                 const kwargs = {
                     param0: 200,
                 }
-                // for (const module of moduleChain)
-                    // visualiserModules[module.name].processVis(pixIdx, pixVals, kwargs);
-                visualiserModules['bitwiseN'].processVis(pixIdx, pixVals, kwargs);
+                for (const module of moduleChain)
+                    if (typeof visualiserModules[module.name].processPixels == 'function') visualiserModules[module.name].processPixels(pixIdx, pixVals, kwargs);
             }
         }
         updatePixels()
+    }
+    for (const module of moduleChain)
+        if (typeof visualiserModules[module.name].processFramePost == 'function') visualiserModules[module.name].processFramePost(vidIn);
+}
+
+
+class VidThru {
+    constructor() {
+        console.log('VidThru Constructor');
+    }
+    processFrame() {
+        image(vidIn, 0, 0, cnv.width, cnv.height);
+    }
+}
+
+class RandomBoxes {
+    constructor() {
+        console.log('RandomBoxes Constructor');
+    }
+    processFrame() {
+        fill(random(0, 255), random(0, 255), random(0, 255), random(0, 100))
+        const x = random(30, width-30)
+        const y = random(30, height-30)
+        const w = random(10, 30)
+        const h = random(10, 30)
+        rect(x, y, w, h)    
     }
 }
