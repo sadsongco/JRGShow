@@ -1,3 +1,7 @@
+/**
+ * Process messages received from visualiser window
+ * @param {Event} e - triggering event
+ */
 const processVisMessage = function(e) {
     let currTrackEl = document.querySelector('.currTrack')
     if ('visTransition' in e.data) {

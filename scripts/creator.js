@@ -217,15 +217,16 @@ window.setup = function() {
         outputResQuery.onerror = () => {
             console.log(`Database error: ${outputResQuery.error}`);
         }
-        frameRate(10)
+        frameRate(30)
     }
     for (let module of moduleChain)
         console.log(module.name)
 }
 window.draw = function() {
-    background(0, 0, 0, 50);
+    background(0, 0, 0, 10);
     for (const module of moduleChain)
-        if (typeof visualiserModules[module.name].processFramePre == 'function') visualiserModules[module.name].processFramePre(vidIn);
+        if (typeof visualiserModules[module.name].processFramePre == 'function')
+            visualiserModules[module.name].processFramePre(vidIn);
     // tempRandomBoxes.processFrame();
     // image(vidIn, 0, 0, cnv.width, cnv.height);
     if (moduleChain.length > 0) {
@@ -236,16 +237,18 @@ window.draw = function() {
                 const pixIdx = ((vy * width) + vx) * 4
                 let pixVals = getPixelValues(pixIdx, vidIn.pixels)
                 const kwargs = {
-                    param0: 200,
+                    thresh: 150,
                 }
                 for (const module of moduleChain)
-                    if (typeof visualiserModules[module.name].processPixels == 'function') visualiserModules[module.name].processPixels(pixIdx, pixVals, kwargs);
+                    if (typeof visualiserModules[module.name].processPixels == 'function')
+                        visualiserModules[module.name].processPixels(pixIdx, pixVals, kwargs);
             }
         }
         updatePixels()
     }
     for (const module of moduleChain)
-        if (typeof visualiserModules[module.name].processFramePost == 'function') visualiserModules[module.name].processFramePost(vidIn);
+        if (typeof visualiserModules[module.name].processFramePost == 'function')
+            visualiserModules[module.name].processFramePost(vidIn);
 }
 
 

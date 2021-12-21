@@ -7,6 +7,6 @@ export const vidThru = function(vidIn, bw=false, vignette=false, vignetteImage) 
         image(vignetteImage, 0, 0)
 }
 
-export const processFramePost = function(vidIn) {
+export const processFramePre = function(vidIn) {
     image(vidIn, 0, 0)
 }

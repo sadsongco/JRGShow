@@ -1,5 +1,17 @@
 const channel = new BroadcastChannel('vis-comms')
 
+// TODO change State variables to boolean - easier to track and understand
+/**
+ * Process key events, post messages on shared BroadcastChannel to control visualiser output
+ * @param {Event} e - triggering event
+ * @param {integer} currVisState - whether visualiser is currently visible
+ * @param {integer} currSetState - whether a setlist item has been selected
+ * @param {integer} currSourceState - whether a source has been selected
+ * @param {integer} currFeatState - whether the featuring text is visible
+ * @param {integer} currSetId - id of currently selected setlist item
+ * @param {boolean} run - is visualiser currently running
+ * @returns {array} [integer, integer, integer, integer, boolean] - updated input parameters
+ */
 const keyEvent = function(e, currVisState, currSetState, currSourceState, currFeatState, currSetId, run) {
     if (e.key == 't') { // toggle title
         e.preventDefault()

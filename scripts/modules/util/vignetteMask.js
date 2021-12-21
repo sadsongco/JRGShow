@@ -1,3 +1,9 @@
+/**
+ * 
+ * @param {integer} width - width of canvas
+ * @param {integer} height - height of canvas
+ * @returns {array} width x height pixel array with opacity vignette
+ */
 const vignetteMask = function(width, height) {
     const vigMask = []
     for (let y = 0; y < height; y ++) {
