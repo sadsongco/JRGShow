@@ -3,7 +3,7 @@ export const visList = [
         visGroup: "bitwise",
         visualisers: [
             {name: "bitwiseN"},
-            // {name: "bitwise1"},
+            {name: "bitwise1"},
             // {name: "bitwise2"},
             // {name: "bitwiseBrighten"},
             // {name: "specLoading"},

@@ -1,5 +1,5 @@
 /**
- * 
+ * Generates an opacity mask pixel array for use as a vignette
  * @param {integer} width - width of canvas
  * @param {integer} height - height of canvas
  * @returns {array} width x height pixel array with opacity vignette
