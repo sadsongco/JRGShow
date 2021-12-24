@@ -184,6 +184,60 @@ const hideAllOutputPaths = (modSlots) => {
     }
 }
 
+/**
+ * Saves visualiser setup to setlist
+ * @param {Event} e 
+ */
+const saveSettings = (e) => {
+    const trackName = document.getElementById('trackName').value;
+    if (trackName === "")
+    return alert('Track must have a name');
+    const track = {
+        name: trackName,
+        source: document.getElementById('trackSource')?.value,
+        feature: document.getElementById('trackFeatured')?.value,
+        visChain: [],
+        position: -1 // placeholder, value retrieved from database
+    }
+    for (let visModule of moduleChain) {
+        const trackModule = {
+            name: visModule.name,
+            params: visualiserParamVals[visModule.name]
+        }
+        track.visChain.push(trackModule);
+    }
+    let openRequest = indexedDB.open('visDB', 1);
+    openRequest.onerror = (err) => {
+        console.log(`Error opening database: ${err.message}`);
+    }
+    openRequest.onsuccess = () => {
+        let db = openRequest.result;
+        const transaction = db.transaction('setlist', 'readwrite');
+        const setList = transaction.objectStore('setlist');
+        // get next set position to put setlist item at end
+        const index = setList.index('setpos');
+        const openCursorRequest = index.openCursor(null, 'prev');
+        openCursorRequest.onerror = (err) => {
+            console.log(`Error getting max position: ${err.message}`);
+        }
+        openCursorRequest.onsuccess = (event) => {
+            if (event.target.result)
+                track.position = event.target.result.value.position + 1;
+            else
+                track.position = 0
+            console.log(track)
+            let saveRequest = setList.put(track);
+            saveRequest.onerror = (err) => {
+                console.log(`Error saving setlist item: ${err.target.error.message}`, err);
+            }
+            saveRequest.onsuccess = () => {
+                console.log('Setlist item saved');
+                window.location.href = "/hub.html";
+            }
+        }
+    }
+}
+
 // make module selector
 const selectorTarget = document.getElementById('module-selector');
 
@@ -222,6 +276,7 @@ clearSlotButton.addEventListener('click', clearSlot)
 const saveSettingsEl = document.getElementById('saveSettings');
 const saveSettingsButton = document.createElement('button');
 saveSettingsButton.innerText = "Save To Setlist";
+saveSettingsButton.addEventListener('click', saveSettings);
 saveSettingsEl.appendChild(saveSettingsButton);
 
 // initialise module slots, make selectable

@@ -11,8 +11,10 @@ window.onload = () => {
             db.createObjectStore('inputDevice', {keyPath: 'id'});
         if (!db.objectStoreNames.contains('visChains'))
             db.createObjectStore('visChains', {keyPath: 'id'});
-        if (!db.objectStoreNames.contains('setlist'))
-            db.createObjectStore('setlist', {keyPath: 'id'});
+        if (!db.objectStoreNames.contains('setlist')) {
+            let setlist = db.createObjectStore('setlist', {keyPath: 'name'});
+            let setPosIdx = setlist.createIndex('setpos', 'position', { unique:true });
+        }
     }
     openRequest.onerror = () => {
         console.log('onerror');
@@ -32,6 +34,10 @@ const devices = [];
 const deviceTarget = document.getElementById('vidsrc');
 const deviceSelector = document.createElement('select');
 
+/**
+ * Creates variables and HTML selector from available video input devices
+ * @param {array} deviceInfos - available video input devices
+ */
 const gotDevices = (deviceInfos) => {
     for (let i = 0; i !== deviceInfos.length; ++i) {
         const deviceInfo = deviceInfos[i];
@@ -61,6 +67,9 @@ const gotDevices = (deviceInfos) => {
     deviceTarget.appendChild(deviceSelector);
 }
 
+/**
+ * Writes resolution and input device to database, redirects to hub page
+ */
 const launchVis = () => {
     console.log(resolutions[resSelector.value])
     console.log(devices[deviceSelector.value])
