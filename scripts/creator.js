@@ -75,6 +75,7 @@ const showParams = (modName) => {
                 paramEntry.min = param.range ? param.range[0] : 0;
                 paramEntry.max = param.range ? param.range[1]: 255;
                 paramEntry.value = param.value || 100;
+                paramEntry.step = param.step ? param.step : 1;
                 break;
             case 'toggle':
                 paramEntry.type = 'checkbox';
@@ -86,12 +87,13 @@ const showParams = (modName) => {
 }
 
 const updateParameter = (e) => {
+    console.log((e.target.value * 255) | 0);
     const names = e.target.name.split("-");
     const moduleName = names[0], paramName = names[1];
     if (e.target.type === 'checkbox')
         visualiserParamVals[moduleName][paramName] = e.target.checked;
     else
-        visualiserParamVals[moduleName][paramName] = parseInt(e.target.value);
+        visualiserParamVals[moduleName][paramName] = parseFloat(e.target.value);
 }
 
 /**

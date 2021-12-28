@@ -24,3 +24,5 @@ export const processFramePre = function(vidIn, kwargs={}) {
         value: false
     }
 ]
+
+export default vidThru;
