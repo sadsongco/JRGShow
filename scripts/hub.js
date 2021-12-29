@@ -1,94 +1,80 @@
-// drag and drop list adapted from https://code-boxx.com/drag-drop-sortable-list-javascript/
-let setlist;
+import { getSetlist, sortSetlistByOrder } from './modules/common/getSetlist.js';
 
-// https://stackoverflow.com/questions/1069666/sorting-object-property-by-values
-/**
- * Orders setlist array according to position property of track object
- * @param {array} setlist - array of track objects
- * @returns {array} - sorted array
- */
-const sortSetlistByOrder = (setlist) => {
-    return [...setlist].sort((a, b) => a.position - b.position);
-}
+let setlist;
 
 window.onload = () => {
     slist('setlist');
 }
 
+/**
+ * Create sortable list - adapted from https://code-boxx.com/drag-drop-sortable-list-javascript/
+ * @param {HTMLElement} target - container for sortable list
+ */
 const slist = (target) => {
     target = document.getElementById(target);
     target.classList.add('slist');
     let items = [];
     let current = null;
-    let openRequest = indexedDB.open('visDB', 1);
-    openRequest.onerror = (err) => {
-        console.log(`Error opening database: ${err.message}`);
-    }
-    openRequest.onsuccess = () => {
-        let db = openRequest.result;
-        const transaction = db.transaction('setlist');
-        const setListFromDB = transaction.objectStore('setlist');
-        const setRequest = setListFromDB.getAll();
-        setRequest.onerror = (err) => {
-            console.log(`Error retrieving setlist: ${err}`);
+    getSetlist()
+    .then((res) => {
+        setlist = res;
+        const sortedSetlist = sortSetlistByOrder(setlist);
+        for (const setlistItem of sortedSetlist) {
+            const item = document.createElement('li');
+            item.value = setlistItem.position;
+            item.innerText = setlistItem.name;
+            item.draggable = true;
+        
+            item.addEventListener('dragstart', (e) => {
+                current = e.target;
+                for (let targetItem of items) {
+                    if (targetItem != current) targetItem.classList.add('hint');
+                }
+            });
+        
+            item.addEventListener('dragenter', (e) => {
+                if (e.target != current) e.target.classList.add('active');
+            })
+        
+            item.addEventListener('dragleave', (e) => {
+                e.target.classList.remove('active');
+            });
+        
+            item.addEventListener('dragend', () => {
+                for (let targetItem of items) {
+                    targetItem.classList.remove('hint');
+                    targetItem.classList.remove('active');
+                }
+            });
+        
+            item.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+        
+            item.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (e.target != current) {
+                    let currentpos = 0, droppedpos = 0;
+                    for (let i = 0; i < items.length; i ++) {
+                        if (current == items[i]) currentpos = i;
+                        if (e.target == items[i]) droppedpos = i;
+                    }
+                    if (currentpos < droppedpos)
+                        e.target.parentNode.insertBefore(current, e.target.nextSibling);
+                    else
+                        e.target.parentNode.insertBefore(current, e.target);
+                    saveSetlist();
+                }
+            });
+            target.appendChild(item);
+            items.push(item);
         }
-        setRequest.onsuccess = () => {
-            setlist = setRequest.result;
-            const sortedSetlist = sortSetlistByOrder(setRequest.result);
-            for (const setlistItem of sortedSetlist) {
-                const item = document.createElement('li');
-                item.value = setlistItem.position;
-                item.innerText = setlistItem.name;
-                item.draggable = true;
-            
-                item.addEventListener('dragstart', (e) => {
-                    current = e.target;
-                    for (let targetItem of items) {
-                        if (targetItem != current) targetItem.classList.add('hint');
-                    }
-                });
-            
-                item.addEventListener('dragenter', (e) => {
-                    if (e.target != current) e.target.classList.add('active');
-                })
-            
-                item.addEventListener('dragleave', (e) => {
-                    e.target.classList.remove('active');
-                });
-            
-                item.addEventListener('dragend', () => {
-                    for (let targetItem of items) {
-                        targetItem.classList.remove('hint');
-                        targetItem.classList.remove('active');
-                    }
-                });
-            
-                item.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                });
-            
-                item.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    if (e.target != current) {
-                        let currentpos = 0, droppedpos = 0;
-                        for (let i = 0; i < items.length; i ++) {
-                            if (current == items[i]) currentpos = i;
-                            if (e.target == items[i]) droppedpos = i;
-                        }
-                        if (currentpos < droppedpos)
-                            e.target.parentNode.insertBefore(current, e.target.nextSibling);
-                        else
-                            e.target.parentNode.insertBefore(current, e.target);
-                        saveSetlist();
-                    }
-                });
-                target.appendChild(item);
-                items.push(item);
-            }
-        }
-    }
+    })
 }
 
+/**
+ * Save sorted setlist to database
+ */
 const saveSetlist = () => {
     const setlistItems = document.getElementById('setlist').getElementsByTagName('li');
     for (const [setlistPos, setlistItem] of Object.entries(setlistItems)) {
@@ -139,6 +125,7 @@ const saveSetlist = () => {
         }
     }
 }
+
 
 // add reset button to page
 const resetApp = () => {

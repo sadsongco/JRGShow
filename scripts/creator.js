@@ -86,8 +86,11 @@ const showParams = (modName) => {
     }
 }
 
+/**
+ * Update parameter values when control is changed
+ * @param {Event} e - triggering event
+ */
 const updateParameter = (e) => {
-    console.log((e.target.value * 255) | 0);
     const names = e.target.name.split("-");
     const moduleName = names[0], paramName = names[1];
     if (e.target.type === 'checkbox')
@@ -297,32 +300,11 @@ selectedSlot = modSlot;
 setOutputPath();
 
 // track module chain
-export let moduleChain = []
+let moduleChain = []
 
 // p5js preview visualiser
 
-export let inputDevice, outputRes, cnv, vidIn;
-let asciiart_width, asciiart_height;
-const asciiCof = 12;
-
-// setters for exporting global contants to modules
-// https://stackoverflow.com/questions/53723251/javascript-modifing-an-imported-variable-causes-assignment-to-constant-varia
-
-export const setInputDevice = function(device) {
-    inputDevice = device;
-}
-
-export const setOutputRes = function(res) {
-    outputRes = res;
-}
-
-export const setCanvas = function(canvas) {
-    cnv = canvas;
-}
-
-export const setVidIn = function(vidSrc) {
-    vidIn = vidSrc;
-}
+let cnv, vidIn;
 
 /**
  * P5.JS preload function
@@ -330,6 +312,9 @@ export const setVidIn = function(vidSrc) {
  */
 window.preload = function() {
     importModules()
+    .then((res) => {
+        visualiserModules = res;
+    })
 }
 
 /**
@@ -338,7 +323,10 @@ window.preload = function() {
  */
 window.setup = function() {
     // get data from persistent storage
-    setupVisualisers();
+    setupVisualisers(4, 'preview')
+    .then((res)=>{
+        [cnv, vidIn] = res;
+    })
 }
 
 /**
@@ -346,5 +334,5 @@ window.setup = function() {
  * Called every frame
  */
 window.draw = function() {
-    visualiserDraw();
+    visualiserDraw(moduleChain, visualiserModules, visualiserParamVals, vidIn, cnv);
 }

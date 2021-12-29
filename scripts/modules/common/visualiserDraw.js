@@ -1,7 +1,7 @@
 import getPixelValues from '../util/getPixelValues.js';
-import { moduleChain, visualiserModules, visualiserParamVals, vidIn, cnv } from "../../creator.js";
 
-export function visualiserDraw() {
+export function visualiserDraw(moduleChain, visualiserModules, visualiserParamVals, vidIn, cnv) {
+    // console.log(moduleChain)
     background(0, 0, 0, 255);
     for (const module of moduleChain) {
         const kwargs = visualiserParamVals[module.name];

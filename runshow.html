@@ -8,37 +8,25 @@
     <title>JRG - Show Visuals - Setlist Home</title>
 </head>
 <body>
-    <div class="container">    
-        <h1>JRG END OF THE ROAD FESTIVAL SHOW VISUALS - SETLIST HOME</h1>
-        <p>
-            Click on name to load song. <br>
-            Right arrow: fade in / out <br>
-            Left arrow: start vis running <br>
-            T: fade title in / out | S: fade source in / out | C: fade featured artist in / out <br>
-        </p>
-        <div id="setListContainer"></div>
-        <div id="threshControls">
-            <fieldset id="threshControlSet">
-                <legend>Threshold controls</legend>
-                <label for="threshBase">Base Threshold</label>
-                <input id="threshBase"
-                    type="range"
-                    min="0"
-                    max="255"
-                    step="1"
-                    value="100"
-                    style="width: 255px;">
-                <span id="threshBaseVal"></span>
-                <br />
-                <label for="threshDyn">Dynamic Threshold</label>
-                <input id="threshDyn"
-                    type="checkbox">
-                <span id="threshDynVal">OFF</span>
-            </fieldset>
+    <header>
+        <h1>
+            Run Show
+        </h1>
+    </header>
+    <main>
+        <section class="instructions">
+            <p>
+                Click on name to load song. <br>
+                Right arrow: fade in / out <br>
+                Left arrow: start vis running <br>
+                T: fade title in / out | S: fade source in / out | C: fade featured artist in / out <br>
+            </p>
+        </section>
+        <section id="setListContainer"></section>
+        <div id="liveParameters">
         </div>
-        <div id="loResControls"></div>
         <div id="visRunning"></div>
-    </div>
-    <script type="module" src="./scripts/pageManager.js"></script>
+    </main>
+    <script type="module" src="./scripts/runShow.js"></script>
 </body>
 </html>
