@@ -10,6 +10,10 @@
   padding: 10px;
   border: 1px solid #333;
   background: #eaeaea;
+  color: black;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .slist li.hint {
@@ -17,4 +21,20 @@
 }
 .slist li.active {
   background: #ffd4d4;
+}
+.slist li.grabbed {
+  background: #999;
+  color: red;
+  font-weight: 800;
+  width: 50%;
+}
+
+.slist li .optButton {
+  color: #800;
+  font-weight: 800;
+  background-color: #ccc;
+  padding: 4px;
+  border-radius: 5px;
+  border: 1px solid #999;
+  margin: 0 3px;
 }

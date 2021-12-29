@@ -1,10 +1,10 @@
 import getPixelValues from '../util/getPixelValues.js';
 
-export function visualiserDraw(moduleChain, visualiserModules, visualiserParamVals, vidIn, cnv) {
+export function visualiserDraw(moduleChain, visualiserModules, vidIn, cnv) {
     // console.log(moduleChain)
     background(0, 0, 0, 255);
     for (const module of moduleChain) {
-        const kwargs = visualiserParamVals[module.name];
+        const kwargs = module.params;
         if (typeof visualiserModules[module.name].processFramePre == 'function')
             visualiserModules[module.name].processFramePre(vidIn, kwargs);
     }
@@ -16,7 +16,7 @@ export function visualiserDraw(moduleChain, visualiserModules, visualiserParamVa
                 const pixIdx = ((vy * width) + vx) * 4;
                 let pixVals = getPixelValues(pixIdx, vidIn.pixels);
                 for (const module of moduleChain) {
-                    const kwargs = visualiserParamVals[module.name];
+                    const kwargs = module.params;
                     if (typeof visualiserModules[module.name].processPixels == 'function')
                         visualiserModules[module.name].processPixels(pixIdx, pixVals, kwargs);
                 }

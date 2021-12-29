@@ -12,6 +12,8 @@ window.onload = () => {
  */
 const slist = (target) => {
     target = document.getElementById(target);
+    while (target.firstChild)
+        target.removeChild(target.firstChild);
     target.classList.add('slist');
     let items = [];
     let current = null;
@@ -21,12 +23,29 @@ const slist = (target) => {
         const sortedSetlist = sortSetlistByOrder(setlist);
         for (const setlistItem of sortedSetlist) {
             const item = document.createElement('li');
-            item.value = setlistItem.position;
+            item.value = parseInt(setlistItem.position);
             item.innerText = setlistItem.name;
             item.draggable = true;
+
+            // add edit and delete buttons to list
+            const options = document.createElement('div');
+            const delItem = document.createElement('a');
+            const editItem = document.createElement('a');
+            editItem.innerText = 'edit';
+            editItem.classList.add('optButton');
+            editItem.id = setlistItem.name;
+            editItem.addEventListener('click', editSetlistItem);
+            options.appendChild(editItem);
+            delItem.innerText = 'delete';
+            delItem.classList.add('optButton');
+            delItem.id = setlistItem.name;
+            delItem.addEventListener('click', deleteSetlistItem);
+            options.appendChild(delItem);
+            item.appendChild(options);
         
             item.addEventListener('dragstart', (e) => {
                 current = e.target;
+                current.classList.add('grabbed');
                 for (let targetItem of items) {
                     if (targetItem != current) targetItem.classList.add('hint');
                 }
@@ -53,6 +72,7 @@ const slist = (target) => {
         
             item.addEventListener('drop', (e) => {
                 e.preventDefault();
+                current.classList.remove('grabbed');
                 if (e.target != current) {
                     let currentpos = 0, droppedpos = 0;
                     for (let i = 0; i < items.length; i ++) {
@@ -80,7 +100,7 @@ const saveSetlist = () => {
     for (const [setlistPos, setlistItem] of Object.entries(setlistItems)) {
         for (let item of setlist) {
             if (item.name === setlistItem.innerText)
-                item.position = setlistPos;
+                item.position = parseInt(setlistPos);
         }
     }
     let openRequest = indexedDB.open('visDB', 1);
@@ -126,6 +146,32 @@ const saveSetlist = () => {
     }
 }
 
+const deleteSetlistItem = (e) => {
+    let confirmed = confirm(`Do you want to delete ${e.target.id}?`);
+    if (confirmed) {
+        let openRequest = indexedDB.open('visDB', 1);
+        openRequest.onerror = (err) => {
+            console.log(`Error opening database: ${err.message}`);
+        }
+        openRequest.onsuccess = () => {
+            let db = openRequest.result;
+            const transaction = db.transaction('setlist', 'readwrite');
+            const request = transaction.objectStore('setlist').delete(e.target.id);
+            request.onerror = (err) => {
+                console.log(`Error deleting item ${e.target.id}: ${err.message}`);
+            }
+            transaction.oncomplete = () => {
+                console.log(`${e.target.id} deleted`);
+                slist('setlist');
+            }
+            
+        }
+    }
+}
+
+const editSetlistItem = (e) => {
+    window.location.href = `creator.html?edit=true&track=${e.target.id}`;
+}
 
 // add reset button to page
 const resetApp = () => {
@@ -136,7 +182,8 @@ const resetApp = () => {
     }
     return;
 }
-const reset = document.createElement('button');
+const reset = document.createElement('a');
+reset.classList.add('button');
 reset.innerText = 'Reset Application';
 document.getElementById('reset').appendChild(reset);
 reset.addEventListener('click', resetApp);

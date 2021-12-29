@@ -4,13 +4,14 @@ import { getSetlist, sortSetlistByOrder } from './modules/common/getSetlist.js';
 import keyEvent from './modules/util/controlKeyEvents.js'
 import processVisMessage from './modules/util/processVisMessage.js'
 
-let setlist;
+let setlist = {};
 let currSetId = -1
 let currSetState = 0
 let currVisState = 0
 let currSourceState = 0
 let currFeatState = 0
 let run = false
+let visWindow
 
 
 window.onload = function () {
@@ -33,7 +34,7 @@ window.onload = function () {
         outputResQuery.onsuccess = () => {
             const outputRes = outputResQuery.result.outputResolution;
             // window.open('./vis.html', '_blank', `width=${outputRes.w}, height=${outputRes.h}`);
-            window.open('./vis.html', 'vis', `width=${outputRes.w}, height=${outputRes.h}`);
+            visWindow = window.open('./vis.html', 'vis', `width=${outputRes.w}, height=${outputRes.h}`);
         }
         outputResQuery.onerror = () => {
             console.log(`Database error: ${outputResQuery.error}`);
@@ -42,9 +43,9 @@ window.onload = function () {
     // get setlist and display
     getSetlist()
     .then((res) => {
-        setlist = res;
         const setlistContainer = document.getElementById('setListContainer')
         for (let item of sortSetlistByOrder(res)) {
+            setlist[item.name] = item;
             const newEl = document.createElement('div')
             newEl.id = item.name;
             newEl.classList.add('setlistItem');
@@ -63,7 +64,7 @@ const launchSetlistItem = function(e) {
     if (currTrackEl) currTrackEl.classList.remove('currTrack')
     channel.postMessage({
         changeTrack: true,
-        setItem: e.target.id
+        track: setlist[e.target.id],
     })
     currSetId = e.target.id
     currSetState = 0
@@ -74,3 +75,20 @@ const launchSetlistItem = function(e) {
 
 const channel = new BroadcastChannel('vis-comms')
 channel.addEventListener('message', (e)=> processVisMessage(e))
+
+// add close show button
+const closeShow = (e) => {
+    let confirmed = confirm('Do you really want to close the show?');
+    if (confirmed) {
+        let reallyConfirmed = confirm("Sorry to be a pest, but this will close the visualiser window. Only press OK if you're really sure you want to end the show");
+        if (reallyConfirmed) {
+            visWindow.close();
+            window.location.href = "hub.html";
+        }
+    }
+}
+const closeShowButton = document.createElement('a');
+closeShowButton.classList.add('button');
+closeShowButton.innerText = 'Close Show';
+closeShowButton.addEventListener('click', closeShow)
+document.getElementById('closeShow').appendChild(closeShowButton);

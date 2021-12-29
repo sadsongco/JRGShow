@@ -1,38 +1,44 @@
+// async indexeddb wrapper https://github.com/jakearchibald/idb
+import { openDB } from 'https://cdn.jsdelivr.net/npm/idb@7/+esm';
+
 // import registered visualisers
 import { visList } from "./modules/visualisers/registeredVis.js";
 import { visualiserDraw } from "./modules/common/visualiserDraw.js";
 import { importModules } from "./modules/common/importModules.js";
 import { setupVisualisers } from "./modules/common/setupVisualisers.js";
 
-export let visualiserModules = {}, visualiserParamVals = {};
+let visualiserModules = {};
 
 /**
  * Adds a visualiser to a screen slot
  * @param {Event} e - HTML event
  */
 const addModule = (e) => {
-    selectedSlot.innerText = moduleSelector.value;
+    selectedSlot.innerText = visualiserSelector.value;
     selectedSlot.filled = true;
     selectedSlot.classList.add('slot-filled');
     setOutputPath();
     updateModuleChain();
-    showParams(moduleSelector.value);
+    showParams(visualiserSelector.value);
 }
 
 /**
  * Updates the chain of modules to match screen slots
  */
 const updateModuleChain = () => {
-    moduleChain = [];
-    visualiserParamVals = {};
+    console.log(currentVisChain)
+    currentVisChain = [];
     for (let modSlot of modSlots) {
         if (modSlot.filled) {
-            moduleChain.push(visModules[modSlot.innerText])
+            const modObj = {};
+            modObj.name = modSlot.innerText;
+            // moduleChain.push(visModules[modSlot.innerText])
             const moduleParams = {};
             for (let param of visualiserModules[modSlot.innerText].params) {
                 moduleParams[param.name] = param.value;
             }
-            visualiserParamVals[modSlot.innerText] = moduleParams;
+            modObj.params = moduleParams;
+            currentVisChain.push(modObj)
         }
     }
 }
@@ -93,10 +99,14 @@ const showParams = (modName) => {
 const updateParameter = (e) => {
     const names = e.target.name.split("-");
     const moduleName = names[0], paramName = names[1];
-    if (e.target.type === 'checkbox')
-        visualiserParamVals[moduleName][paramName] = e.target.checked;
-    else
-        visualiserParamVals[moduleName][paramName] = parseFloat(e.target.value);
+    for (let visMod of currentVisChain) {
+        if (visMod.name == moduleName) {
+            if (e.target.type === 'checkbox')
+                return visMod.params[paramName] = e.target.checked;
+            else
+                return visMod.params[paramName] = parseFloat(e.target.value);
+        }
+    }
 }
 
 /**
@@ -109,6 +119,21 @@ const clearParams = () => {
         paramsEl.removeChild(paramsEl.firstChild);
     const paramTitle = document.getElementById('parameters-title');
     paramTitle.innerText = "";
+}
+
+const updateSlots = () => {
+    let currSlot;
+    for (const visIdx in currentVisChain) {
+        const currVis = currentVisChain[visIdx]
+        currSlot = modSlots[parseInt(visIdx) + (modSlots.length - currentVisChain.length)];
+        currSlot.innerText = currVis.name;
+        currSlot.filled = true;
+        currSlot.classList.add('slot-filled')
+    }
+    currSlot.classList.add('slot-selected');
+    setOutputPath();
+    updateModuleChain();
+    showParams(visualiserSelector.value);
 }
 
 /**
@@ -132,6 +157,13 @@ const deselectAll = () => {
         modSlot.classList.remove('slot-selected')
     }
     selectedSlot = false;
+}
+
+
+const fillDetails = async (setItem) => {
+    document.getElementById('trackName').value = setItem.name;
+    document.getElementById('trackSource').value = setItem.source;
+    document.getElementById('trackFeatured').value = setItem.feature;
 }
 
 /**
@@ -204,10 +236,10 @@ const saveSettings = (e) => {
         visChain: [],
         position: -1 // placeholder, value retrieved from database
     }
-    for (let visModule of moduleChain) {
+    for (let visModule of currentVisChain) {
         const trackModule = {
             name: visModule.name,
-            params: visualiserParamVals[visModule.name]
+            params: visModule.params
         }
         track.visChain.push(trackModule);
     }
@@ -227,10 +259,9 @@ const saveSettings = (e) => {
         }
         openCursorRequest.onsuccess = (event) => {
             if (event.target.result)
-                track.position = event.target.result.value.position + 1;
+                track.position = parseInt(event.target.result.value.position) + 1;
             else
                 track.position = 0
-            console.log(track)
             let saveRequest = setList.put(track);
             saveRequest.onerror = (err) => {
                 console.log(`Error saving setlist item: ${err.target.error.message}`, err);
@@ -243,12 +274,34 @@ const saveSettings = (e) => {
     }
 }
 
-// make module selector
+// check if editing or creating new
+const editExisting = async (trackName) => {
+    let db = await openDB('visDB', 1, db => {
+        if (db.oldVersion == 0) {
+            console.log(`Error opening database: ${err.message}`);
+            return [];
+        }
+    });
+    try {
+        let res = await db.get('setlist', trackName);
+        return res;
+    }
+    catch (err) {
+        console.log(`Error retrieving ${trackName} from setlist: ${err}`)
+        return []
+    }
+}
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+let currentVisChain = [];
+
+
+// make visualiser selector
 const selectorTarget = document.getElementById('module-selector');
 
-const moduleSelector = document.createElement('select');
+const visualiserSelector = document.createElement('select');
 
-const visModules = {};
+const allVisModules = {};
 
 for (let visGroup of visList) {
     const optGroup = document.createElement('optgroup');
@@ -258,15 +311,14 @@ for (let visGroup of visList) {
         option.value = vis.name;
         option.text = vis.name;
         optGroup.appendChild(option);
-        visModules[vis.name] = {
+        allVisModules[vis.name] = {
             name: vis.name
         };
     }
-    moduleSelector.add(optGroup);
+    visualiserSelector.add(optGroup);
 }
 
-selectorTarget.appendChild(moduleSelector)
-
+selectorTarget.appendChild(visualiserSelector)
 // add fill and clear slot buttons
 const addModuleButton = document.createElement('button');
 addModuleButton.innerText = "Module to Selected Slot"
@@ -299,29 +351,32 @@ modSlot.classList.add('slot-selected');
 selectedSlot = modSlot;
 setOutputPath();
 
-// track module chain
-let moduleChain = []
 
-// p5js preview visualiser
 
+// p5js preview visualiser variables
 let cnv, vidIn;
 
 /**
  * P5.JS preload function
  * Called asnchronously once at beginning of execution
  */
-window.preload = function() {
-    importModules()
-    .then((res) => {
-        visualiserModules = res;
-    })
+window.preload = async function() {
+    visualiserModules = await importModules()
+    if (urlParams.get('edit')) {
+        const existingSetItem = await editExisting(urlParams.get('track'));
+        currentVisChain = existingSetItem.visChain;
+        if (currentVisChain.length > 0 || existingSetItem) {
+            await fillDetails(existingSetItem);
+            updateSlots();
+        }
+    }
 }
 
 /**
  * P5.JS setup function
  * Called once after preload is done
  */
-window.setup = function() {
+window.setup = async function() {
     // get data from persistent storage
     setupVisualisers(4, 'preview')
     .then((res)=>{
@@ -334,5 +389,5 @@ window.setup = function() {
  * Called every frame
  */
 window.draw = function() {
-    visualiserDraw(moduleChain, visualiserModules, visualiserParamVals, vidIn, cnv);
+    visualiserDraw(currentVisChain, visualiserModules, vidIn, cnv);
 }

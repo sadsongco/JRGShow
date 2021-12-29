@@ -11,18 +11,14 @@ const channel = new BroadcastChannel('vis-comms')
 channel.addEventListener('message', (e) => {
     console.log(e.data)
     if (e.data.changeTrack) {
-        if (currTrack !== e.data.setItem)
-            currTrack = e.data.setItem
+        if (currTrack !== e.data.track.title)
+            currTrack = e.data.track.title;
+            moduleChain = e.data.track.visChain;
     }
 })
 
-
-
-
-export let visualiserModules = {}, visualiserParamVals = {};
-
-// alert('VisMain')
-// track module chain
+// VISUALISER variables
+let visualiserModules = {};
 let moduleChain = []
 let cnv, vidIn;
 
@@ -43,7 +39,7 @@ window.preload = function() {
  */
 window.setup = function() {
     // get data from persistent storage
-    setupVisualisers(4, 'vis')
+    setupVisualisers(1, 'vis')
     .then((res)=>{
         [cnv, vidIn] = res;
     })
@@ -54,5 +50,5 @@ window.setup = function() {
  * Called every frame
  */
 window.draw = function() {
-    visualiserDraw(moduleChain, visualiserModules, visualiserParamVals, vidIn, cnv);
+    visualiserDraw(moduleChain, visualiserModules, vidIn, cnv);
 }
