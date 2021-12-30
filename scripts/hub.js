@@ -20,6 +20,7 @@ const slist = (target) => {
     getSetlist()
     .then((res) => {
         setlist = res;
+        console.log(setlist)
         const sortedSetlist = sortSetlistByOrder(setlist);
         for (const setlistItem of sortedSetlist) {
             const item = document.createElement('li');

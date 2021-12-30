@@ -10,3 +10,11 @@ export const htmlToElement = function(html) {
     template.innerHTML = html
     return template.content
 }
+
+/**
+ * Converts a decimal number to a binary string
+ * https://medium.com/@parkerjmed/practical-bit-manipulation-in-javascript-bfd9ef6d6c30
+ * @param {float} x - decimal number to convert to binary
+ * @returns {string} - binary string
+ */
+export const d2b = x => x.toString(2);

@@ -161,10 +161,38 @@ main {
 /* parameters and preview */
 
 .parameters {
-  /* width: 45%;
+  color: #222;
+  padding: 0 2em 1em 2em;
+  width: 45%;
   height: 90%;
-  background-color: var(--bg-col); */
+  background-color: var(--bg-col);
+  border-radius: 15px;
 }
+
+.param-container {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.5em;
+}
+.param-name {
+  grid-column-start: 0;
+  grid-column-end: 1;
+}
+.param-container input {
+  grid-column-start: 1;
+  grid-column-end: 2;
+}
+
+.param-container input[type="range"] {
+  height: 1em;
+}
+
+.param-val {
+  grid-column-start: 2;
+  grid-column-end: 3;
+}
+
 .preview {
   display: flex;
   justify-content: center;

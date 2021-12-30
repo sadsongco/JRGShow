@@ -7,6 +7,10 @@ import { visualiserDraw } from "./modules/common/visualiserDraw.js";
 import { importModules } from "./modules/common/importModules.js";
 import { setupVisualisers } from "./modules/common/setupVisualisers.js";
 
+// import utilities and generators
+import { dynamicGenerator, pseudoRandomGenerator } from "./modules/util/generators.js"
+import { outputParameters, outputParamVals } from "./modules/parameters/outputParameters.js"
+
 let visualiserModules = {};
 
 /**
@@ -14,6 +18,8 @@ let visualiserModules = {};
  * @param {Event} e - HTML event
  */
 const addModule = (e) => {
+    if (!selectedSlot) return // don't try and fill output, or if no slot is selected somehow
+    if (e.target.id === 'output') return // can't fill output slot
     selectedSlot.innerText = visualiserSelector.value;
     selectedSlot.filled = true;
     selectedSlot.classList.add('slot-filled');
@@ -26,7 +32,6 @@ const addModule = (e) => {
  * Updates the chain of modules to match screen slots
  */
 const updateModuleChain = () => {
-    console.log(currentVisChain)
     currentVisChain = [];
     for (let modSlot of modSlots) {
         if (modSlot.filled) {
@@ -58,6 +63,16 @@ const selectSlot = (slot) => {
         clearParams();
 }
 
+const selectOutput = () => {
+    deselectAll()
+    outSlot.classList.add('slot-selected');
+    showParams('Output');
+}
+
+const deselectOutput = () => {
+    outSlot.classList.remove('slot-selected');
+}
+
 /**
  * Display parameters for visualiser in selected module
  * @param {string} modName - module to show params of
@@ -68,29 +83,41 @@ const showParams = (modName) => {
     while (paramsEl.firstChild)
         paramsEl.removeChild(paramsEl.firstChild);
     const paramTitle = document.getElementById('parameters-title');
-    paramTitle.innerText = `Parameters for ${modName}`;
-    for (let param of visualiserModules[modName].params) {
-        const paramContainer = document.createElement('div');
-        paramContainer.appendChild(document.createTextNode(param.name));
+    paramTitle.innerText = `${modName} Parameters`;
+    const params = modName === 'Output' ? outputParameters : visualiserModules[modName].params;
+    let paramContainer
+    paramContainer = document.createElement('div');
+    for (let param of params) {
+        paramContainer.classList.add('param-container')
+        const paramNameEl = document.createElement('div');
+        paramNameEl.classList.add('param-name')
+        paramNameEl.innerText = param.displayName;
+        paramContainer.appendChild(paramNameEl);
         const paramEntry = document.createElement('input');
         paramEntry.name = `${modName}-${param.name}`;
         paramEntry.addEventListener('change', updateParameter);
         switch (param.type) {
             case 'val':
                 paramEntry.type = 'range';
-                paramEntry.min = param.range ? param.range[0] : 0;
-                paramEntry.max = param.range ? param.range[1]: 255;
-                paramEntry.value = param.value || 100;
-                paramEntry.step = param.step ? param.step : 1;
+                paramEntry.min = param.hasOwnProperty('range') ? param.range[0] : 0;
+                paramEntry.max = param.hasOwnProperty('range') ? param.range[1]: 255;
+                paramEntry.value = param.hasOwnProperty('value') ? param.value : 100;
+                paramEntry.step = param.hasOwnProperty('step') ? param.step : 1;
                 break;
             case 'toggle':
                 paramEntry.type = 'checkbox';
                 break;
         };
         paramContainer.appendChild(paramEntry);
-        paramsEl.appendChild(paramContainer);
+        const paramVal = document.createElement('div');
+        paramVal.id = `${modName}-${param.name}-value`;
+        paramVal.classList.add('param-val');
+        paramVal.innerText = param.value;
+        paramContainer.appendChild(paramVal)
     }
+    paramsEl.appendChild(paramContainer);
 }
+
 
 /**
  * Update parameter values when control is changed
@@ -99,14 +126,24 @@ const showParams = (modName) => {
 const updateParameter = (e) => {
     const names = e.target.name.split("-");
     const moduleName = names[0], paramName = names[1];
-    for (let visMod of currentVisChain) {
-        if (visMod.name == moduleName) {
-            if (e.target.type === 'checkbox')
-                return visMod.params[paramName] = e.target.checked;
-            else
-                return visMod.params[paramName] = parseFloat(e.target.value);
+    const newValue = getParameterValue(e);
+    if (moduleName === 'Output') {
+        outputParamVals[paramName] = newValue;
+    } else {
+        for (let visMod of currentVisChain) {
+            if (visMod.name == moduleName) {
+                visMod.params[paramName] = newValue;
+            }
         }
     }
+    document.getElementById(`${e.target.name}-value`).innerText = newValue;
+}
+
+const getParameterValue = (e) => {
+    if (e.target.type === 'checkbox')
+        return e.target.checked;
+    else
+        return parseFloat(e.target.value);
 }
 
 /**
@@ -140,6 +177,7 @@ const updateSlots = () => {
  * Clears slot
  */
 const clearSlot = () => {
+    if (!selectedSlot) return;
     selectedSlot.innerText = "";
     selectedSlot.filled = false;
     selectedSlot.classList.remove('slot-filled');
@@ -152,6 +190,7 @@ const clearSlot = () => {
  * Deselects all slots
  */
 const deselectAll = () => {
+    deselectOutput();
     for (let modSlot of modSlots) {
         modSlot.selected = false;
         modSlot.classList.remove('slot-selected')
@@ -227,14 +266,15 @@ const hideAllOutputPaths = (modSlots) => {
  */
 const saveSettings = (e) => {
     const trackName = document.getElementById('trackName').value;
-    if (trackName === "")
+    if (trackName === "") 
     return alert('Track must have a name');
     const track = {
         name: trackName,
         source: document.getElementById('trackSource')?.value,
         feature: document.getElementById('trackFeatured')?.value,
         visChain: [],
-        position: -1 // placeholder, value retrieved from database
+        position: -1,
+        outputSettings: outputParamVals // placeholder, value retrieved from database
     }
     for (let visModule of currentVisChain) {
         const trackModule = {
@@ -303,6 +343,7 @@ const visualiserSelector = document.createElement('select');
 
 const allVisModules = {};
 
+
 for (let visGroup of visList) {
     const optGroup = document.createElement('optgroup');
     optGroup.label = visGroup.visGroup;
@@ -351,6 +392,10 @@ modSlot.classList.add('slot-selected');
 selectedSlot = modSlot;
 setOutputPath();
 
+// setup Output slot
+const outSlot = document.getElementById('output');
+outSlot.addEventListener('click', selectOutput)
+
 
 
 // p5js preview visualiser variables
@@ -389,5 +434,7 @@ window.setup = async function() {
  * Called every frame
  */
 window.draw = function() {
-    visualiserDraw(currentVisChain, visualiserModules, vidIn, cnv);
+    visualiserDraw(currentVisChain, visualiserModules, vidIn, cnv, outputParamVals);
 }
+
+
