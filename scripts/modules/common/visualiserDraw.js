@@ -3,7 +3,7 @@ import { dynamicGenerator, pseudoRandomGenerator } from "../util/generators.js"
 import getPixelValues from '../util/getPixelValues.js';
 
 export function visualiserDraw(moduleChain, visualiserModules, vidIn, cnv, outputParamVals) {
-    // console.log('visualiserDraw')
+    // console.log('visualiserDraw', outputParamVals)
     // frameRate(1)
     const { bg_opacity = 255, bg_r = 0, bg_g = 0, bg_b = 0 } = outputParamVals;
     background(bg_r, bg_g, bg_b, bg_opacity);

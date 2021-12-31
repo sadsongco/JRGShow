@@ -8,14 +8,8 @@
 
 #canvasContainer {
   background-color: black;
-  /* position: absolute;
-  left: 0;
-  top: 0; */
-  /* width: 100vw;
-  height: 100vh; */
   z-index: 1;
   opacity: 0;
-  transition: opacity 5s;
 }
 
 #busy {
@@ -36,7 +30,7 @@
   top: 15vh;
   left: 3vw;
   width: 94vw;
-  font-size: 80px;
+  font-size: 12vmin;
   text-align: center;
   opacity: 0;
   transition: opacity 3s ease-in-out;
@@ -48,7 +42,7 @@
   top: 18vh;
   left: 3vw;
   width: 94vw;
-  font-size: 60px;
+  font-size: 9vmin;
   text-align: center;
   opacity: 0;
   transition: opacity 3s ease-in-out;
@@ -62,7 +56,7 @@
   width: 91vw;
   /* padding-left: 50px; */
   padding-right: 50px;
-  font-size: 50px;
+  font-size: 7vmin;
   text-align: center;
   opacity: 0;
   transition: opacity 3s ease-in-out;

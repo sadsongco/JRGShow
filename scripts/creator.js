@@ -8,7 +8,6 @@ import { importModules } from "./modules/common/importModules.js";
 import { setupVisualisers } from "./modules/common/setupVisualisers.js";
 
 // import utilities and generators
-import { dynamicGenerator, pseudoRandomGenerator } from "./modules/util/generators.js"
 import { outputParameters, outputParamVals } from "./modules/parameters/outputParameters.js"
 
 let visualiserModules = {};

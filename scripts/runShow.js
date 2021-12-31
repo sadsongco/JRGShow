@@ -1,7 +1,7 @@
 import { getSetlist, sortSetlistByOrder } from './modules/common/getSetlist.js';
 
 // LOAD UTILITIES
-import keyEvent from './modules/util/controlKeyEvents.js'
+import keyEvent from './modules/util/runshowKeyEvents.js'
 import processVisMessage from './modules/util/processVisMessage.js'
 
 let setlist = {};
@@ -73,8 +73,9 @@ const launchSetlistItem = function(e) {
     currTrackEl.classList.add('currTrack')
 }
 
-const channel = new BroadcastChannel('vis-comms')
-channel.addEventListener('message', (e)=> processVisMessage(e))
+// Add animated show running message
+const runEl = document.getElementById('visRunning')
+runEl.innerText = "Visualiser Stopped"
 
 // add close show button
 const closeShow = (e) => {
@@ -92,3 +93,15 @@ closeShowButton.classList.add('button');
 closeShowButton.innerText = 'Close Show';
 closeShowButton.addEventListener('click', closeShow)
 document.getElementById('closeShow').appendChild(closeShowButton);
+
+// Event listeners for show control
+const channel = new BroadcastChannel('vis-comms')
+channel.addEventListener('message', (e)=> processVisMessage(e))
+
+document.addEventListener('keydown', (e)=>{
+    [currSetState, currSourceState, currFeatState, currVisState, run] = keyEvent(e, currVisState, currSetState, currSourceState, currFeatState, currSetId, run)
+    if (run)
+        runEl.innerText = "Visualiser Running [arrow left]"
+    else
+        runEl.innerText = "Visualiser Stopped [arrow left]"
+}, true)
