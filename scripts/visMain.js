@@ -142,8 +142,9 @@ const updateVis = function(currTrack) {
 // VISUALISER variables
 let visualiserModules = {};
 let moduleChain = []
-let cnv, vidIn;
+let cnv, vidIn, audioIn;
 let outputSettings;
+let fft;
 
 /**
  * P5.JS preload function
@@ -161,8 +162,11 @@ window.preload = function() {
  * Called once after preload is done
  */
 window.setup = async function() {
+    const audioCtx = getAudioContext();
     // get data from persistent storage
-    [cnv, vidIn] = await setupVisualisers(1, 'canvasContainer')
+    [cnv, vidIn, audioIn] = await setupVisualisers(1, 'canvasContainer', audioCtx)
+    fft = new p5.FFT();
+    fft.setInput(audioIn);
     outputSettings = outputParamVals;
 }
 
@@ -171,5 +175,6 @@ window.setup = async function() {
  * Called every frame
  */
 window.draw = function() {
-    visualiserDraw(moduleChain, visualiserModules, vidIn, cnv, outputSettings);
+    if (!fft || !outputSettings) return;
+    visualiserDraw(moduleChain, visualiserModules, vidIn, audioIn, fft, cnv, outputSettings);
 }

@@ -9,7 +9,9 @@ window.onload = () => {
             db.createObjectStore('outputResolution', {keyPath: 'id'});
         if (!db.objectStoreNames.contains('inputDevice'))
             db.createObjectStore('inputDevice', {keyPath: 'id'});
-        if (!db.objectStoreNames.contains('visChains'))
+        if (!db.objectStoreNames.contains('audioSource'))
+            db.createObjectStore('audioSource', {keyPath: 'id'});
+            if (!db.objectStoreNames.contains('visChains'))
             db.createObjectStore('visChains', {keyPath: 'id'});
         if (!db.objectStoreNames.contains('setlist')) {
             let setlist = db.createObjectStore('setlist', {keyPath: 'name'});
@@ -30,19 +32,26 @@ window.onload = () => {
 
 // helper function for capturing from specific video source
 // https://editor.p5js.org/codingtrain/sketches/JjRoa1lWO
-const devices = [];
+const devices = [], audioSources = [];
 const deviceTarget = document.getElementById('vidsrc');
 const deviceSelector = document.createElement('select');
+const audioTarget = document.getElementById('audiosrc');
+const audioSelector = document.createElement('select');
 
 /**
  * Creates variables and HTML selector from available video input devices
  * @param {array} deviceInfos - available video input devices
  */
 const gotDevices = (deviceInfos) => {
-    for (let i = 0; i !== deviceInfos.length; ++i) {
-        const deviceInfo = deviceInfos[i];
+    for (let deviceInfo of deviceInfos) {
         if (deviceInfo.kind == 'videoinput') {
             devices.push({
+                label: deviceInfo.label,
+                id: deviceInfo.deviceId
+            });
+        }
+        if (deviceInfo.kind == 'audioinput') {
+            audioSources.push({
                 label: deviceInfo.label,
                 id: deviceInfo.deviceId
             });
@@ -65,6 +74,18 @@ const gotDevices = (deviceInfos) => {
         deviceSelector.add(option)
     }
     deviceTarget.appendChild(deviceSelector);
+    for (let audioIdx in audioSources) {
+        const device = audioSources[audioIdx];
+        const option = document.createElement('option');
+        option.value = audioIdx
+        option.text = device.label;
+        audioSelector.add(option)
+    }
+    audioTarget.appendChild(audioSelector);
+}
+
+const gotSources = (deviceList) => {
+    console.log(deviceList);
 }
 
 /**
@@ -73,6 +94,7 @@ const gotDevices = (deviceInfos) => {
 const launchVis = () => {
     console.log(resolutions[resSelector.value])
     console.log(devices[deviceSelector.value])
+    console.log(audioSources[audioSelector.value])
     let openRequest = indexedDB.open('visDB', 1);
     openRequest.onerror = () => {
         return 'Database error'
@@ -87,7 +109,7 @@ const launchVis = () => {
             outputResolution: resolutions[resSelector.value]
         }
         writeSettings.put(outputSettings);
-        // write input settings to db
+        // write video input settings to db
         transaction = db.transaction('inputDevice', 'readwrite');
         writeSettings = transaction.objectStore('inputDevice');
         let inputDevice = {
@@ -95,11 +117,22 @@ const launchVis = () => {
             inputDevice: devices[deviceSelector.value]
         }
         writeSettings.put(inputDevice);
+        // write audio input settings to db
+        transaction = db.transaction('audioSource', 'readwrite');
+        writeSettings = transaction.objectStore('audioSource');
+        let audioDevice = {
+            id: 1,
+            sources: audioSources,
+            sourceIdx: parseInt(audioSelector.value),
+            source: audioSources[audioSelector.value]
+        }
+        writeSettings.put(audioDevice);
     }
     window.location.href = "/hub.html";
 }
 
-// set up camera to capture from other source
+// get video and audio sources
+// TODO selected device doesn't carry over - look here: https://jsfiddle.net/bomzj/beap6n2g/
 navigator.mediaDevices.enumerateDevices()
 .then(gotDevices)
 

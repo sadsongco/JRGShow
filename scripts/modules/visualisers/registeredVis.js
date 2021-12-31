@@ -4,6 +4,7 @@ export const visList = [
         visualisers: [
             {name: "bitwiseN"},
             {name: "bitwise1"},
+            {name: "dynTest"},
             // {name: "bitwise2"},
             // {name: "bitwiseBrighten"},
             // {name: "specLoading"},

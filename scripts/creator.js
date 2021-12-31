@@ -52,6 +52,7 @@ const updateModuleChain = () => {
  * @param {HTMLElement} slot - slot that has been clicked on
  */
 const selectSlot = (slot) => {
+    audioIn.start();
     deselectAll();
     selectedSlot = slot;
     slot.selected = true;
@@ -63,6 +64,7 @@ const selectSlot = (slot) => {
 }
 
 const selectOutput = () => {
+    audioIn.start()
     deselectAll()
     outSlot.classList.add('slot-selected');
     showParams('Output');
@@ -398,7 +400,8 @@ outSlot.addEventListener('click', selectOutput)
 
 
 // p5js preview visualiser variables
-let cnv, vidIn;
+let cnv, vidIn, audioIn;
+let fft = null;
 
 /**
  * P5.JS preload function
@@ -422,10 +425,10 @@ window.preload = async function() {
  */
 window.setup = async function() {
     // get data from persistent storage
-    setupVisualisers(4, 'preview')
-    .then((res)=>{
-        [cnv, vidIn] = res;
-    })
+    const audioCtx = getAudioContext();
+    [cnv, vidIn, audioIn] = await setupVisualisers(4, 'preview', audioCtx)
+    fft = new p5.FFT(0.8, 32);
+    fft.setInput(audioIn);
 }
 
 /**
@@ -433,7 +436,9 @@ window.setup = async function() {
  * Called every frame
  */
 window.draw = function() {
-    visualiserDraw(currentVisChain, visualiserModules, vidIn, cnv, outputParamVals);
+    // console.log(fft);
+    if (!fft || !outputParamVals) return;
+    visualiserDraw(currentVisChain, visualiserModules, vidIn, audioIn, fft, cnv, outputParamVals);
 }
 
 

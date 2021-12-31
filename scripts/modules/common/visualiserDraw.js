@@ -2,16 +2,21 @@
 import { dynamicGenerator, pseudoRandomGenerator } from "../util/generators.js"
 import getPixelValues from '../util/getPixelValues.js';
 
-export function visualiserDraw(moduleChain, visualiserModules, vidIn, cnv, outputParamVals) {
+export function visualiserDraw(moduleChain, visualiserModules, vidIn, audioIn, fft, cnv, outputParamVals) {
     // console.log('visualiserDraw', outputParamVals)
     // frameRate(1)
+    // set background
     const { bg_opacity = 255, bg_r = 0, bg_g = 0, bg_b = 0 } = outputParamVals;
+    // const bg_opacity = 255, bg_r = 0, bg_g = 0, bg_b = 0;
     background(bg_r, bg_g, bg_b, bg_opacity);
+    // get audio data
+    // let spectrum = fft.analyze()
     const dyn = dynamicGenerator();
     const rand = pseudoRandomGenerator();
     // console.log(rand)
     for (const module of moduleChain) {
         const kwargs = module.params;
+        kwargs.fft = fft;
         if (typeof visualiserModules[module.name].processFramePre == 'function')
         visualiserModules[module.name].processFramePre(vidIn, kwargs);
     }
@@ -25,6 +30,7 @@ export function visualiserDraw(moduleChain, visualiserModules, vidIn, cnv, outpu
                 let pixVals = getPixelValues(pixIdx, vidIn.pixels);
                 for (const module of moduleChain) {
                     const kwargs = module.params;
+                    kwargs.fft = fft;
                     kwargs.dyn = dyn;
                     kwargs.rand = rand[randIdx];
                     if (typeof visualiserModules[module.name].processPixels == 'function')
@@ -35,7 +41,10 @@ export function visualiserDraw(moduleChain, visualiserModules, vidIn, cnv, outpu
         }
         updatePixels();
     }
-    for (const module of moduleChain)
+    for (const module of moduleChain) {
+        const kwargs = module.params;
+        kwargs.fft = fft;
         if (typeof visualiserModules[module.name].processFramePost == 'function')
             visualiserModules[module.name].processFramePost(vidIn);
+    }
 }
