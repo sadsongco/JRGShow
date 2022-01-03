@@ -52,7 +52,7 @@ const updateModuleChain = () => {
  * @param {HTMLElement} slot - slot that has been clicked on
  */
 const selectSlot = (slot) => {
-    audioIn.start();
+    // audioIn.start();
     deselectAll();
     selectedSlot = slot;
     slot.selected = true;
@@ -96,7 +96,7 @@ const showParams = (modName) => {
         paramContainer.appendChild(paramNameEl);
         const paramEntry = document.createElement('input');
         paramEntry.name = `${modName}-${param.name}`;
-        paramEntry.addEventListener('change', updateParameter);
+        paramEntry.addEventListener('input', updateParameter);
         switch (param.type) {
             case 'val':
                 paramEntry.type = 'range';
@@ -402,6 +402,8 @@ outSlot.addEventListener('click', selectOutput)
 // p5js preview visualiser variables
 let cnv, vidIn, audioIn;
 let fft = null;
+// setup preview shrink ratio - larger numbner is smaller preview
+let prevSize = 4;
 
 /**
  * P5.JS preload function
@@ -409,6 +411,9 @@ let fft = null;
  */
 window.preload = async function() {
     visualiserModules = await importModules()
+    for (let visualiserModule of Object.values(visualiserModules)) {
+        visualiserModule.preload()
+    }
     if (urlParams.get('edit')) {
         const existingSetItem = await editExisting(urlParams.get('track'));
         currentVisChain = existingSetItem.visChain;
@@ -426,7 +431,7 @@ window.preload = async function() {
 window.setup = async function() {
     // get data from persistent storage
     const audioCtx = getAudioContext();
-    [cnv, vidIn, audioIn] = await setupVisualisers(4, 'preview', audioCtx)
+    [cnv, vidIn, audioIn] = await setupVisualisers(prevSize, 'preview', audioCtx)
     fft = new p5.FFT(0.8, 32);
     fft.setInput(audioIn);
 }
@@ -438,7 +443,7 @@ window.setup = async function() {
 window.draw = function() {
     // console.log(fft);
     if (!fft || !outputParamVals) return;
-    visualiserDraw(currentVisChain, visualiserModules, vidIn, audioIn, fft, cnv, outputParamVals);
+    visualiserDraw(currentVisChain, visualiserModules, vidIn, audioIn, fft, cnv, outputParamVals, prevSize);
 }
 
 

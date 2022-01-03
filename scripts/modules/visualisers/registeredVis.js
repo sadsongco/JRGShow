@@ -26,14 +26,14 @@ export const visList = [
     //         {name: "threshold"},
     //     ]
     // },
-    // {
-    //     visGroup: "loRes",
-    //     visualisers: [
-    //         {name: "boxes"},
+    {
+        visGroup: "loRes",
+        visualisers: [
+            {name: "boxes"},
     //         {name: "circles"},
     //         {name: "lines"},
-    //     ]
-    // },
+        ]
+    },
     {
         visGroup: "straightVideo",
         visualisers: [

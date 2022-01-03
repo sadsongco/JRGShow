@@ -5,10 +5,12 @@ import { visList } from "../visualisers/registeredVis.js";
  */
 export const importModules = async function () {
     const visualiserModules = {};
+    const path = '../visualisers/'
     for (let visGroup of visList) {
         for (let vis of visGroup.visualisers) {
-            const modulePath = `../visualisers/${visGroup.visGroup}/${vis.name}.js`;
-            visualiserModules[vis.name] = await import(modulePath)
+            const modulePath = `${path}${visGroup.visGroup}/${vis.name}.js`;
+            const currModule = await import(modulePath)
+            visualiserModules[vis.name] = new currModule[vis.name]
         }
     }
     return  visualiserModules;

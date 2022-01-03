@@ -2,7 +2,7 @@
 import { dynamicGenerator, pseudoRandomGenerator } from "../util/generators.js"
 import getPixelValues from '../util/getPixelValues.js';
 
-export function visualiserDraw(moduleChain, visualiserModules, vidIn, audioIn, fft, cnv, outputParamVals) {
+export function visualiserDraw(moduleChain, visualiserModules, vidIn, audioIn, fft, cnv, outputParamVals, prevSize = 1) {
     // console.log('visualiserDraw', outputParamVals)
     // frameRate(1)
     // set background
@@ -29,7 +29,12 @@ export function visualiserDraw(moduleChain, visualiserModules, vidIn, audioIn, f
                 let randIdx = rand.length - (Math.abs((pixIdx ^ parseInt(rand, 2)) << 1) % rand.length) - 1;
                 let pixVals = getPixelValues(pixIdx, vidIn.pixels);
                 for (const module of moduleChain) {
+                    // include module parameters in arguments
                     const kwargs = module.params;
+                    // include common parameters in arguments
+                    kwargs.prevSize = prevSize;
+                    kwargs.vx = vx;
+                    kwargs.vy = vy;
                     kwargs.fft = fft;
                     kwargs.dyn = dyn;
                     kwargs.rand = rand[randIdx];
