@@ -10,22 +10,22 @@ export const visList = [
             // {name: "specLoading"},
         ]
     },
-    // {
-    //     visGroup: "common",
-    //     visualisers: [
+    {
+        visGroup: "common",
+        visualisers: [
     //         {name: "randomBoxes"},
-    //         {name: "vignette"},
-    //     ]
-    // },
-    // {
-    //     visGroup: "hires",
-    //     visualisers: [
+            {name: "vignette"},
+        ]
+    },
+    {
+        visGroup: "hires",
+        visualisers: [
     //         {name: "edgeDetect"},
     //         {name: "gradReveal"},
-    //         {name: "motion"},
+            {name: "motion"},
     //         {name: "threshold"},
-    //     ]
-    // },
+        ]
+    },
     {
         visGroup: "loRes",
         visualisers: [

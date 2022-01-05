@@ -1,52 +1,34 @@
 import { Visualiser } from "../Visualiser.js"
 
-// const boxes = function(vx, vy, iR, iG, iB, loResStep, showVignette, vigMask) {
-//     push()
-//     rectMode(CENTER)
-//     noStroke()
-//     const col = color(iR, iG, iB, Math.floor(random(240, 255)))
-//     if (showVignette)
-//         col.setAlpha(alpha(col) * vigMask[vx + (vy * width)])
-//     fill(col)
-//     rect(vx, vy, loResStep, loResStep)
-//     pop()
-// }
-
-// export default boxes
-
 export class boxes extends Visualiser {
-    constructor() {
-        super();
-        this.pg;
-    }
-    preload = async function() {
-        this.pg = createGraphics(width, height);
-    }
-    processFramePre = function() {
-        this.pg.clear();
-    }
+
     processPixels = function(pixIdx, pixVals, kwargs={}) {
         let [iR, iG, iB] = pixVals;
-        const { prevSize } = kwargs;
+        const { previewSize } = kwargs;
+        const { lyrOp = 1 } = kwargs;
         const { vx = 0, vy = 0 } = kwargs; 
         let { loResStep = 160 } = kwargs;
+        loResStep /= previewSize;
         if (kwargs.dynRes === true) {
             const { dyn = 0 } = kwargs;
             const { dynRange = 100 } = kwargs;
-            const { dynSpeed = 1 } = kwargs;
-            loResStep += ((dyn[dynSpeed] * 2) - 1) * dynRange;
+            const { dynResSpeed = 1 } = kwargs;
+            loResStep = (loResStep + (((dyn[dynResSpeed] * 2) - 1) * (dynRange / (2 * previewSize)))) | 0;
+            if (loResStep < 1) loResStep = 1;
         }
-        if (vx % (loResStep / prevSize) != 0 || vy % (loResStep / prevSize) != 0) return;
-        this.pg.push()
-        this.pg.rectMode(CENTER)
-        this.pg.noStroke()
-        const col = color(iR, iG, iB);
-        this.pg.fill(col)
-        this.pg.rect(vx, vy, loResStep / prevSize, loResStep / prevSize)
-        this.pg.pop()
-    }
-    processFramePost = function() {
-        image(this.pg, 0, 0);
+        if (vx % loResStep != 0 || vy % loResStep != 0) return;
+        for (let nx = vx; nx < vx+loResStep; nx++) {
+            if (nx > width) break;
+            for (let ny = vy; ny < vy+loResStep; ny++) {
+                if (ny > height) break;
+                let nIdx = ((ny * width) + nx) * 4;
+                if (nIdx >= pixels.length) break;
+                pixels[nIdx + 0] = (iR * lyrOp) + (pixels[nIdx + 0] * (1 - lyrOp));
+                pixels[nIdx + 1] = (iG * lyrOp) + (pixels[nIdx + 1] * (1 - lyrOp));
+                pixels[nIdx + 2] = (iB * lyrOp) + (pixels[nIdx + 2] * (1 - lyrOp));
+            }
+        }
+
     }
     params = [
         {
@@ -54,7 +36,7 @@ export class boxes extends Visualiser {
             displayName: "Resolution",
             type: "val",
             range: [
-                0, 640
+                1, 320
             ],
             value: 160
         },

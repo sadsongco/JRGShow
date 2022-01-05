@@ -24,9 +24,10 @@ let currTrack = {
 }
 
 // TARGET HTML ELEMENTS
-// const fr = document.getElementById('fr')
+const fr = document.getElementById('fr')
 // const info = document.getElementById('info')
 // const setStatus = document.getElementById('setStatus')
+const debug=true;
 const visTitle = document.getElementById('visTitle')
 const visSource = document.getElementById('visSource')
 const visFeat = document.getElementById('visFeat')
@@ -150,11 +151,11 @@ let fft;
  * P5.JS preload function
  * Called asnchronously once at beginning of execution
  */
-window.preload = function() {
-    importModules()
-    .then((res) => {
-        visualiserModules = res;
-    })
+window.preload = async function() {
+    visualiserModules= await importModules();
+    for (let visualiserModule of Object.values(visualiserModules)) {
+        visualiserModule.preload()
+    }
 }
 
 /**
@@ -167,6 +168,8 @@ window.setup = async function() {
     [cnv, vidIn, audioIn] = await setupVisualisers(1, 'canvasContainer', audioCtx)
     fft = new p5.FFT();
     fft.setInput(audioIn);
+    for (let visualiserModule of Object.values(visualiserModules))
+        visualiserModule.setup()
     outputSettings = outputParamVals;
 }
 
@@ -175,6 +178,20 @@ window.setup = async function() {
  * Called every frame
  */
 window.draw = function() {
+    if (debug) fr.innerText = frameRate() << 0;
     if (!fft || !outputSettings) return;
     visualiserDraw(moduleChain, visualiserModules, vidIn, audioIn, fft, cnv, outputSettings);
+}
+
+/**
+ * Fullscreen control event listener callback
+ * @param {Event} e 
+ */
+window.keyPressed = function(e) {
+    e.preventDefault()
+    if (key === 'f')
+        fullscreen(1)
+    else if (key === 'escape')
+        fullscreen(0)
+    // return window.open('', 'visControl')
 }

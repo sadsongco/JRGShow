@@ -1,0 +1,25 @@
+.instructions {
+  flex-basis: 100%;
+}
+
+#setListContainer {
+  flex-basis: 70%;
+  margin-bottom: 3em;
+}
+
+#liveParameters {
+  flex-basis: 30%;
+}
+
+.setlistItem {
+  width: 80%;
+  padding: 0.4em;
+  margin-bottom: 0.3em;
+  background-color: #eaeaea;
+  color: #111;
+  font-weight: bold;
+}
+
+.setlistItem:nth-child(even) {
+  opacity: 0.9;
+}

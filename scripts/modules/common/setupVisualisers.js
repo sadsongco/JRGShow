@@ -13,8 +13,8 @@ export const setupVisualisers = async(scaleDown = 1, cnvTarget, audioCtx) => {
     audioSource = await getAudioSource(db);
     outputRes = await getOutputResolution(db);
     const scaledRes = {
-        w: outputRes.w * ((windowWidth / outputRes.w) / scaleDown),
-        h: outputRes.h * ((windowWidth / outputRes.w) / scaleDown),
+        w: (outputRes.w * ((windowWidth / outputRes.w) / scaleDown)) << 0,
+        h: (outputRes.h * ((windowWidth / outputRes.w) / scaleDown)) << 0,
     };
     // create and place the canvas
     pixelDensity(1);

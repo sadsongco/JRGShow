@@ -20,6 +20,7 @@ export const dynamicGenerator = () => {
 
 /**
  * Generate a pseudo-random binary string
+ * TODO update https://stackoverflow.com/questions/38702724/math-floor-vs-math-trunc-javascript
  * @returns {string} - binary string of variable length
  */
 export const pseudoRandomGenerator = () => {

@@ -16,6 +16,10 @@
   align-items: center;
 }
 
+.slist li:nth-child(even) {
+  background: #bababa;
+}
+
 .slist li.hint {
   background: #fea;
 }

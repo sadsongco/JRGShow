@@ -67,7 +67,7 @@ input {
 }
 
 .setlistItem:hover {
-  background-color: cadetblue;
+  background-color: #997627;
   cursor: pointer;
 }
 
@@ -83,7 +83,7 @@ input {
 
 .currTrack,
 .currTrack:hover {
-  background: #997627;
+  background: #34ae11;
   transition: background 0.5s ease-in;
 }
 

@@ -20,16 +20,19 @@ const slist = (target) => {
     getSetlist()
     .then((res) => {
         setlist = res;
-        console.log(setlist)
         const sortedSetlist = sortSetlistByOrder(setlist);
         for (const setlistItem of sortedSetlist) {
             const item = document.createElement('li');
             item.value = parseInt(setlistItem.position);
-            item.innerText = setlistItem.name;
+            const songNameContainer = document.createElement('div')
+            songNameContainer.classList.add('songNameContainer');
+            songNameContainer.innerText = setlistItem.name;
+            item.appendChild(songNameContainer);
             item.draggable = true;
 
             // add edit and delete buttons to list
             const options = document.createElement('div');
+            options.classList.add('setlistItemOptions');
             const delItem = document.createElement('a');
             const editItem = document.createElement('a');
             editItem.innerText = 'edit';
@@ -47,6 +50,7 @@ const slist = (target) => {
             item.addEventListener('dragstart', (e) => {
                 current = e.target;
                 current.classList.add('grabbed');
+                e.target.querySelector('.setlistItemOptions').style.display = 'none';
                 for (let targetItem of items) {
                     if (targetItem != current) targetItem.classList.add('hint');
                 }
@@ -74,12 +78,14 @@ const slist = (target) => {
             item.addEventListener('drop', (e) => {
                 e.preventDefault();
                 current.classList.remove('grabbed');
+                current.querySelector('.setlistItemOptions').style.display = 'block';
                 if (e.target != current) {
                     let currentpos = 0, droppedpos = 0;
                     for (let i = 0; i < items.length; i ++) {
                         if (current == items[i]) currentpos = i;
                         if (e.target == items[i]) droppedpos = i;
                     }
+                    // TODO there's an error here, but non-fatal
                     if (currentpos < droppedpos)
                         e.target.parentNode.insertBefore(current, e.target.nextSibling);
                     else
@@ -99,8 +105,9 @@ const slist = (target) => {
 const saveSetlist = () => {
     const setlistItems = document.getElementById('setlist').getElementsByTagName('li');
     for (const [setlistPos, setlistItem] of Object.entries(setlistItems)) {
+        console.log(setlistItem.firstChild.innerText)
         for (let item of setlist) {
-            if (item.name === setlistItem.innerText)
+            if (item.name === setlistItem.firstChild.innerText)
                 item.position = parseInt(setlistPos);
         }
     }

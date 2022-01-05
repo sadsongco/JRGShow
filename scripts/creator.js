@@ -64,7 +64,7 @@ const selectSlot = (slot) => {
 }
 
 const selectOutput = () => {
-    audioIn.start()
+    // audioIn.start()
     deselectAll()
     outSlot.classList.add('slot-selected');
     showParams('Output');
@@ -79,6 +79,14 @@ const deselectOutput = () => {
  * @param {string} modName - module to show params of
  */
 const showParams = (modName) => {
+    let paramVals;
+    if (modName === 'Output')
+        paramVals = outputParamVals
+    else
+        for (let visMod of currentVisChain) {
+            if (visMod.name === modName)
+                paramVals = visMod.params
+        }
     const paramsEl = document.getElementById('params');
     // empty parameters element
     while (paramsEl.firstChild)
@@ -102,18 +110,19 @@ const showParams = (modName) => {
                 paramEntry.type = 'range';
                 paramEntry.min = param.hasOwnProperty('range') ? param.range[0] : 0;
                 paramEntry.max = param.hasOwnProperty('range') ? param.range[1]: 255;
-                paramEntry.value = param.hasOwnProperty('value') ? param.value : 100;
+                paramEntry.value = param.hasOwnProperty('value') ? paramVals[param.name] : 100;
                 paramEntry.step = param.hasOwnProperty('step') ? param.step : 1;
                 break;
             case 'toggle':
                 paramEntry.type = 'checkbox';
+                paramEntry.checked = paramEntry.value = param.hasOwnProperty('value') ? paramVals[param.name] : false;
                 break;
         };
         paramContainer.appendChild(paramEntry);
         const paramVal = document.createElement('div');
         paramVal.id = `${modName}-${param.name}-value`;
         paramVal.classList.add('param-val');
-        paramVal.innerText = param.value;
+        paramVal.innerText = paramVals[param.name];
         paramContainer.appendChild(paramVal)
     }
     paramsEl.appendChild(paramContainer);
@@ -434,6 +443,8 @@ window.setup = async function() {
     [cnv, vidIn, audioIn] = await setupVisualisers(prevSize, 'preview', audioCtx)
     fft = new p5.FFT(0.8, 32);
     fft.setInput(audioIn);
+    for (let visualiserModule of Object.values(visualiserModules))
+        visualiserModule.setup()
 }
 
 /**
