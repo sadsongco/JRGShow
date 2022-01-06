@@ -4,7 +4,7 @@ export class dynTest extends Visualiser {
     processFramePre = function(vidIn, kwargs={}) {
         const { dyn = 0 } = kwargs;
         const { fft = null } = kwargs
-        let spectrum, waveform;
+        let spectrum = [], waveform = [];
         if (fft) {
             spectrum = fft.analyze();
             waveform = fft.waveform();

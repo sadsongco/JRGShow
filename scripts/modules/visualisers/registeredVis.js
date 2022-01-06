@@ -4,7 +4,7 @@ export const visList = [
         visualisers: [
             {name: "bitwiseN"},
             {name: "bitwise1"},
-            {name: "dynTest"},
+            // {name: "dynTest"},
             // {name: "bitwise2"},
             // {name: "bitwiseBrighten"},
             // {name: "specLoading"},
@@ -43,13 +43,13 @@ export const visList = [
     //         {name: "vidThruPoster"},
         ]
     },
-    // {
-    //     visGroup: "text",
-    //     visualisers: [
-    //         {name: "ascii"},
+    {
+        visGroup: "text",
+        visualisers: [
+            {name: "ascii"},
     //         {name: "detunedQuintet"},
     //         {name: "score"},
     //         {name: "scriptText"}
-    //     ]
-    // }
+        ]
+    }
 ]

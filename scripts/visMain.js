@@ -1,7 +1,5 @@
-// import registered visualisers
-import { visualiserDraw } from "./modules/common/visualiserDraw.js";
-import { importModules } from "./modules/common/importModules.js";
-import { setupVisualisers } from "./modules/common/setupVisualisers.js";
+// import p5 functions
+import { p5Preload, p5Setup, p5Draw } from "./modules/common/p5Funcs.js";
 
 // import utilities
 import { htmlToElement } from "./modules/util/utils.js";
@@ -36,22 +34,22 @@ const canvasContainer = document.getElementById('canvasContainer')
 // CONTROLLER / VISUALISER COMMUNICATION
 const channel = new BroadcastChannel('vis-comms')
 channel.addEventListener('message', (e) => {
-    console.log(e.data)
     if (e.data.changeTrack) {
         // if this is our first track change from the test card,
         // make sure we're looping 
         if (!isLooping())
-            loop()
+        loop()
         channel.postMessage({
             visTransition: true
         })
         if (currTrack.name !== e.data.track.name) {
             currTrack = e.data.track;
         }
+        // fade out title, source and featuring if visible before changing values
         if (visTitle.style.opacity != 0
             || visSource.style.opacity != 0
             || visFeat.style.opacity != 0
-            ) {
+        ) {
             visTitle.style.opacity = 0
             visSource.style.opacity = 0
             visFeat.style.opacity = 0
@@ -71,10 +69,13 @@ channel.addEventListener('message', (e) => {
                 displayTrackFeat(currTrack)
             }
         } else {
+            // change title, source and featuring values
             displayTrackTitle(currTrack)
             displayTrackSource(currTrack)
             displayTrackFeat(currTrack)
         }
+        console.log(canvasContainer)
+        // fade out canvas if visible before changing visualiser chain
         if (canvasContainer.style.opacity != 0) {
             canvasContainer.style.opacity = 0
             canvasContainer.ontransitionend = () => {
@@ -82,7 +83,9 @@ channel.addEventListener('message', (e) => {
                 updateVis(currTrack)
             }
         } else {
+            // change visualiser chain
             updateVis(currTrack)
+            console.log(e.data)
         }
         return
     }
@@ -141,21 +144,18 @@ const updateVis = function(currTrack) {
 }
 
 // VISUALISER variables
-let visualiserModules = {};
 let moduleChain = []
-let cnv, vidIn, audioIn;
 let outputSettings;
-let fft;
+const previewSize = 1;
+let setupDone = false;
 
 /**
  * P5.JS preload function
  * Called asnchronously once at beginning of execution
  */
 window.preload = async function() {
-    visualiserModules= await importModules();
-    for (let visualiserModule of Object.values(visualiserModules)) {
-        visualiserModule.preload()
-    }
+    await p5Preload();
+    outputSettings = outputParamVals;
 }
 
 /**
@@ -163,14 +163,8 @@ window.preload = async function() {
  * Called once after preload is done
  */
 window.setup = async function() {
-    const audioCtx = getAudioContext();
-    // get data from persistent storage
-    [cnv, vidIn, audioIn] = await setupVisualisers(1, 'canvasContainer', audioCtx)
-    fft = new p5.FFT();
-    fft.setInput(audioIn);
-    for (let visualiserModule of Object.values(visualiserModules))
-        visualiserModule.setup()
-    outputSettings = outputParamVals;
+    await p5Setup(previewSize, this);
+    setupDone = true;
 }
 
 /**
@@ -178,9 +172,10 @@ window.setup = async function() {
  * Called every frame
  */
 window.draw = function() {
+    // visualiser specific
     if (debug) fr.innerText = frameRate() << 0;
-    if (!fft || !outputSettings) return;
-    visualiserDraw(moduleChain, visualiserModules, vidIn, audioIn, fft, cnv, outputSettings);
+    if (!setupDone) return;
+    p5Draw(moduleChain, outputSettings, previewSize)
 }
 
 /**

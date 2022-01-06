@@ -1,7 +1,8 @@
 // async indexeddb wrapper https://github.com/jakearchibald/idb
 import { openDB } from 'https://cdn.jsdelivr.net/npm/idb@7/+esm';
 
-export const setupVisualisers = async(scaleDown = 1, cnvTarget, audioCtx) => {
+export const setupVisualisers = async(scaleDown = 1, audioCtx) => {
+    const cnvTarget = 'canvasContainer';
     let inputDevice, audioSource, outputRes;
     let db = await openDB('visDB', 1, db => {
         if (db.oldVersion == 0) {

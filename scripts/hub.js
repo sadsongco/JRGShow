@@ -20,6 +20,13 @@ const slist = (target) => {
     getSetlist()
     .then((res) => {
         setlist = res;
+        if (res.length === 0) {
+            const emptyMessage = document.createElement('div');
+            emptyMessage.classList.add('songNameContainer', 'emptyMessage');
+            emptyMessage.innerText = "Setlist items will appear here after you save them using 'Create New Song Visual'";
+            target.appendChild(emptyMessage);
+            return
+        }
         const sortedSetlist = sortSetlistByOrder(setlist);
         for (const setlistItem of sortedSetlist) {
             const item = document.createElement('li');
@@ -154,6 +161,10 @@ const saveSetlist = () => {
     }
 }
 
+/**
+ * Delete setlist item from database
+ * @param {Event} e - triggering event
+ */
 const deleteSetlistItem = (e) => {
     let confirmed = confirm(`Do you want to delete ${e.target.id}?`);
     if (confirmed) {
@@ -177,18 +188,23 @@ const deleteSetlistItem = (e) => {
     }
 }
 
+/**
+ * Open setlist item for editing in creator window
+ * @param {Event} e - triggering event
+ */
 const editSetlistItem = (e) => {
     window.location.href = `creator.html?edit=true&track=${e.target.id}`;
 }
 
-// add reset button to page
+/**
+ * Clear database, reset app, return to initialisation page 
+ */
 const resetApp = () => {
     let confirmed = confirm("This will delete all settings and databases. Want to proceed?");
     if (confirmed) {
         let openRequest = indexedDB.deleteDatabase('visDB', 1);
         window.location.href = "/";
     }
-    return;
 }
 const reset = document.createElement('a');
 reset.classList.add('button');

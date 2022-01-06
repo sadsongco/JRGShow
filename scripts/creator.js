@@ -1,16 +1,14 @@
 // async indexeddb wrapper https://github.com/jakearchibald/idb
 import { openDB } from 'https://cdn.jsdelivr.net/npm/idb@7/+esm';
 
-// import registered visualisers
+// import p5 draw functions
+import { p5Preload, p5Setup, p5Draw } from './modules/common/p5Funcs.js';
+
+// import registered visualisers for selector
 import { visList } from "./modules/visualisers/registeredVis.js";
-import { visualiserDraw } from "./modules/common/visualiserDraw.js";
-import { importModules } from "./modules/common/importModules.js";
-import { setupVisualisers } from "./modules/common/setupVisualisers.js";
 
 // import utilities and generators
 import { outputParameters, outputParamVals } from "./modules/parameters/outputParameters.js"
-
-let visualiserModules = {};
 
 /**
  * Adds a visualiser to a screen slot
@@ -31,20 +29,28 @@ const addModule = (e) => {
  * Updates the chain of modules to match screen slots
  */
 const updateModuleChain = () => {
-    currentVisChain = [];
-    for (let modSlot of modSlots) {
-        if (modSlot.filled) {
-            const modObj = {};
-            modObj.name = modSlot.innerText;
-            // moduleChain.push(visModules[modSlot.innerText])
-            const moduleParams = {};
-            for (let param of visualiserModules[modSlot.innerText].params) {
-                moduleParams[param.name] = param.value;
+    let currSlot = document.querySelector('.slot-selected')
+    console.log(currentVisChain)
+    let tempVisChain = []
+    // currentVisChain = [];
+    for (let modSlot of document.getElementsByClassName('slot-filled')) {
+        let slotObjUpdated = false;
+        for (let visMod of currentVisChain) {
+            if (visMod.name === modSlot.innerText) {
+                tempVisChain.push(visMod);
+                slotObjUpdated = true;
             }
-            modObj.params = moduleParams;
-            currentVisChain.push(modObj)
         }
+        if (slotObjUpdated) continue;
+        const modObj = {};
+        modObj.name = modSlot.innerText;
+        const moduleParams = {};
+        for (let param of visualiserModules[modSlot.innerText].params)
+            moduleParams[param.name] = param.value;
+        modObj.params = moduleParams;
+        tempVisChain.push(modObj)
     }
+    currentVisChain = tempVisChain
 }
 
 /**
@@ -149,6 +155,11 @@ const updateParameter = (e) => {
     document.getElementById(`${e.target.name}-value`).innerText = newValue;
 }
 
+/**
+ * Returns parameter value from a changed input control, dependent on input type
+ * @param {Event} e - Triggering event
+ * @returns {Boolean or Float} - Updated parameter value
+ */
 const getParameterValue = (e) => {
     if (e.target.type === 'checkbox')
         return e.target.checked;
@@ -165,9 +176,12 @@ const clearParams = () => {
     while (paramsEl.firstChild)
         paramsEl.removeChild(paramsEl.firstChild);
     const paramTitle = document.getElementById('parameters-title');
-    paramTitle.innerText = "";
+    paramTitle.innerText = "Visualiser Parameters";
 }
 
+/**
+ * Update slots when changed
+ */
 const updateSlots = () => {
     let currSlot;
     for (const visIdx in currentVisChain) {
@@ -176,6 +190,7 @@ const updateSlots = () => {
         currSlot.innerText = currVis.name;
         currSlot.filled = true;
         currSlot.classList.add('slot-filled')
+        visualiserSelector.value = currVis.name;
     }
     currSlot.classList.add('slot-selected');
     setOutputPath();
@@ -208,7 +223,10 @@ const deselectAll = () => {
     selectedSlot = false;
 }
 
-
+/**
+ * Fills save form with values from set item when editing
+ * @param {Object} setItem 
+ */
 const fillDetails = async (setItem) => {
     document.getElementById('trackName').value = setItem.name;
     document.getElementById('trackSource').value = setItem.source;
@@ -252,7 +270,6 @@ const activateOutput = (modSlot) => {
 const activatePath = (modSlot) => {
     const modPath = document.getElementById(`${modSlot.id}-path`)
     return modPath.style.opacity = 1;
-
 }
 
 /**
@@ -325,6 +342,11 @@ const saveSettings = (e) => {
 }
 
 // check if editing or creating new
+/**
+ * Retrieves setlist item from database when editing
+ * @param {String} trackName - name of setlist item to edit
+ * @returns {Object} - setlist item
+ */
 const editExisting = async (trackName) => {
     let db = await openDB('visDB', 1, db => {
         if (db.oldVersion == 0) {
@@ -353,7 +375,6 @@ const visualiserSelector = document.createElement('select');
 
 const allVisModules = {};
 
-
 for (let visGroup of visList) {
     const optGroup = document.createElement('optgroup');
     optGroup.label = visGroup.visGroup;
@@ -368,8 +389,8 @@ for (let visGroup of visList) {
     }
     visualiserSelector.add(optGroup);
 }
-
 selectorTarget.appendChild(visualiserSelector)
+
 // add fill and clear slot buttons
 const addModuleButton = document.createElement('button');
 addModuleButton.innerText = "Module to Selected Slot"
@@ -380,12 +401,19 @@ clearSlotButton.innerText = "Clear Selected Slot"
 selectorTarget.appendChild(clearSlotButton)
 clearSlotButton.addEventListener('click', clearSlot)
 
-// make save settings
+// make save settings and exit buttons
 const saveSettingsEl = document.getElementById('saveSettings');
 const saveSettingsButton = document.createElement('button');
 saveSettingsButton.innerText = "Save To Setlist";
 saveSettingsButton.addEventListener('click', saveSettings);
 saveSettingsEl.appendChild(saveSettingsButton);
+
+const exitButton = document.createElement('button');
+exitButton.innerText = "Exit Creator";
+exitButton.addEventListener('click', (e)=>{
+    window.location.href = '/hub.html';
+})
+saveSettingsEl.appendChild(exitButton);
 
 // initialise module slots, make selectable
 let selectedSlot = false;
@@ -406,23 +434,20 @@ setOutputPath();
 const outSlot = document.getElementById('output');
 outSlot.addEventListener('click', selectOutput)
 
-
-
-// p5js preview visualiser variables
-let cnv, vidIn, audioIn;
-let fft = null;
-// setup preview shrink ratio - larger numbner is smaller preview
-let prevSize = 4;
+// initiliase preview shrink ratio - larger numbner is smaller preview
+let previewSize = 4;
+// setup container for all visualiser modules
+let visualiserModules = {};
+// trigger start of draw loop
+let setupDone = false;
 
 /**
  * P5.JS preload function
  * Called asnchronously once at beginning of execution
  */
 window.preload = async function() {
-    visualiserModules = await importModules()
-    for (let visualiserModule of Object.values(visualiserModules)) {
-        visualiserModule.preload()
-    }
+    visualiserModules = await p5Preload();
+    // creator page specific preload
     if (urlParams.get('edit')) {
         const existingSetItem = await editExisting(urlParams.get('track'));
         currentVisChain = existingSetItem.visChain;
@@ -431,6 +456,7 @@ window.preload = async function() {
             updateSlots();
         }
     }
+
 }
 
 /**
@@ -438,13 +464,8 @@ window.preload = async function() {
  * Called once after preload is done
  */
 window.setup = async function() {
-    // get data from persistent storage
-    const audioCtx = getAudioContext();
-    [cnv, vidIn, audioIn] = await setupVisualisers(prevSize, 'preview', audioCtx)
-    fft = new p5.FFT(0.8, 32);
-    fft.setInput(audioIn);
-    for (let visualiserModule of Object.values(visualiserModules))
-        visualiserModule.setup()
+    await p5Setup(previewSize, this);
+    setupDone = true;
 }
 
 /**
@@ -452,9 +473,9 @@ window.setup = async function() {
  * Called every frame
  */
 window.draw = function() {
-    // console.log(fft);
-    if (!fft || !outputParamVals) return;
-    visualiserDraw(currentVisChain, visualiserModules, vidIn, audioIn, fft, cnv, outputParamVals, prevSize);
+    if (!setupDone) return;
+    // visualiserDraw(currentVisChain, visualiserModules, vidIn, audioIn, fft, cnv, outputParamVals, previewSize);
+    p5Draw(currentVisChain, outputParamVals, previewSize);
 }
 
 

@@ -1,13 +1,49 @@
 // import utilities and generators
 import { dynamicGenerator, pseudoRandomGenerator } from "../util/generators.js"
 import getPixelValues from '../util/getPixelValues.js';
+import { importModules } from "./importModules.js";
+import { setupVisualisers } from "./setupVisualisers.js";
 
-export function visualiserDraw(moduleChain, visualiserModules, vidIn, audioIn, fft, cnv, outputParamVals, previewSize = 1) {
+// p5js preview visualiser variables
+let cnv, vidIn, audioIn;
+let fft = null;
+// container for visuaiser modules
+let visualiserModules;
+/**
+ * P5.JS preload function
+ * Called asnchronously once at beginning of execution
+ */
+export const p5Preload = async function() {
+    visualiserModules = await importModules()
+    for (let visualiserModule of Object.values(visualiserModules)) {
+        visualiserModule.preload()
+    }
+    return visualiserModules;
+}
+
+/**
+ * P5.JS setup function
+ * Called once after preload is done
+ */
+export const p5Setup = async function(previewSize, context) {
+    // get data from persistent storage
+    const audioCtx = getAudioContext();
+    [cnv, vidIn, audioIn] = await setupVisualisers(previewSize, audioCtx)
+    fft = new p5.FFT(0.8, 32);
+    fft.setInput(audioIn);
+    for (let visualiserModule of Object.values(visualiserModules)) {
+        let kwargs = visualiserModule.params;
+        visualiserModule.setup(context, kwargs); // include context for some vis modules
+    }
+    return [cnv, vidIn, audioIn, fft];
+}
+
+export function p5Draw(moduleChain, outputParamVals, previewSize = 1) {
     // frameRate(4)
     // noLoop()
     // set background
     const { bg_opacity = 255, bg_r = 0, bg_g = 0, bg_b = 0 } = outputParamVals;
-    background(bg_r, bg_g, bg_b, bg_opacity);
+    cnv.background(bg_r, bg_g, bg_b, bg_opacity);
     // get audio data
     const dyn = dynamicGenerator();
     const rand = pseudoRandomGenerator();
@@ -21,7 +57,7 @@ export function visualiserDraw(moduleChain, visualiserModules, vidIn, audioIn, f
         visualiserModules[module.name].processFramePre(vidIn, kwargs);
     }
     if (moduleChain.length > 0) {
-        loadPixels();
+        cnv.loadPixels();
         vidIn.loadPixels();
         for (let vy = 0; vy < cnv.height; vy++) {
             for (let vx = 0; vx < cnv.width; vx++) {
@@ -29,7 +65,7 @@ export function visualiserDraw(moduleChain, visualiserModules, vidIn, audioIn, f
                 // let randIdx = rand.length - (Math.abs((pixIdx ^ parseInt(rand, 2)) << 1) % rand.length) - 1;
                 let randIdx = pixIdx % rand.length;
                 let pixVals = getPixelValues(pixIdx, vidIn.pixels);
-                let lyrVals = getPixelValues(pixIdx, pixels);
+                // let lyrVals = getPixelValues(pixIdx, pixels);
                 for (const module of moduleChain) {
                     // include module parameters in arguments
                     const kwargs = visParams[module.name];

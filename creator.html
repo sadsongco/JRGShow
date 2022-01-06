@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="./styles/creator.css">
     <script src="./assets/lib/p5.js"></script>
     <script src="./assets/lib/p5.sound.js"></script>
-    <!-- <script src="./assets/lib/p5.asciiart.min.js"></script> -->
+    <script src="./assets/lib/p5.asciiart.min.js"></script>
     <title>Show Visualiser - Visual Creator</title>
 </head>
 <body>
@@ -57,9 +57,12 @@
         <section class="row bottomrow">
             <section class="parameters" id="parameters">
                 <h1 id = "parameters-title"></h1>
-                <div id="params" class="param-controls"></div>
+                <div id="params" class="param-controls">
+                    <h1 id="parameters-title">Visualiser Creator</h1>
+                    <p>Select a visualiser from the dropdown menu. Select a slot and add it. Adjust parameters. Save the song. There are also global output parameters that can be adjusted by selecting the <strong>Vis Output</strong> slot</p>
+                </div>
             </section>
-            <div class="preview" id="preview">
+            <div class="preview" id="canvasContainer">
                 <h2>Output Preview</h2>
             </div>
         </section>
