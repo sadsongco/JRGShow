@@ -29,10 +29,7 @@ const addModule = (e) => {
  * Updates the chain of modules to match screen slots
  */
 const updateModuleChain = () => {
-    let currSlot = document.querySelector('.slot-selected')
-    console.log(currentVisChain)
     let tempVisChain = []
-    // currentVisChain = [];
     for (let modSlot of document.getElementsByClassName('slot-filled')) {
         let slotObjUpdated = false;
         for (let visMod of currentVisChain) {
@@ -335,7 +332,7 @@ const saveSettings = (e) => {
             }
             saveRequest.onsuccess = () => {
                 console.log('Setlist item saved');
-                window.location.href = "/hub.html";
+                window.location.href = "hub.html";
             }
         }
     }
@@ -411,7 +408,7 @@ saveSettingsEl.appendChild(saveSettingsButton);
 const exitButton = document.createElement('button');
 exitButton.innerText = "Exit Creator";
 exitButton.addEventListener('click', (e)=>{
-    window.location.href = '/hub.html';
+    window.location.href = 'hub.html';
 })
 saveSettingsEl.appendChild(exitButton);
 
@@ -456,7 +453,6 @@ window.preload = async function() {
             updateSlots();
         }
     }
-
 }
 
 /**

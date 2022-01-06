@@ -203,7 +203,7 @@ const resetApp = () => {
     let confirmed = confirm("This will delete all settings and databases. Want to proceed?");
     if (confirmed) {
         let openRequest = indexedDB.deleteDatabase('visDB', 1);
-        window.location.href = "/";
+        window.location.href = "index.html";
     }
 }
 const reset = document.createElement('a');

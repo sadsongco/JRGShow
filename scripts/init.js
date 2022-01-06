@@ -128,7 +128,7 @@ const launchVis = () => {
         }
         writeSettings.put(audioDevice);
     }
-    window.location.href = "/hub.html";
+    window.location.href = "hub.html";
 }
 
 // get video and audio sources

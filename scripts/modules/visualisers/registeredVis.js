@@ -18,7 +18,7 @@ export const visList = [
         ]
     },
     {
-        visGroup: "hires",
+        visGroup: "hiRes",
         visualisers: [
     //         {name: "edgeDetect"},
     //         {name: "gradReveal"},
