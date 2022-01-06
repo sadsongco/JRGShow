@@ -8,14 +8,14 @@ import { setupVisualisers } from "./setupVisualisers.js";
 let cnv, vidIn, audioIn;
 let fft = null;
 // container for visualiser modules
-let visualiserModules;
+let visualiserModules = {};
+
 /**
  * P5.JS preload function
  * Called asnchronously once at beginning of execution
  */
 export const p5Preload = async function() {
     visualiserModules = await importModules()
-    console.log(visualiserModules)
     for (let visualiserModule of Object.values(visualiserModules)) {
         visualiserModule.preload()
     }
@@ -27,7 +27,6 @@ export const p5Preload = async function() {
  * Called once after preload is done
  */
 export const p5Setup = async function(previewSize, context) {
-    console.log('async hack')
     // get data from persistent storage
     const audioCtx = getAudioContext();
     [cnv, vidIn, audioIn] = await setupVisualisers(previewSize, audioCtx)

@@ -133,6 +133,8 @@ const launchVis = () => {
 
 // get video and audio sources
 // TODO selected device doesn't carry over - look here: https://jsfiddle.net/bomzj/beap6n2g/
+const permissions = await navigator.mediaDevices.getUserMedia({video: true, audio: true})
+
 navigator.mediaDevices.enumerateDevices()
 .then(gotDevices)
 
