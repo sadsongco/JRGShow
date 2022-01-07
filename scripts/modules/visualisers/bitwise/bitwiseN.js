@@ -1,7 +1,7 @@
 import { Visualiser } from "../Visualiser.js";
 
 export const bitwiseN = class extends Visualiser {
-    processPixels = function(pixIdx, pixVals, kwargs={}) {
+    processPixels = function(pixIdx, pixVals, kwargs={}, context) {
         // setup visualiser parameters with default values
         let { threshold = 100 } = kwargs;
         const { dynThresh = false } = kwargs;
@@ -12,9 +12,10 @@ export const bitwiseN = class extends Visualiser {
         const { negOpacity = 1 } = kwargs;
         const { lyrOpacity = 1 } = kwargs;
         const { dyn = 0 } = kwargs;
-        let { rand } = kwargs;
+        let { rand = 0 } = kwargs;
         let { noise = 0 } = kwargs;
         let [iR, iG, iB] = pixVals;
+        // process pixel
         const grayscale = (iR * 0.3) + (iG * 0.59) + (iB * 0.11)
         let oR = iR - (iR * rand * noise);
         let oG = iG - (iG * rand * noise);
@@ -25,15 +26,14 @@ export const bitwiseN = class extends Visualiser {
             threshold = Math.abs(dynThreshMin + ((dynThreshMax - dynThreshMin) * dyn[dynThreshSpeed]));
         }
         if ((invert && grayscale < threshold) || (!invert && grayscale > threshold)) {
-            pixels[pixIdx+0] = (oR * lyrOpacity) + (pixels[pixIdx+0] * (1 - lyrOpacity));
-            pixels[pixIdx+1] = (oG * lyrOpacity) + (pixels[pixIdx+1] * (1 - lyrOpacity));
-            pixels[pixIdx+2] = (oB * lyrOpacity) + (pixels[pixIdx+2] * (1 - lyrOpacity));
+            context.cnvPixels.data[pixIdx+0] = (oR * lyrOpacity) + (context.cnvPixels.data[pixIdx+0] * (1 - lyrOpacity));
+            context.cnvPixels.data[pixIdx+1] = (oG * lyrOpacity) + (context.cnvPixels.data[pixIdx+1] * (1 - lyrOpacity));
+            context.cnvPixels.data[pixIdx+2] = (oB * lyrOpacity) + (context.cnvPixels.data[pixIdx+2] * (1 - lyrOpacity));
         } 
         else {
-            pixels[pixIdx+0] = 0;
-            pixels[pixIdx+1] = 0;
-            pixels[pixIdx+2] = 0;
-            pixels[pixIdx+3] = (negOpacity * 255) | 0;
+            context.cnvPixels.data[pixIdx+0] = 0 + (context.cnvPixels.data[pixIdx+0] * (1 - negOpacity));;
+            context.cnvPixels.data[pixIdx+1] = 0 + (context.cnvPixels.data[pixIdx+1] * (1 - negOpacity));;
+            context.cnvPixels.data[pixIdx+2] = 0 + (context.cnvPixels.data[pixIdx+2] * (1 - negOpacity));;
         }
     }
     params = [

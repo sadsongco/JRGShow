@@ -2,13 +2,15 @@
 import { openDB } from 'https://cdn.jsdelivr.net/npm/idb@7/+esm';
 
 // import p5 draw functions
-import { p5Preload, p5Setup, p5Draw } from './modules/common/p5Funcs.js';
+// import { visPreload, p5Preload, p5Setup, p5Draw } from './modules/common/p5Funcs.js';
 
 // import registered visualisers for selector
 import { visList } from "./modules/visualisers/registeredVis.js";
 
 // import utilities and generators
 import { outputParameters, outputParamVals } from "./modules/parameters/outputParameters.js"
+
+import { VisOutputEngine } from "./modules/common/visOutputEngine.js"
 
 /**
  * Adds a visualiser to a screen slot
@@ -48,6 +50,8 @@ const updateModuleChain = () => {
         tempVisChain.push(modObj)
     }
     currentVisChain = tempVisChain
+    visOutputEngine.setCurrentVisChain(currentVisChain);
+    console.log(currentVisChain)
 }
 
 /**
@@ -149,6 +153,7 @@ const updateParameter = (e) => {
             }
         }
     }
+    moduleName === 'Output' ? visOutputEngine.setOutputSettings(outputParamVals) : visOutputEngine.setCurrentVisChain(currentVisChain);
     document.getElementById(`${e.target.name}-value`).innerText = newValue;
 }
 
@@ -360,91 +365,128 @@ const editExisting = async (trackName) => {
         return []
     }
 }
-const queryString = window.location.search;
-const urlParams = new URLSearchParams(queryString);
+
+
+
+
+
+const buildCreatorUI = () => {
+
+    // make visualiser selector
+    const selectorTarget = document.getElementById('module-selector');
+    
+    visualiserSelector = document.createElement('select');
+    
+    const allVisModules = {};
+    
+    for (let visGroup of visList) {
+        const optGroup = document.createElement('optgroup');
+        optGroup.label = visGroup.visGroup;
+        for (let vis of visGroup.visualisers) {
+            const option = document.createElement('option');
+            option.value = vis.name;
+            option.text = vis.name;
+            optGroup.appendChild(option);
+            allVisModules[vis.name] = {
+                name: vis.name
+            };
+        }
+        visualiserSelector.add(optGroup);
+    }
+    selectorTarget.appendChild(visualiserSelector)
+    
+    // add fill and clear slot buttons
+    const addModuleButton = document.createElement('button');
+    addModuleButton.innerText = "Module to Selected Slot"
+    selectorTarget.appendChild(addModuleButton)
+    addModuleButton.addEventListener('click', addModule)
+    const clearSlotButton = document.createElement('button');
+    clearSlotButton.innerText = "Clear Selected Slot"
+    selectorTarget.appendChild(clearSlotButton)
+    clearSlotButton.addEventListener('click', clearSlot)
+    
+    // make save settings and exit buttons
+    const saveSettingsEl = document.getElementById('saveSettings');
+    const saveSettingsButton = document.createElement('button');
+    saveSettingsButton.innerText = "Save To Setlist";
+    saveSettingsButton.addEventListener('click', saveSettings);
+    saveSettingsEl.appendChild(saveSettingsButton);
+    
+    const exitButton = document.createElement('button');
+    exitButton.innerText = "Exit Creator";
+    exitButton.addEventListener('click', (e)=>{
+        window.location.href = 'hub.html';
+    })
+    saveSettingsEl.appendChild(exitButton);
+    
+    // initialise module slots, make selectable
+    // let selectedSlot = false;
+    modSlots = document.getElementsByClassName('vis-module');
+    let modSlot;
+    for (modSlot of modSlots) {
+        modSlot.addEventListener("click", (e) => selectSlot(e.target));
+        modSlot.selected = false;
+        modSlot.filled = false;
+    }
+    // initialise last slot as selected
+    modSlot.selected = true;
+    modSlot.classList.add('slot-selected');
+    selectedSlot = modSlot;
+    setOutputPath();
+    
+    // setup Output slot
+    outSlot = document.getElementById('output');
+    outSlot.addEventListener('click', selectOutput)
+}
+
+const runVisualiser = () => {
+    console.log('runVisualiser')
+    // initiliase preview shrink ratio - larger numbner is smaller preview
+    let previewSize = 4;
+    // trigger start of draw loop
+    let setupDone = false;
+    
+    /**
+     * P5.JS preload function
+     * Called asnchronously once at beginning of execution
+     */
+    window.preload = function() {
+        // p5Preload();
+    }
+    
+    /**
+     * P5.JS setup function
+     * Called once after preload is done
+     */
+    window.setup = function() {
+        console.log('creator setup')
+        console.log(visualiserModules)
+        // p5Setup(previewSize, this);
+        console.log('creator setup done')
+        setupDone = true;
+    }
+    
+    /**
+     * P5.JS draw function
+     * Called every frame
+     */
+    window.draw = function() {
+        if (!setupDone) return;
+        // visualiserDraw(currentVisChain, visualiserModules, vidIn, audioIn, fft, cnv, outputParamVals, previewSize);
+        // p5Draw(currentVisChain, outputParamVals, previewSize);
+    }
+}
+const queryString   = window.location.search;
+const urlParams     = new URLSearchParams(queryString);
 let currentVisChain = [];
 
+// global variables
+let visualiserSelector, modSlots, selectedSlot = false, outSlot;
+let visualiserModules, visOutputEngine;
 
-// make visualiser selector
-const selectorTarget = document.getElementById('module-selector');
-
-const visualiserSelector = document.createElement('select');
-
-const allVisModules = {};
-
-for (let visGroup of visList) {
-    const optGroup = document.createElement('optgroup');
-    optGroup.label = visGroup.visGroup;
-    for (let vis of visGroup.visualisers) {
-        const option = document.createElement('option');
-        option.value = vis.name;
-        option.text = vis.name;
-        optGroup.appendChild(option);
-        allVisModules[vis.name] = {
-            name: vis.name
-        };
-    }
-    visualiserSelector.add(optGroup);
-}
-selectorTarget.appendChild(visualiserSelector)
-
-// add fill and clear slot buttons
-const addModuleButton = document.createElement('button');
-addModuleButton.innerText = "Module to Selected Slot"
-selectorTarget.appendChild(addModuleButton)
-addModuleButton.addEventListener('click', addModule)
-const clearSlotButton = document.createElement('button');
-clearSlotButton.innerText = "Clear Selected Slot"
-selectorTarget.appendChild(clearSlotButton)
-clearSlotButton.addEventListener('click', clearSlot)
-
-// make save settings and exit buttons
-const saveSettingsEl = document.getElementById('saveSettings');
-const saveSettingsButton = document.createElement('button');
-saveSettingsButton.innerText = "Save To Setlist";
-saveSettingsButton.addEventListener('click', saveSettings);
-saveSettingsEl.appendChild(saveSettingsButton);
-
-const exitButton = document.createElement('button');
-exitButton.innerText = "Exit Creator";
-exitButton.addEventListener('click', (e)=>{
-    window.location.href = 'hub.html';
-})
-saveSettingsEl.appendChild(exitButton);
-
-// initialise module slots, make selectable
-let selectedSlot = false;
-const modSlots = document.getElementsByClassName('vis-module');
-let modSlot;
-for (modSlot of modSlots) {
-    modSlot.addEventListener("click", (e) => selectSlot(e.target));
-    modSlot.selected = false;
-    modSlot.filled = false;
-}
-// initialise last slot as selected
-modSlot.selected = true;
-modSlot.classList.add('slot-selected');
-selectedSlot = modSlot;
-setOutputPath();
-
-// setup Output slot
-const outSlot = document.getElementById('output');
-outSlot.addEventListener('click', selectOutput)
-
-// initiliase preview shrink ratio - larger numbner is smaller preview
-let previewSize = 4;
-// setup container for all visualiser modules
-let visualiserModules = {};
-// trigger start of draw loop
-let setupDone = false;
-
-/**
- * P5.JS preload function
- * Called asnchronously once at beginning of execution
- */
-window.preload = async function() {
-    visualiserModules = await p5Preload();
+window.onload = async () => {
     // creator page specific preload
+    buildCreatorUI();
     if (urlParams.get('edit')) {
         const existingSetItem = await editExisting(urlParams.get('track'));
         currentVisChain = existingSetItem.visChain;
@@ -453,25 +495,9 @@ window.preload = async function() {
             updateSlots();
         }
     }
-}
-
-/**
- * P5.JS setup function
- * Called once after preload is done
- */
-window.setup = async function() {
-    await p5Setup(previewSize, this);
-    setupDone = true;
-}
-
-/**
- * P5.JS draw function
- * Called every frame
- */
-window.draw = function() {
-    if (!setupDone) return;
-    // visualiserDraw(currentVisChain, visualiserModules, vidIn, audioIn, fft, cnv, outputParamVals, previewSize);
-    p5Draw(currentVisChain, outputParamVals, previewSize);
-}
-
-
+    visOutputEngine = new VisOutputEngine();
+    visualiserModules = await visOutputEngine.loadVisModules();
+    console.log(visualiserModules)
+    await visOutputEngine.setupCanvas()
+    visOutputEngine.drawCanvas();
+}   

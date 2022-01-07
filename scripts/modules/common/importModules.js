@@ -13,5 +13,5 @@ export const importModules = async function () {
             visualiserModules[vis.name] = new currModule[vis.name]
         }
     }
-    return  visualiserModules;
+    return  await Promise.resolve(visualiserModules);
 };

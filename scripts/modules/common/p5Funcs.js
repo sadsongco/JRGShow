@@ -11,15 +11,18 @@ let fft = null;
 let visualiserModules = {};
 
 /**
+ * Wrapper for importModules to keep visualiser modules in scope, and deliver to external scripts when needed
+ * @returns {Object} visualiser modules
+ */
+export const visPreload = async function() {
+    return await importModules();
+}
+
+/**
  * P5.JS preload function
  * Called asnchronously once at beginning of execution
  */
 export const p5Preload = async function() {
-    visualiserModules = await importModules()
-    for (let visualiserModule of Object.values(visualiserModules)) {
-        visualiserModule.preload()
-    }
-    return visualiserModules;
 }
 
 /**
@@ -27,16 +30,19 @@ export const p5Preload = async function() {
  * Called once after preload is done
  */
 export const p5Setup = async function(previewSize, context) {
+    console.log('p5setup')
+    console.log(visualiserModules)
     // get data from persistent storage
     const audioCtx = getAudioContext();
     [cnv, vidIn, audioIn] = await setupVisualisers(previewSize, audioCtx)
     fft = new p5.FFT(0.8, 32);
     fft.setInput(audioIn);
     for (let visualiserModule of Object.values(visualiserModules)) {
+        console.log(visualiserModule)
         let kwargs = visualiserModule.params;
         visualiserModule.setup(context, kwargs); // include context for some vis modules
     }
-    return [cnv, vidIn, audioIn, fft];
+    return await Promise.resolve([cnv, vidIn, audioIn, fft]);
 }
 
 export function p5Draw(moduleChain, outputParamVals, previewSize = 1) {

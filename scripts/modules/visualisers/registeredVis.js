@@ -3,7 +3,7 @@ export const visList = [
         visGroup: "bitwise",
         visualisers: [
             {name: "bitwiseN"},
-            {name: "bitwise1"},
+            // {name: "bitwise1"},
             // {name: "dynTest"},
             // {name: "bitwise2"},
             // {name: "bitwiseBrighten"},
@@ -14,7 +14,7 @@ export const visList = [
         visGroup: "common",
         visualisers: [
     //         {name: "randomBoxes"},
-            {name: "vignette"},
+            // {name: "vignette"},
         ]
     },
     {
@@ -22,14 +22,14 @@ export const visList = [
         visualisers: [
     //         {name: "edgeDetect"},
     //         {name: "gradReveal"},
-            {name: "motion"},
+            // {name: "motion"},
     //         {name: "threshold"},
         ]
     },
     {
         visGroup: "loRes",
         visualisers: [
-            {name: "boxes"},
+            // {name: "boxes"},
     //         {name: "circles"},
     //         {name: "lines"},
         ]
@@ -38,7 +38,7 @@ export const visList = [
         visGroup: "straightVideo",
         visualisers: [
     //         {name: "pixThru"},
-            {name: "vidThru"},
+            // {name: "vidThru"},
     //         {name: "vidThruHalf"},
     //         {name: "vidThruPoster"},
         ]
@@ -46,7 +46,7 @@ export const visList = [
     {
         visGroup: "text",
         visualisers: [
-            {name: "ascii"},
+            // {name: "ascii"},
     //         {name: "detunedQuintet"},
     //         {name: "score"},
     //         {name: "scriptText"}

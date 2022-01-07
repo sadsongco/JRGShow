@@ -1,11 +1,8 @@
-// import p5 functions
-import { p5Preload, p5Setup, p5Draw } from "./modules/common/p5Funcs.js";
-
 // import utilities
 import { htmlToElement } from "./modules/util/utils.js";
 
 // import default settings
-import { outputParamVals } from "./modules/parameters/outputParameters.js"
+import { VisOutputEngine } from "./modules/common/visOutputEngine.js"
 
 // CONTROLLER VARIABLES
 let currTrack = {
@@ -22,10 +19,6 @@ let currTrack = {
 }
 
 // TARGET HTML ELEMENTS
-const fr = document.getElementById('fr')
-// const info = document.getElementById('info')
-// const setStatus = document.getElementById('setStatus')
-const debug=true;
 const visTitle = document.getElementById('visTitle')
 const visSource = document.getElementById('visSource')
 const visFeat = document.getElementById('visFeat')
@@ -37,8 +30,8 @@ channel.addEventListener('message', (e) => {
     if (e.data.changeTrack) {
         // if this is our first track change from the test card,
         // make sure we're looping 
-        if (!isLooping())
-        loop()
+        // if (!isLooping())
+        // loop()
         channel.postMessage({
             visTransition: true
         })
@@ -74,7 +67,6 @@ channel.addEventListener('message', (e) => {
             displayTrackSource(currTrack)
             displayTrackFeat(currTrack)
         }
-        console.log(canvasContainer)
         // fade out canvas if visible before changing visualiser chain
         if (canvasContainer.style.opacity != 0) {
             canvasContainer.style.opacity = 0
@@ -85,7 +77,6 @@ channel.addEventListener('message', (e) => {
         } else {
             // change visualiser chain
             updateVis(currTrack)
-            console.log(e.data)
         }
         return
     }
@@ -139,43 +130,8 @@ const updateVis = function(currTrack) {
     channel.postMessage({
         visTransition: false
     })
-    moduleChain = currTrack.visChain;
-    outputSettings = currTrack.outputSettings;
-}
-
-// VISUALISER variables
-let moduleChain = []
-let outputSettings;
-const previewSize = 1;
-let setupDone = false;
-
-/**
- * P5.JS preload function
- * Called asnchronously once at beginning of execution
- */
-window.preload = async function() {
-    await p5Preload();
-    outputSettings = outputParamVals;
-}
-
-/**
- * P5.JS setup function
- * Called once after preload is done
- */
-window.setup = async function() {
-    await p5Setup(previewSize, this);
-    setupDone = true;
-}
-
-/**
- * P5.JS draw function
- * Called every frame
- */
-window.draw = function() {
-    // visualiser specific
-    if (debug) fr.innerText = frameRate() << 0;
-    if (!setupDone) return;
-    p5Draw(moduleChain, outputSettings, previewSize)
+    visOutputEngine.setCurrentVisChain(currTrack.visChain);
+    visOutputEngine.setOutputSettings(currTrack.outputSettings);
 }
 
 /**
@@ -189,4 +145,12 @@ window.keyPressed = function(e) {
     else if (key === 'escape')
         fullscreen(0)
     // return window.open('', 'visControl')
+}
+let visOutputEngine, visualiserModules;
+
+window.onload = async() => {
+    visOutputEngine = new VisOutputEngine()
+    visualiserModules = await visOutputEngine.loadVisModules();
+    await visOutputEngine.setupCanvas()
+    visOutputEngine.drawCanvas();
 }
