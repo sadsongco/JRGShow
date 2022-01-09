@@ -41,7 +41,7 @@ export const setupVisualiserCanvas = async() => {
     const cnv = document.createElement('canvas');
     await resizeCanvas(cnvTarget, outputRes, cnv);
     cnvTarget.appendChild(cnv)
-    window.onresize = () => resizeCanvas(cnvTarget, outputRes, cnv);
+    // window.onresize = () => resizeCanvas(cnvTarget, outputRes, cnv);
     // create video node, attach to video input stream
     const vidIn = document.createElement('video');
     vidIn.srcObject = await navigator.mediaDevices.getUserMedia(inputDevice.constraints)
@@ -56,8 +56,8 @@ export const setupVisualiserCanvas = async() => {
 
 const resizeCanvas = async (cnvTarget, outputRes, cnv) => {
     const scaledRes = await getResolution(outputRes, cnvTarget);
-    cnv.width = scaledRes.w;
-    cnv.height = scaledRes.h;
+    cnv.width = cnvTarget.style.width = scaledRes.w;
+    cnv.height = cnvTarget.style.height = scaledRes.h;
 }
 
 const getResolution = async(outputRes, cnvTarget) => {

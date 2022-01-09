@@ -21,8 +21,9 @@ export const VisOutputEngine = class {
         // this.lastFrameTime      = 0;    // keeping track of the last draw time to calculate framerate
         this.frameRate          = 1;    // framerate of visualiser
         this.debug              = true; // show debug info
-        this.fr                 = null; // DOM element for displaying framerate
+        this.fr                 = null; // DOM this.cnv for displaying framerate
         this.frametimes         = [];
+        this.visContainer       = null;
     }
 
     /**
@@ -59,6 +60,7 @@ export const VisOutputEngine = class {
         this.vidContext = this.vidCnv.getContext('2d');
         this.outputSettings = { bg_opacity: 255, bg_r: 0, bg_g: 0, bg_b: 0 };
         this.fr = document.getElementById('fr');
+        this.visContainer = document.getElementById('outerContainer');
     }
 
     /**
@@ -130,4 +132,36 @@ export const VisOutputEngine = class {
             this.cnvContext.fillStyle = bg_col;
             this.cnvContext.fillRect(0, 0, this.cnv.width, this.cnv.height);
     }
+
+    launchFullscreen() {
+        var enabled =
+          document.fullscreenEnabled ||
+          document.webkitFullscreenEnabled ||
+          document.mozFullScreenEnabled ||
+          document.msFullscreenEnabled;
+        if (!enabled) {
+          throw new Error('Fullscreen not enabled in this browser.');
+        }
+        if (this.visContainer.requestFullscreen) {
+          this.visContainer.requestFullscreen();
+        } else if (this.visContainer.mozRequestFullScreen) {
+          this.visContainer.mozRequestFullScreen();
+        } else if (this.visContainer.webkitRequestFullscreen) {
+          this.visContainer.webkitRequestFullscreen();
+        } else if (this.visContainer.msRequestFullscreen) {
+          this.visContainer.msRequestFullscreen();
+        }
+      }
+
+      exitFullscreen() {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+          document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        }
+      }
 }

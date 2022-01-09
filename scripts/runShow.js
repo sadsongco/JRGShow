@@ -78,20 +78,29 @@ const runEl = document.getElementById('visRunning')
 runEl.innerText = "Visualiser Stopped"
 
 // add close show button
-const closeShow = (e) => {
-    let confirmed = confirm('Do you really want to close the show?');
-    if (confirmed) {
-        let reallyConfirmed = confirm("Sorry to be a pest, but this will close the visualiser window. Only press OK if you're really sure you want to end the show");
-        if (reallyConfirmed) {
-            visWindow.close();
-            window.location.href = "hub.html";
-        }
-    }
+const closeShowCheck = (e) => {
+    const box = document.getElementById('closeShowCheck');
+    const closeShowButton = document.createElement('a');
+    closeShowButton.classList.add('button');
+    closeShowButton.innerText = 'Close Show';
+    closeShowButton.addEventListener('click', closeShow)
+    document.getElementById('closeShowCheckButton').appendChild(closeShowButton);
+    box.style.height = '100%';
+    box.style.opacity = 1;
+    box.style.borderWidth = '4px';
+    box.style.padding = '0.8vw';
+    document.getElementById('closeShowCheckText').innerText = "DO YOU REALLY WANT TO CLOSE THE VISUALISER WINDOW AND STOP THE SHOW?";
 }
+
+const closeShow = (e) => {
+    visWindow.close();
+    window.location.href = "hub.html";
+}
+
 const closeShowButton = document.createElement('a');
 closeShowButton.classList.add('button');
 closeShowButton.innerText = 'Close Show';
-closeShowButton.addEventListener('click', closeShow)
+closeShowButton.addEventListener('click', closeShowCheck)
 document.getElementById('closeShow').appendChild(closeShowButton);
 
 // Event listeners for show control

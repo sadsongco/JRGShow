@@ -23,3 +23,32 @@
 .setlistItem:nth-child(even) {
   opacity: 0.9;
 }
+
+#closeShowContainer {
+  position: relative;
+  width: 25vw;
+  height: 11vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#closeShowCheck {
+  color: black;
+  position: absolute;
+  height: 0px;
+  width: 100%;
+  opacity: 0;
+  background-color: #e2e2e2;
+  border-color: #991e1e;
+  border-style: solid;
+  border-width: 0;
+  transition: height 0.5s ease-in-out, opacity 0.5s ease-in, border-width 0.5s,
+    paddding 0.5s ease-in-out;
+  border-radius: 5px;
+}
+
+#closeShowCheckText {
+  font-weight: 800;
+  font-size: 1.3vw;
+}

@@ -366,12 +366,10 @@ const editExisting = async (trackName) => {
     }
 }
 
-
-
-
-
+/**
+ * Build user interface for visualiser creator page
+ */
 const buildCreatorUI = () => {
-
     // make visualiser selector
     const selectorTarget = document.getElementById('module-selector');
     
@@ -439,43 +437,6 @@ const buildCreatorUI = () => {
     outSlot.addEventListener('click', selectOutput)
 }
 
-const runVisualiser = () => {
-    console.log('runVisualiser')
-    // initiliase preview shrink ratio - larger numbner is smaller preview
-    let previewSize = 4;
-    // trigger start of draw loop
-    let setupDone = false;
-    
-    /**
-     * P5.JS preload function
-     * Called asnchronously once at beginning of execution
-     */
-    window.preload = function() {
-        // p5Preload();
-    }
-    
-    /**
-     * P5.JS setup function
-     * Called once after preload is done
-     */
-    window.setup = function() {
-        console.log('creator setup')
-        console.log(visualiserModules)
-        // p5Setup(previewSize, this);
-        console.log('creator setup done')
-        setupDone = true;
-    }
-    
-    /**
-     * P5.JS draw function
-     * Called every frame
-     */
-    window.draw = function() {
-        if (!setupDone) return;
-        // visualiserDraw(currentVisChain, visualiserModules, vidIn, audioIn, fft, cnv, outputParamVals, previewSize);
-        // p5Draw(currentVisChain, outputParamVals, previewSize);
-    }
-}
 const queryString   = window.location.search;
 const urlParams     = new URLSearchParams(queryString);
 let currentVisChain = [];
@@ -497,7 +458,6 @@ window.onload = async () => {
     }
     visOutputEngine = new VisOutputEngine();
     visualiserModules = await visOutputEngine.loadVisModules();
-    console.log(visualiserModules)
     await visOutputEngine.setupCanvas()
     visOutputEngine.drawCanvas();
 }   

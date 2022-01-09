@@ -138,13 +138,12 @@ const updateVis = function(currTrack) {
  * Fullscreen control event listener callback
  * @param {Event} e 
  */
-window.keyPressed = function(e) {
+window.onkeydown = function(e) {
     e.preventDefault()
-    if (key === 'f')
-        fullscreen(1)
-    else if (key === 'escape')
-        fullscreen(0)
-    // return window.open('', 'visControl')
+    if (e.key === 'f')
+        visOutputEngine.launchFullscreen(document);
+    else if (e.key === 'escape')
+        visOutputEngine.exitFullscreen();
 }
 let visOutputEngine, visualiserModules;
 
