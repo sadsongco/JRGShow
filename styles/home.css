@@ -40,7 +40,7 @@ header {
 button,
 a.button {
   display: inline-block;
-  font-size: 1em;
+  font-size: 0.9em;
   text-decoration: none;
   padding: 0.8em 1.8em;
   margin: 4px 0;
