@@ -51,6 +51,7 @@ const gotDevices = (deviceInfos) => {
             });
         }
         if (deviceInfo.kind == 'audioinput') {
+            console.log(deviceInfo)
             audioSources.push({
                 label: deviceInfo.label,
                 id: deviceInfo.deviceId
@@ -76,6 +77,13 @@ const gotDevices = (deviceInfos) => {
     deviceTarget.appendChild(deviceSelector);
     for (let audioIdx in audioSources) {
         const device = audioSources[audioIdx];
+        device.constraints = {
+            audio: {
+                devideId: {
+                    exact: device.id
+                }
+            }
+        }
         const option = document.createElement('option');
         option.value = audioIdx
         option.text = device.label;
@@ -97,7 +105,7 @@ const launchVis = () => {
     console.log(audioSources[audioSelector.value])
     let openRequest = indexedDB.open('visDB', 1);
     openRequest.onerror = () => {
-        return 'Database error'
+        throw new Error('Database error');
     }
     openRequest.onsuccess = () => {
         let db = openRequest.result;

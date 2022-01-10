@@ -1,16 +1,13 @@
 // async indexeddb wrapper https://github.com/jakearchibald/idb
 import { openDB } from 'https://cdn.jsdelivr.net/npm/idb@7/+esm';
 
-// import p5 draw functions
-// import { visPreload, p5Preload, p5Setup, p5Draw } from './modules/common/p5Funcs.js';
-
 // import registered visualisers for selector
 import { visList } from "./modules/visualisers/registeredVis.js";
 
 // import utilities and generators
 import { outputParameters, outputParamVals } from "./modules/parameters/outputParameters.js"
 
-import { VisOutputEngine } from "./modules/common/visOutputEngine.js"
+import { VisOutputEngine } from "./modules/common/VisOutputEngine.js"
 
 /**
  * Adds a visualiser to a screen slot
@@ -51,7 +48,6 @@ const updateModuleChain = () => {
     }
     currentVisChain = tempVisChain
     visOutputEngine.setCurrentVisChain(currentVisChain);
-    console.log(currentVisChain)
 }
 
 /**
@@ -88,7 +84,7 @@ const deselectOutput = () => {
 const showParams = (modName) => {
     let paramVals;
     if (modName === 'Output')
-        paramVals = outputParamVals
+        paramVals = outputSettings
     else
         for (let visMod of currentVisChain) {
             if (visMod.name === modName)
@@ -145,7 +141,7 @@ const updateParameter = (e) => {
     const moduleName = names[0], paramName = names[1];
     const newValue = getParameterValue(e);
     if (moduleName === 'Output') {
-        outputParamVals[paramName] = newValue;
+        outputSettings[paramName] = newValue;
     } else {
         for (let visMod of currentVisChain) {
             if (visMod.name == moduleName) {
@@ -153,7 +149,7 @@ const updateParameter = (e) => {
             }
         }
     }
-    moduleName === 'Output' ? visOutputEngine.setOutputSettings(outputParamVals) : visOutputEngine.setCurrentVisChain(currentVisChain);
+    moduleName === 'Output' ? visOutputEngine.setOutputSettings(outputSettings) : visOutputEngine.setCurrentVisChain(currentVisChain);
     document.getElementById(`${e.target.name}-value`).innerText = newValue;
 }
 
@@ -229,7 +225,7 @@ const deselectAll = () => {
  * Fills save form with values from set item when editing
  * @param {Object} setItem 
  */
-const fillDetails = async (setItem) => {
+const fillDetails = (setItem) => {
     document.getElementById('trackName').value = setItem.name;
     document.getElementById('trackSource').value = setItem.source;
     document.getElementById('trackFeatured').value = setItem.feature;
@@ -303,7 +299,7 @@ const saveSettings = (e) => {
         feature: document.getElementById('trackFeatured')?.value,
         visChain: [],
         position: -1,
-        outputSettings: outputParamVals // placeholder, value retrieved from database
+        outputSettings: outputSettings // placeholder, value retrieved from database
     }
     for (let visModule of currentVisChain) {
         const trackModule = {
@@ -352,7 +348,7 @@ const saveSettings = (e) => {
 const editExisting = async (trackName) => {
     let db = await openDB('visDB', 1, db => {
         if (db.oldVersion == 0) {
-            console.log(`Error opening database: ${err.message}`);
+            throw new Error(`Error opening database: ${err.message}`);
             return [];
         }
     });
@@ -361,8 +357,8 @@ const editExisting = async (trackName) => {
         return res;
     }
     catch (err) {
-        console.log(`Error retrieving ${trackName} from setlist: ${err}`)
-        return []
+        throw new Error(`Error retrieving ${trackName} from setlist: ${err}`)
+        return [];
     }
 }
 
@@ -415,10 +411,9 @@ const buildCreatorUI = () => {
     exitButton.addEventListener('click', (e)=>{
         window.location.href = 'hub.html';
     })
-    saveSettingsEl.appendChild(exitButton);
+    document.getElementById('exit').appendChild(exitButton);
     
     // initialise module slots, make selectable
-    // let selectedSlot = false;
     modSlots = document.getElementsByClassName('vis-module');
     let modSlot;
     for (modSlot of modSlots) {
@@ -444,20 +439,26 @@ let currentVisChain = [];
 // global variables
 let visualiserSelector, modSlots, selectedSlot = false, outSlot;
 let visualiserModules, visOutputEngine;
+let outputSettings;
 
 window.onload = async () => {
+    visOutputEngine = new VisOutputEngine();
+    visualiserModules = await visOutputEngine.loadVisModules();
+    outputSettings = outputParamVals;
     // creator page specific preload
     buildCreatorUI();
+    await visOutputEngine.setupCanvas()
     if (urlParams.get('edit')) {
         const existingSetItem = await editExisting(urlParams.get('track'));
         currentVisChain = existingSetItem.visChain;
+        outputSettings = existingSetItem.outputSettings;
+        visOutputEngine.setOutputSettings(outputSettings);
         if (currentVisChain.length > 0 || existingSetItem) {
-            await fillDetails(existingSetItem);
+            fillDetails(existingSetItem);
             updateSlots();
         }
+        // provide hint for saving
+        document.getElementById('saveSettings').appendChild(document.createTextNode(' - Change the Track Name to save a copy'));
     }
-    visOutputEngine = new VisOutputEngine();
-    visualiserModules = await visOutputEngine.loadVisModules();
-    await visOutputEngine.setupCanvas()
     visOutputEngine.drawCanvas();
 }   

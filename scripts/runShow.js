@@ -80,16 +80,10 @@ runEl.innerText = "Visualiser Stopped"
 // add close show button
 const closeShowCheck = (e) => {
     const box = document.getElementById('closeShowCheck');
-    const closeShowButton = document.createElement('a');
-    closeShowButton.classList.add('button');
-    closeShowButton.innerText = 'Close Show';
-    closeShowButton.addEventListener('click', closeShow)
-    document.getElementById('closeShowCheckButton').appendChild(closeShowButton);
     box.style.height = '100%';
     box.style.opacity = 1;
     box.style.borderWidth = '4px';
     box.style.padding = '0.8vw';
-    document.getElementById('closeShowCheckText').innerText = "DO YOU REALLY WANT TO CLOSE THE VISUALISER WINDOW AND STOP THE SHOW?";
 }
 
 const closeShow = (e) => {
@@ -97,11 +91,32 @@ const closeShow = (e) => {
     window.location.href = "hub.html";
 }
 
+const cancelCloseShow = (e) => {
+    const box = document.getElementById('closeShowCheck');
+    box.style.height = 0;
+    box.style.opacity = 0;
+    box.style.borderWidth = 0;
+    box.style.padding = 0;
+}
+
+// create close show buttons and confirmation
 const closeShowButton = document.createElement('a');
 closeShowButton.classList.add('button');
 closeShowButton.innerText = 'Close Show';
 closeShowButton.addEventListener('click', closeShowCheck)
 document.getElementById('closeShow').appendChild(closeShowButton);
+const closeShowConfirm = document.createElement('a');
+closeShowConfirm.classList.add('button');
+closeShowConfirm.innerText = 'Close Show';
+closeShowConfirm.addEventListener('click', closeShow)
+document.getElementById('closeShowCheckButton').appendChild(closeShowConfirm);
+const cancel = document.createElement('a');
+cancel.classList.add('button');
+cancel.innerText = 'Cancel';
+cancel.addEventListener('click', cancelCloseShow)
+document.getElementById('closeShowCheckButton').appendChild(cancel);
+document.getElementById('closeShowCheckText').innerText = "DO YOU REALLY WANT TO CLOSE THE VISUALISER WINDOW AND STOP THE SHOW?";
+
 
 // Event listeners for show control
 const channel = new BroadcastChannel('vis-comms')

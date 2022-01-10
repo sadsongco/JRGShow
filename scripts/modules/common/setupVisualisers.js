@@ -54,8 +54,7 @@ const setupVisualiserCanvas = async() => {
     const vidCnv = document.createElement('canvas');
     resizeCanvas(cnvTarget, outputRes, vidCnv);
     // TODO - create audio in
-    let audioIn = null;
-    return [cnv, vidCnv, vidIn, audioIn];
+    return [cnv, vidCnv, vidIn, audioSource];
 }
 
 /**
@@ -65,9 +64,14 @@ const setupVisualiserCanvas = async() => {
  * @param {HTMLElement} cnv - HTML5 canvas
  */
 const resizeCanvas = async (cnvTarget, outputRes, cnv) => {
-    const scaledRes = await getResolution(outputRes, cnvTarget);
-    cnv.width = cnvTarget.style.width = scaledRes.w;
-    cnv.height = cnvTarget.style.height = scaledRes.h;
+    try {
+        const scaledRes = await getResolution(outputRes, cnvTarget);
+        cnv.width = cnvTarget.style.width = scaledRes.w;
+        cnv.height = cnvTarget.style.height = scaledRes.h;
+    }
+    catch (err) {
+        throw new Error(`Error resizing the canvas: ${err.message}`);
+    }
 }
 
 /**
@@ -77,7 +81,6 @@ const resizeCanvas = async (cnvTarget, outputRes, cnv) => {
  * @returns {Object} scaledRes - width and height for canvas
  */
 const getResolution = async(outputRes, cnvTarget) => {
-    // console.log(cnvTarget);
     cnvTarget.w = parseFloat(window.getComputedStyle(cnvTarget).width)
     const scaledRes = {
         w: cnvTarget.w << 0,
@@ -91,16 +94,21 @@ const getResolution = async(outputRes, cnvTarget) => {
  * @returns {Array} - video input device Object audio input device Object, user selected width and height for visualiser output
  */
 const getSettings = async() => {
-    let db = await openDB('visDB', 1, db => {
-        if (db.oldVersion == 0) {
-            console.log(`Error opening database: ${err.message}`);
-            return null;
-        }
-    });
-    const inputDevice = await getInputDevice(db);
-    const audioSource = await getAudioSource(db);
-    const outputRes = await getOutputResolution(db);
-    return [inputDevice, audioSource, outputRes];
+    try {
+        let db = await openDB('visDB', 1, db => {
+            if (db.oldVersion == 0) {
+                console.log(`Error opening database: ${err.message}`);
+                return null;
+            }
+        });
+        const inputDevice = await getInputDevice(db);
+        const audioSource = await getAudioSource(db);
+        const outputRes = await getOutputResolution(db);
+        return [inputDevice, audioSource, outputRes];
+    }
+    catch (err) {
+        throw new Error(`Error retrieving settings from database: ${err.message}`);
+    }
 }
 
 /**
@@ -114,7 +122,7 @@ const getInputDevice = async(db) => {
         return result.inputDevice;
     }
     catch (err) {
-        console.log(`error retrieving input device: ${err}`)
+        throw new Error(`Error retrieving input device: ${err}`);
     }
 }
 
@@ -129,7 +137,7 @@ const getAudioSource = async(db) => {
         return result.source;
     }
     catch (err) {
-        console.log(`error retrieving input device: ${err}`)
+        throw new Error(`error retrieving input device: ${err}`);
     }
 }
 
@@ -144,7 +152,7 @@ const getOutputResolution = async(db) => {
         return result.outputResolution;
     }
     catch (err) {
-        console.log(`error retrieving output resolutions: ${err}`)
+        throw new Error(`error retrieving output resolutions: ${err}`);
     }
 }
 export { setupVisualiserCanvas };

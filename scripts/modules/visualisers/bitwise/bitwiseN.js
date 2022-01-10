@@ -11,6 +11,7 @@ export const bitwiseN = class extends Visualiser {
         const { invert = false } = kwargs;
         const { negOpacity = 1 } = kwargs;
         const { lyrOpacity = 1 } = kwargs;
+        const { audioInfo } = kwargs;
         const { dyn = 0 } = kwargs;
         let { rand = 0 } = kwargs;
         let { noise = 0 } = kwargs;

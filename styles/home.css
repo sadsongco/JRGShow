@@ -43,11 +43,15 @@ a.button {
   font-size: 0.9em;
   text-decoration: none;
   padding: 0.8em 1.8em;
-  margin: 4px 0;
+  margin: 4px;
   color: #fff;
   background-color: #673ab7;
   border: 2px solid white;
   border-radius: 10px;
+}
+button:hover,
+a.button:hover {
+  cursor: pointer;
 }
 
 select,

@@ -1,4 +1,6 @@
 .DS_Store
 .VSCodeCounter
 .vscode
+_prototype
+_sandbox
 /out/*
