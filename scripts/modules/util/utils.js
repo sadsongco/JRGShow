@@ -4,7 +4,7 @@
  * @param {string} html - html string to convert
  * @returns {HTMLElement} - html converted to HTMLElement
  */
-export const htmlToElement = function(html) {
+const htmlToElement = function(html) {
     const template = document.createElement('template')
     html = html.trim()
     template.innerHTML = html
@@ -17,4 +17,6 @@ export const htmlToElement = function(html) {
  * @param {float} x - decimal number to convert to binary
  * @returns {string} - binary string
  */
-export const d2b = x => x.toString(2);
+const d2b = x => x.toString(2);
+
+export { d2b, htmlToElement };

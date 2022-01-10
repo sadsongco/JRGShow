@@ -5,7 +5,7 @@ import { openDB, deleteDB, wrap, unwrap } from 'https://cdn.jsdelivr.net/npm/idb
  * Asynchronously retreive current setlist from database
  * @returns {IDBObjectStore} - setlist retrieved from database
  */
-export const getSetlist = async() => {
+const getSetlist = async() => {
     let db = await openDB('visDB', 1, db => {
         if (db.oldVersion == 0) {
             console.log(`Error opening database: ${err.message}`);
@@ -21,6 +21,8 @@ export const getSetlist = async() => {
  * @param {array} setlist - array of track objects
  * @returns {array} - sorted array
  */
- export const sortSetlistByOrder = (setlist) => {
+const sortSetlistByOrder = (setlist) => {
     return [...setlist].sort((a, b) => a.position - b.position);
 }
+
+export { getSetlist, sortSetlistByOrder }

@@ -3,7 +3,7 @@ import { visList } from "../visualisers/registeredVis.js";
 /**
  * imports all of the registered visualiser modules into global visualiserModules array
  */
-export const importModules = async function () {
+const importModules = async function () {
     const visualiserModules = {};
     const path = '../visualisers/'
     for (let visGroup of visList) {
@@ -15,3 +15,5 @@ export const importModules = async function () {
     }
     return  await Promise.resolve(visualiserModules);
 };
+
+export { importModules }

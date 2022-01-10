@@ -3,6 +3,10 @@ import { importModules }                            from "./importModules.js";
 import { dynamicGenerator, pseudoRandomGenerator }  from "../util/generators.js";
 import getPixelValues                               from "../util/getPixelValues.js"
 
+/**
+ * @class Class that sets up and processes the HTML5 canvas, processing visuals according to the
+ * user generated chain of visualisers and their parameters
+ */
 export const VisOutputEngine = class {
     constructor() {
         this.cnv                = null; // will hold the HTML5 canvas

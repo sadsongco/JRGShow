@@ -1,8 +1,8 @@
 // import utilities and generators
-import { dynamicGenerator, pseudoRandomGenerator } from "../util/generators.js"
-import getPixelValues from '../util/getPixelValues.js';
-import { importModules } from "./importModules.js";
-import { setupVisualisers } from "./setupVisualisers.js";
+import { dynamicGenerator, pseudoRandomGenerator } from "../modules/util/generators.js"
+import getPixelValues from '../modules/util/getPixelValues.js';
+import { importModules } from "../modules/common/importModules.js";
+import { setupVisualisers } from "../modules/common/setupVisualisers.js";
 
 // p5js preview visualiser variables
 let cnv, vidIn, audioIn;

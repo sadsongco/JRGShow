@@ -160,7 +160,7 @@ const updateParameter = (e) => {
 /**
  * Returns parameter value from a changed input control, dependent on input type
  * @param {Event} e - Triggering event
- * @returns {Boolean or Float} - Updated parameter value
+ * @returns {Boolean | Float} - Updated parameter value
  */
 const getParameterValue = (e) => {
     if (e.target.type === 'checkbox')
