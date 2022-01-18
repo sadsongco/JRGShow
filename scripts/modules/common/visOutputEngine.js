@@ -45,7 +45,6 @@ export const VisOutputEngine = class {
    */
   setOutputSettings = (outputSettings) => {
     this.outputSettings = outputSettings;
-    console.log(this.outputSettings)
   }
 
   /**
@@ -71,7 +70,7 @@ export const VisOutputEngine = class {
     this.audioEngine = new AudioEngine(this.audioContext, audioSource);
     await this.audioEngine.init();
     // initialise output settings and target DOM elements
-    this.outputSettings = { bg_opacity: 255, bg_r: 0, bg_g: 0, bg_b: 0 };
+    this.outputSettings = { bg_opacity: 255, bg_col: [0,0,0] };
     this.fr = document.getElementById('fr');
     this.visContainer = document.getElementById('outerContainer');
   }
@@ -85,7 +84,7 @@ export const VisOutputEngine = class {
         // get dynamic and modulation variables
         const dyn = dynamicGenerator(this.frameCount);
         const rand = pseudoRandomGenerator();
-		this.audioEngine.getAudioAnalysis();
+        this.audioEngine.getAudioAnalysis();
         // this.audioEngine.draw(this.cnvContext, this.cnv);
         // set params, once per frame, included in processFramePre loop
         const visParams = {}
@@ -94,13 +93,12 @@ export const VisOutputEngine = class {
             const kwargs = visParams[module.name];
             kwargs.dyn = dyn;
             kwargs.audioInfo = this.audioEngine;
-            this.visualiserModules[module.name].processFramePre(this.vidIn, kwargs);
+            this.visualiserModules[module.name].processFramePre(this.vidIn, kwargs, this);
         }
         if (this.currentVisChain.length > 0) {
             this.vidContext.drawImage(this.vidIn, 0, 0, this.cnv.width, this.cnv.height);
             this.vidPixels = this.vidContext.getImageData(0, 0, this.cnv.width, this.cnv.height);
             this.cnvPixels = this.cnvContext.getImageData(0, 0, this.cnv.width, this.cnv.height);
-            // vidIn.loadPixels();
             for (let vy = 0; vy < this.cnv.height; vy++) {
                 for (let vx = 0; vx < this.cnv.width; vx++) {
                     const pixIdx = ((vy * this.cnv.width) + vx) * 4;
@@ -113,13 +111,20 @@ export const VisOutputEngine = class {
                         kwargs.vx = vx;
                         kwargs.vy = vy;
                         kwargs.rand = rand[randIdx];
-						kwargs.audioInfo = this.audioEngine;
+                        kwargs.audioInfo = this.audioEngine;
                         this.visualiserModules[module.name].processPixels(pixIdx, pixVals, kwargs, this);
                     }
                 }
             }
             this.cnvContext.putImageData(this.cnvPixels, 0, 0);
-        }
+            for (const module of this.currentVisChain) {
+              visParams[module.name] = {...module.params};
+              const kwargs = visParams[module.name];
+              kwargs.dyn = dyn;
+              kwargs.audioInfo = this.audioEngine;
+              this.visualiserModules[module.name].processFramePost(this.vidPixels.data, kwargs, this);
+            }
+          }
         
         // this.cnvContext.drawImage(this.vidIn, 0, 0, this.cnv.width, this.cnv.height);
         ++this.frameCount;
@@ -138,10 +143,10 @@ export const VisOutputEngine = class {
 
   drawBackground = async() => {
           // set background
-          const { bg_opacity = 255, bg_r = 0, bg_g = 0, bg_b = 0 } = this.outputSettings;
-          const bg_col = `rgba(${bg_r}, ${bg_g}, ${bg_b}, ${bg_opacity/255})`;
+          const { bg_opacity = 255, bg_col = [0,0,0] } = this.outputSettings;
+          const bgCol = `rgba(${bg_col[0]}, ${bg_col[1]}, ${bg_col[2]}, ${bg_opacity/255})`;
           this.cnvContext.save();
-          this.cnvContext.fillStyle = bg_col;
+          this.cnvContext.fillStyle = bgCol;
           this.cnvContext.fillRect(0, 0, this.cnv.width, this.cnv.height);
           this.cnvContext.restore();
   }

@@ -22,7 +22,7 @@ export const visList = [
         visualisers: [
     //         {name: "edgeDetect"},
     //         {name: "gradReveal"},
-            // {name: "motion"},
+            {name: "motion"},
     //         {name: "threshold"},
         ]
     },
@@ -38,7 +38,7 @@ export const visList = [
         visGroup: "straightVideo",
         visualisers: [
     //         {name: "pixThru"},
-            // {name: "vidThru"},
+            {name: "vidThru"},
     //         {name: "vidThruHalf"},
     //         {name: "vidThruPoster"},
         ]

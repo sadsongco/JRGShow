@@ -6,7 +6,9 @@ import { visList } from "./modules/visualisers/registeredVis.js";
 
 // import utilities and generators
 import { outputParameters, outputParamVals } from "./modules/parameters/outputParameters.js"
+import { rgbToHex, hexToRgb } from './modules/util/utils.js';
 
+// import visualiser engine for preview
 import { VisOutputEngine } from "./modules/common/VisOutputEngine.js"
 
 /**
@@ -120,12 +122,21 @@ const showParams = (modName) => {
                 paramEntry.type = 'checkbox';
                 paramEntry.checked = paramEntry.value = param.hasOwnProperty('value') ? paramVals[param.name] : false;
                 break;
+            case 'colour':
+                paramEntry.type = 'color';
+                paramEntry.value = paramVals[param.name];
+                break;
         };
         paramContainer.appendChild(paramEntry);
         const paramVal = document.createElement('div');
         paramVal.id = `${modName}-${param.name}-value`;
         paramVal.classList.add('param-val');
-        paramVal.innerText = paramVals[param.name];
+        switch (param.type) {
+            case 'colour':
+                break;
+            default:
+                paramVal.innerText = paramVals[param.name];
+        }
         paramContainer.appendChild(paramVal)
     }
     paramsEl.appendChild(paramContainer);
@@ -139,7 +150,7 @@ const showParams = (modName) => {
 const updateParameter = (e) => {
     const names = e.target.name.split("-");
     const moduleName = names[0], paramName = names[1];
-    const newValue = getParameterValue(e);
+    let newValue = getParameterValue(e);
     if (moduleName === 'Output') {
         outputSettings[paramName] = newValue;
     } else {
@@ -150,6 +161,13 @@ const updateParameter = (e) => {
         }
     }
     moduleName === 'Output' ? visOutputEngine.setOutputSettings(outputSettings) : visOutputEngine.setCurrentVisChain(currentVisChain);
+    // hacky - didn't realise I'd need a type until much later
+    const paramType = paramName.split('_')[paramName.split('_').length - 1];
+    if (paramType === 'col') {
+        // if it's a colour, convert back to hex before adding as the input value
+        newValue = rgbToHex(...newValue);
+        return;
+    }
     document.getElementById(`${e.target.name}-value`).innerText = newValue;
 }
 
@@ -159,10 +177,16 @@ const updateParameter = (e) => {
  * @returns {Boolean | Float} - Updated parameter value
  */
 const getParameterValue = (e) => {
-    if (e.target.type === 'checkbox')
-        return e.target.checked;
-    else
-        return parseFloat(e.target.value);
+    switch (e.target.type) {
+        case "checkbox":
+            return e.target.checked;
+            break;
+        case "color":
+            return hexToRgb(e.target.value);
+            break;
+        default:
+            return parseFloat(e.target.value);
+    }
 }
 
 /**

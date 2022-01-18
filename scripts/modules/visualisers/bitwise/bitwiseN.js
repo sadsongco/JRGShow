@@ -1,4 +1,5 @@
 import { Visualiser } from "../Visualiser.js";
+import { greyscaleCalc } from "../../util/utils.js";
 
 export const bitwiseN = class extends Visualiser {
     processPixels = function(pixIdx, pixVals, kwargs={}, context) {
@@ -17,12 +18,12 @@ export const bitwiseN = class extends Visualiser {
         let { noise = 0 } = kwargs;
         let [iR, iG, iB] = pixVals;
         // process pixel
-        const grayscale = (iR * 0.3) + (iG * 0.59) + (iB * 0.11)
+        const grayscale = greyscaleCalc(pixVals);
         let oR = iR - (iR * rand * noise);
         let oG = iG - (iG * rand * noise);
         let oB = iB - (iB * rand * noise); 
         if (bw)
-        oR = oG = oB = grayscale;
+            oR = oG = oB = grayscale;
         if (dynThresh) {
             threshold = Math.abs(dynThreshMin + ((dynThreshMax - dynThreshMin) * dyn[dynThreshSpeed]));
         }

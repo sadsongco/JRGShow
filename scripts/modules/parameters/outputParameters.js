@@ -9,31 +9,10 @@ export const outputParameters = [
         value: 255
     },
     {
-        name: "bg_r",
-        displayName: "Background Colour Red",
-        type: "val",
-        range: [
-            0, 255
-        ],
-        value: 0
-    },
-    {
-        name: "bg_g",
-        displayName: "Background Colour Green",
-        type: "val",
-        range: [
-            0, 255
-        ],
-        value: 0
-    },
-    {
-        name: "bg_b",
-        displayName: "Background Colour Blue",
-        type: "val",
-        range: [
-            0, 255
-        ],
-        value: 0
+        name: "bg_col",
+        displayName: "Background Colour",
+        type: "colour",
+        value: "#000000",
     },
     {
         name: "transitionInTime",
