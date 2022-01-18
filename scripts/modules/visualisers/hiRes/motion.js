@@ -5,10 +5,11 @@ import Vector from "../../../classes/Vector.js";
 export class motion extends Visualiser {
     constructor() {
         super();
-        this.prevFrame = [];
+        this.prevFrame = false;
         this.motion = false;
     }
-    processPixels = function(pixIdx, pixVals, kwargs = {}, context) {
+    processPixels = function(pixIdx, pixVals, kwargs = {}, pixels) {
+        if (Math.random() > 0.999999) console.log(this.prevFrame)
         if (!this.prevFrame) return
         const { resolution = 1 } = kwargs;
         if (pixIdx % resolution !== 0) return
@@ -40,10 +41,10 @@ export class motion extends Visualiser {
         // loop over resolution area and draw pixels
         for (let rx = 0; rx <= resolution; rx++) {
             for (let ry = 0; ry <= resolution; ry++) {
-                let localPixIdx = (((ry + kwargs.vy) * context.cnv.width) + ( + kwargs.vx)) * 4;
-                context.cnvPixels.data[localPixIdx+0] = (oR * lyrOpacity) + (context.cnvPixels.data[pixIdx+0] * (1 - lyrOpacity));
-                context.cnvPixels.data[localPixIdx+1] = (oG * lyrOpacity) + (context.cnvPixels.data[pixIdx+1] * (1 - lyrOpacity));
-                context.cnvPixels.data[localPixIdx+2] = (oB * lyrOpacity) + (context.cnvPixels.data[pixIdx+2] * (1 - lyrOpacity));
+                let localPixIdx = (((ry + kwargs.vy) * pixels.width) + ( + kwargs.vx)) * 4;
+                pixels.data[localPixIdx+0] = (oR * lyrOpacity) + (pixels.data[pixIdx+0] * (1 - lyrOpacity));
+                pixels.data[localPixIdx+1] = (oG * lyrOpacity) + (pixels.data[pixIdx+1] * (1 - lyrOpacity));
+                pixels.data[localPixIdx+2] = (oB * lyrOpacity) + (pixels.data[pixIdx+2] * (1 - lyrOpacity));
             }
         }
 
@@ -59,6 +60,7 @@ export class motion extends Visualiser {
 
     }
     processFramePost = function(vidPixels, kwargs = {}, context) {
+        console.log(vidPixels)
         this.prevFrame = vidPixels;
     }
     params = [

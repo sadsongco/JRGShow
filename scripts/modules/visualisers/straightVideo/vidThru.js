@@ -2,9 +2,7 @@ import { Visualiser } from '../../../_prototype/modules/visualisers/Visualiser.j
 
 export class vidThru extends Visualiser {
     processFramePre = function(vidIn, kwargs={}, context) {
-        const { bw = false } = kwargs;
         const { bwAmt = 1 } = kwargs;
-        const { invert = false } = kwargs;
         const { invAmt = 100 } = kwargs;
         const { blur = 0 } = kwargs;
         const { brightness = 100 } = kwargs;
@@ -28,12 +26,6 @@ export class vidThru extends Visualiser {
 
     }
     params = [
-        // {
-        //     name: 'bw',
-        //     displayName: 'Black & White',
-        //     type: 'toggle',
-        //     value: false
-        // },
         {
             name: 'bwAmt',
             displayName: 'Black & White amount',
@@ -44,12 +36,6 @@ export class vidThru extends Visualiser {
             step: 0.1,
             value: 0
         },
-        // {
-        //     name: 'invert',
-        //     displayName: 'Invert',
-        //     type: 'toggle',
-        //     value: false
-        // },
         {
             name: 'invAmt',
             displayName: 'Inversion amount',

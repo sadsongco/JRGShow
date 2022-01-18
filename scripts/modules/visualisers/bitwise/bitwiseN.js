@@ -2,7 +2,7 @@ import { Visualiser } from "../Visualiser.js";
 import { greyscaleCalc } from "../../util/utils.js";
 
 export const bitwiseN = class extends Visualiser {
-    processPixels = function(pixIdx, pixVals, kwargs={}, context) {
+    processPixels = (pixIdx, pixVals, kwargs={}, pixels) => {
         // setup visualiser parameters with default values
         let { threshold = 100 } = kwargs;
         const { dynThresh = false } = kwargs;
@@ -28,14 +28,14 @@ export const bitwiseN = class extends Visualiser {
             threshold = Math.abs(dynThreshMin + ((dynThreshMax - dynThreshMin) * dyn[dynThreshSpeed]));
         }
         if ((invert && grayscale < threshold) || (!invert && grayscale > threshold)) {
-            context.cnvPixels.data[pixIdx+0] = (oR * lyrOpacity) + (context.cnvPixels.data[pixIdx+0] * (1 - lyrOpacity));
-            context.cnvPixels.data[pixIdx+1] = (oG * lyrOpacity) + (context.cnvPixels.data[pixIdx+1] * (1 - lyrOpacity));
-            context.cnvPixels.data[pixIdx+2] = (oB * lyrOpacity) + (context.cnvPixels.data[pixIdx+2] * (1 - lyrOpacity));
+            pixels.data[pixIdx+0] = (oR * lyrOpacity) + (pixels.data[pixIdx+0] * (1 - lyrOpacity));
+            pixels.data[pixIdx+1] = (oG * lyrOpacity) + (pixels.data[pixIdx+1] * (1 - lyrOpacity));
+            pixels.data[pixIdx+2] = (oB * lyrOpacity) + (pixels.data[pixIdx+2] * (1 - lyrOpacity));
         } 
         else {
-            context.cnvPixels.data[pixIdx+0] = 0 + (context.cnvPixels.data[pixIdx+0] * (1 - negOpacity));;
-            context.cnvPixels.data[pixIdx+1] = 0 + (context.cnvPixels.data[pixIdx+1] * (1 - negOpacity));;
-            context.cnvPixels.data[pixIdx+2] = 0 + (context.cnvPixels.data[pixIdx+2] * (1 - negOpacity));;
+            pixels.data[pixIdx+0] = 0 + (pixels.data[pixIdx+0] * (1 - negOpacity));;
+            pixels.data[pixIdx+1] = 0 + (pixels.data[pixIdx+1] * (1 - negOpacity));;
+            pixels.data[pixIdx+2] = 0 + (pixels.data[pixIdx+2] * (1 - negOpacity));;
         }
     }
     params = [
