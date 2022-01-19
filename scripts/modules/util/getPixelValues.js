@@ -8,7 +8,8 @@ const getPixelValues = function(pixIdx, pixArr) {
     const iR = pixArr[pixIdx + 0]
     const iG = pixArr[pixIdx + 1]
     const iB = pixArr[pixIdx + 2]
-    return [iR, iG, iB]
+    const iO = pixArr[pixIdx + 3]
+    return [iR, iG, iB, iO]
 }
 
 export default getPixelValues

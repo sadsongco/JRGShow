@@ -3,16 +3,11 @@ import { greyscaleCalc } from "../../util/utils.js";
 import Vector from "../../../classes/Vector.js";
 
 export class motion extends Visualiser {
-    constructor() {
-        super();
-        this.prevFrame = false;
-        this.motion = false;
-    }
-    processPixels = function(pixIdx, pixVals, kwargs = {}, pixels) {
-        if (Math.random() > 0.999999) console.log(this.prevFrame)
-        if (!this.prevFrame) return
+
+    processPixels = function(pixIdx, pixVals, kwargs = {}, context) {        
+        if (!context.prevFrame) return
         const { resolution = 1 } = kwargs;
-        if (pixIdx % resolution !== 0) return
+        if (kwargs.vx % resolution !== 0 || kwargs.vy % resolution !== 0) return
         let [iR, iG, iB] = pixVals;
         const { motionThresh = 20 } = kwargs;
         const { lyrOpacity = 1 } = kwargs;
@@ -25,14 +20,14 @@ export class motion extends Visualiser {
         let oB = 0;
         const greyscale = greyscaleCalc(pixVals);
         const currVec = new Vector(iR, iG, iB)
-        const prevVec = new Vector(this.prevFrame[pixIdx + 0], this.prevFrame[pixIdx + 1], this.prevFrame[pixIdx + 2])
-        this.motion = currVec.distSq(prevVec) > (motionThresh*motionThresh);
-        if (!this.motion) return
+        const prevVec = new Vector(context.prevFrame.data[pixIdx + 0], context.prevFrame.data[pixIdx + 1], context.prevFrame.data[pixIdx + 2])
+        const motion = currVec.distSq(prevVec) > (motionThresh*motionThresh);
+        if (!motion) return
         oR = iR;
         oG = iG;
         oB = iB;
         if (bw)
-            oR = oG = oB = greyscale
+        oR = oG = oB = greyscale
         if (motionColToggle) {
             oR = r;
             oG = g;
@@ -41,28 +36,22 @@ export class motion extends Visualiser {
         // loop over resolution area and draw pixels
         for (let rx = 0; rx <= resolution; rx++) {
             for (let ry = 0; ry <= resolution; ry++) {
-                let localPixIdx = (((ry + kwargs.vy) * pixels.width) + ( + kwargs.vx)) * 4;
-                pixels.data[localPixIdx+0] = (oR * lyrOpacity) + (pixels.data[pixIdx+0] * (1 - lyrOpacity));
-                pixels.data[localPixIdx+1] = (oG * lyrOpacity) + (pixels.data[pixIdx+1] * (1 - lyrOpacity));
-                pixels.data[localPixIdx+2] = (oB * lyrOpacity) + (pixels.data[pixIdx+2] * (1 - lyrOpacity));
+                let localPixIdx = (((ry + kwargs.vy) * context.cnvFrame.width) + ( + kwargs.vx)) * 4;
+                context.cnvFrame.data[localPixIdx+0] = (oR * lyrOpacity) + (context.cnvFrame.data[pixIdx+0] * (1 - lyrOpacity));
+                context.cnvFrame.data[localPixIdx+1] = (oG * lyrOpacity) + (context.cnvFrame.data[pixIdx+1] * (1 - lyrOpacity));
+                context.cnvFrame.data[localPixIdx+2] = (oB * lyrOpacity) + (context.cnvFrame.data[pixIdx+2] * (1 - lyrOpacity));
             }
         }
-
+        
         // for (let i = 0; i < resolution; i ++) {
-        //     const resStep = i * resolution;
+            //     const resStep = i * resolution;
             // //     context.pixels[pixIdx + (i*4) + 0] = oR
             // //     context.pixels[pixIdx + (i*4) + 1] = oG
             // //     context.pixels[pixIdx + (i*4) + 2] = oB
             // // }
-        // }
+            // }
     }
-    notMethod = function(prop) {
 
-    }
-    processFramePost = function(vidPixels, kwargs = {}, context) {
-        console.log(vidPixels)
-        this.prevFrame = vidPixels;
-    }
     params = [
         {
             name: "motionThresh",
