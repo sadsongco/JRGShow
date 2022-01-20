@@ -19,8 +19,8 @@ const htmlToElement = function(html) {
  */
 const d2b = x => x.toString(2);
 
-const greyscaleCalc = ([iR, iG, iB]) => {
-    return (iR * 0.3) + (iG * 0.59) + (iB * 0.11)
+const greyscaleCalc = ({r, g, b}) => {
+    return (r * 0.3) + (g * 0.59) + (b * 0.11)
 }
 
 // https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
