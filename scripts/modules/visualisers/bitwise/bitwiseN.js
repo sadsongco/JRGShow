@@ -5,7 +5,6 @@ import alphaBlend from "../../common/blendModes/alphaBlend.js";
 
 export const bitwiseN = class extends Visualiser {
   processPixels = (pixIdx, pixVals, kwargs = {}, context) => {
-    // console.log(kwargs);
     // setup visualiser parameters with default values
     let { threshold = 100 } = kwargs;
     const { dynThresh = false } = kwargs;
@@ -30,14 +29,9 @@ export const bitwiseN = class extends Visualiser {
     let oA = lyrOpacity;
     if (bw) oR = oG = oB = grayscale;
     if (dynThresh) {
-      threshold = Math.abs(
-        dynThreshMin + (dynThreshMax - dynThreshMin) * dyn[dynThreshSpeed]
-      );
+      threshold = Math.abs(dynThreshMin + (dynThreshMax - dynThreshMin) * dyn[dynThreshSpeed]);
     }
-    if (
-      (invert && grayscale < threshold) ||
-      (!invert && grayscale > threshold)
-    ) {
+    if ((invert && grayscale < threshold) || (!invert && grayscale > threshold)) {
       visPixVals = { r: oR, g: oG, b: oB, a: oA };
     } else {
       visPixVals = { r: 0, g: 0, b: 0, a: negOpacity };

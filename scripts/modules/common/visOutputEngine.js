@@ -10,10 +10,29 @@ import getPixelValues from "../util/getPixelValues.js";
  */
 export const VisOutputEngine = class {
   constructor() {
+    this.visualiserModules = {}; // will hold the registered visualiser modules
     this.currentVisChain = []; // will hold the chain of visualiser processors
-    this.frameCount = 0;
-    this.workers = [];
-    this.workerContext = {};
+    this.outputSettings = {}; // will hold the current output settings
+    this.visContainer = null; // DOM element containing canvas
+    this.cnv = null; // will hold the HTML5 canvas
+    this.cnvContext = null; // will hold the graphics context for the canvas
+    this.vidIn = null; // will hold the video input object
+    this.vidCnv = null; // will hold the HTML5 canvas for reading the video input
+    this.vidContext = null; // will hold the graphics context for the video input
+    this.prevVidContext = null; // will hold an graphics context for the previous video frame
+    this.audioEngine = null; // class for managing audio input and processing
+    this.audioContext = null; // will hold the class audio context
+
+    // debugging and performance
+    this.frameCount = 0; // keep track of the number of frames rendered
+    this.debug = true; // show debug info
+    this.fr = null; // DOM this.cnv for displaying framerate
+    this.frametimes = []; // array of timestamps when frames were drawn
+
+    // web workers
+    this.workersCount = 4; // integer number of workers being used
+    this.workers = []; // array of instantiated workers
+    this.pixelProcessorPath = "/scripts/modules/workers/pixelProcessor.js"; // path to worker script
   }
 
   /**
@@ -50,6 +69,8 @@ export const VisOutputEngine = class {
     // set up canvas and video contexts
     this.cnvContext = this.cnv.getContext("2d");
     this.vidContext = this.vidCnv.getContext("2d");
+    const vidCloneCnv = this.vidCnv.cloneNode();
+    this.prevVidContext = vidCloneCnv.getContext("2d");
 
     // initialise output settings and target DOM elements
     this.outputSettings = { bg_opacity: 1, bg_col: [0, 0, 0] };
@@ -58,11 +79,10 @@ export const VisOutputEngine = class {
 
     // initialise web workers
     this.len = this.cnv.width * this.cnv.height * 4;
-    this.workersCount = 1;
     this.segmentLength = this.len / this.workersCount;
     this.blockSize = (this.cnv.height / this.workersCount) << 0;
     for (let i = 0; i < this.workersCount; i++) {
-      this.workers.push(new Worker("/scripts/modules/workers/testWorker.js", { type: "module" }));
+      this.workers.push(new Worker(this.pixelProcessorPath, { type: "module" }));
     }
   };
 
@@ -82,9 +102,8 @@ export const VisOutputEngine = class {
 
     this.finished++;
     if (this.finished === this.workersCount) {
-      // console.log('frame finished');
-      // console.log(canvasData);
     }
+    return Promise.resolve(true);
   };
 
   setPrevCnvFrames = (sourceContext) => {
@@ -109,11 +128,8 @@ export const VisOutputEngine = class {
         // kwargs.audioInfo = this.audioEngine;
         this.visualiserModules[module.name].processFramePre(this.vidIn, kwargs, this);
       }
+      // draw current video frame to video context
       this.vidContext.drawImage(this.vidIn, 0, 0, this.cnv.width, this.cnv.height);
-      // this.vidFrame = this.vidContext.getImageData(0, 0, this.cnv.width, this.cnv.height);
-      // this.drawBackground();
-      // this.cnvContext.drawImage(this.vidIn, 0, 0, this.cnv.width, this.cnv.height);
-      // clear canvas according to output settings
 
       // prepare workers
       if (!prevCnvFrames) prevCnvFrames = this.setPrevCnvFrames(this.cnvContext);
@@ -121,9 +137,11 @@ export const VisOutputEngine = class {
       let workerJobs = [];
       for (let i in this.workers) {
         const videoFrame = this.vidContext.getImageData(0, this.blockSize * i, this.cnv.width, this.blockSize);
+        const prevVideoFrame = this.prevVidContext.getImageData(0, this.blockSize * i, this.cnv.width, this.blockSize);
         workerJobs.push(
           this.invokeWorker(this.workers[i], {
             videoFrame: videoFrame,
+            prevVideoFrame: prevVideoFrame,
             prevCnvFrame: prevCnvFrames[i],
             visChain: this.currentVisChain,
             visParams: visParams,
@@ -134,7 +152,18 @@ export const VisOutputEngine = class {
         );
       }
       await Promise.all(workerJobs);
+      this.prevVidContext.drawImage(this.vidIn, 0, 0, this.cnv.width, this.cnv.height);
       const currCnvFrames = this.setPrevCnvFrames(this.cnvContext);
+
+      ++this.frameCount;
+      if (this.debug) {
+        while (this.frametimes.length > 0 && this.frametimes[0] <= timestamp - 1000) this.frametimes.shift();
+        this.frametimes.push(timestamp);
+        this.frameRate = this.frametimes.length;
+        this.fr.innerText = this.frameRate;
+      }
+
+      // while (this.finished < this.workersCount) continue;
       requestAnimationFrame((timestamp) => drawFrame(currCnvFrames, timestamp));
     };
     requestAnimationFrame((timestamp) => drawFrame(false, timestamp));
