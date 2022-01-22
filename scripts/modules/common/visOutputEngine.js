@@ -3,6 +3,7 @@ import { AudioEngine } from "./audioEngine.js";
 import { importModules } from "./importModules.js";
 import { dynamicGenerator, pseudoRandomGenerator } from "../util/generators.js";
 import getPixelValues from "../util/getPixelValues.js";
+import alphaBlend from "./blendModes/alphaBlend.js";
 
 /**
  * @class Class that sets up and processes the HTML5 canvas, processing visuals according to the
@@ -30,7 +31,7 @@ export const VisOutputEngine = class {
     this.frametimes = []; // array of timestamps when frames were drawn
 
     // web workers
-    this.workersCount = 4; // integer number of workers being used
+    this.workersCount = 8; // integer number of workers being used
     this.workers = []; // array of instantiated workers
     this.pixelProcessorPath = "/scripts/modules/workers/pixelProcessor.js"; // path to worker script
   }
@@ -131,29 +132,85 @@ export const VisOutputEngine = class {
       // draw current video frame to video context
       this.vidContext.drawImage(this.vidIn, 0, 0, this.cnv.width, this.cnv.height);
 
-      // prepare workers
-      if (!prevCnvFrames) prevCnvFrames = this.setPrevCnvFrames(this.cnvContext);
-      this.finished = 0;
-      let workerJobs = [];
-      for (let i in this.workers) {
-        const videoFrame = this.vidContext.getImageData(0, this.blockSize * i, this.cnv.width, this.blockSize);
-        const prevVideoFrame = this.prevVidContext.getImageData(0, this.blockSize * i, this.cnv.width, this.blockSize);
-        workerJobs.push(
-          this.invokeWorker(this.workers[i], {
-            videoFrame: videoFrame,
-            prevVideoFrame: prevVideoFrame,
-            prevCnvFrame: prevCnvFrames[i],
-            visChain: this.currentVisChain,
-            visParams: visParams,
-            outputSettings: this.outputSettings,
-            index: i,
-            length: this.segmentLength,
-          })
-        );
+      // if no workers, process pixels in main thread
+      if (this.workersCount === 0) {
+        this.videoFrame = this.vidContext.getImageData(0, 0, this.cnv.width, this.cnv.height);
+        this.prevVideoFrame = this.prevVidContext.getImageData(0, 0, this.cnv.width, this.cnv.height);
+        if (!prevCnvFrames) prevCnvFrames = [this.cnvContext.getImageData(0, 0, this.cnv.width, this.cnv.height)];
+        this.prevCnvFrame = prevCnvFrames[0];
+        for (let vy = 0; vy < this.videoFrame.height; vy++) {
+          for (let vx = 0; vx < this.videoFrame.width; vx++) {
+            const pixIdx = (vy * this.videoFrame.width + vx) * 4;
+
+            // set background
+            // prev frame pixel vals - no opacity needed
+            let pPixVals = getPixelValues(pixIdx, this.prevCnvFrame.data);
+            // background pixel vals
+            let { bg_opacity = 1, bg_col = [0, 0, 0] } = this.outputSettings;
+            let bgPixVals = {
+              r: bg_col[0],
+              g: bg_col[1],
+              b: bg_col[2],
+              a: bg_opacity,
+            };
+            // alpha blend previous frame and background
+            let oPixVals = alphaBlend(pPixVals, bgPixVals);
+            this.prevCnvFrame.data[pixIdx + 0] = oPixVals.r;
+            this.prevCnvFrame.data[pixIdx + 1] = oPixVals.g;
+            this.prevCnvFrame.data[pixIdx + 2] = oPixVals.b;
+            this.prevCnvFrame.data[pixIdx + 3] = oPixVals.a;
+
+            // calculate visualiser pixel vals
+            // get unprocessed video input pixel values
+            const vidPixVals = getPixelValues(pixIdx, this.videoFrame.data);
+            // video always returns 0 opacity, fix
+            vidPixVals.a = 1;
+
+            // process pixels with visualisers
+            let kwargs = {};
+            if (this.currentVisChain.length === 0) continue;
+            for (const module of this.currentVisChain) {
+              // include module parameters in arguments
+              kwargs = visParams[module.name];
+              // include common parameters in arguments
+              kwargs.vx = vx;
+              kwargs.vy = vy;
+              // kwargs.rand = videoFrame.rand[randIdx];
+              //             kwargs.audioInfo = videoFrame.audioEngine;
+              // console.log(module.name);
+              this.visualiserModules[module.name].processPixels(pixIdx, vidPixVals, kwargs, this);
+            }
+          }
+        }
+        this.cnvContext.putImageData(this.prevCnvFrame, 0, 0);
+      } else {
+        // prepare workers
+        if (!prevCnvFrames) prevCnvFrames = this.setPrevCnvFrames(this.cnvContext);
+        this.finished = 0;
+        let workerJobs = [];
+        for (let i in this.workers) {
+          const videoFrame = this.vidContext.getImageData(0, this.blockSize * i, this.cnv.width, this.blockSize);
+          const prevVideoFrame = this.prevVidContext.getImageData(0, this.blockSize * i, this.cnv.width, this.blockSize);
+          workerJobs.push(
+            this.invokeWorker(this.workers[i], {
+              videoFrame: videoFrame,
+              prevVideoFrame: prevVideoFrame,
+              prevCnvFrame: prevCnvFrames[i],
+              visChain: this.currentVisChain,
+              visParams: visParams,
+              outputSettings: this.outputSettings,
+              index: i,
+              length: this.segmentLength,
+            })
+          );
+        }
+        await Promise.all(workerJobs);
       }
-      await Promise.all(workerJobs);
+
       this.prevVidContext.drawImage(this.vidIn, 0, 0, this.cnv.width, this.cnv.height);
-      const currCnvFrames = this.setPrevCnvFrames(this.cnvContext);
+      let currCnvFrames;
+      if (this.workersCount === 0) currCnvFrames = [this.cnvContext.getImageData(0, 0, this.cnv.width, this.cnv.height)];
+      else currCnvFrames = this.setPrevCnvFrames(this.cnvContext);
 
       ++this.frameCount;
       if (this.debug) {
