@@ -26,10 +26,10 @@ export const VisOutputEngine = class {
     this.prevFramePixels = []; // will hold the pixel array of previous frame
 
     // workers
-    this.numWorkers = 4; // number of Web Workers to spawn
+    this.numWorkers = 2; // number of Web Workers to spawn
     this.workers = []; // will hold the Web Workers
     this.subcnvs = []; // will hold partial canvases for transferring to workers
-    this.subcnvOverlap = 0; // overlap subcanvases for convolution effects
+    this.subcnvOverlap = 4; // overlap subcanvases for convolution effects
     this.workerPath = "/scripts/modules/workers/canvasWorker.js";
 
     // debugging
@@ -65,23 +65,23 @@ export const VisOutputEngine = class {
     return this.visualiserModules;
   };
 
-  /**
-   * Sets up the HTML5 canvas, video input and audio input
-   */
-  setupCanvas = async () => {
-    let audioSource;
-    [this.cnv, this.vidCnv, this.vidIn, audioSource] = await setupVisualiserCanvas();
+  setupSubCnvs = () => {
     // setup workers and subcanvases
     const cnvTarget = document.getElementById("canvasContainer");
-
-    let subCnvHeight = (this.cnv.height / this.numWorkers + this.subcnvOverlap) << 0;
+    const cnvDisplayHeight = (this.cnv.height / this.numWorkers) << 0;
     let subCnvStart = 0;
+    let subCnvHeight = 0;
+    let subCnvDrawStart = 0;
+    let subCnvDrawHeight = 0;
     for (let i = 0; i < this.numWorkers; i++) {
-      console.log("setting up workers");
       // setup workers
       this.workers.push(new Worker(this.workerPath, { type: "module" }));
-      // setup subcanvas
+      subCnvHeight = (this.cnv.height / this.numWorkers + this.subcnvOverlap) << 0;
+      subCnvDrawHeight = subCnvHeight - this.subcnvOverlap + 1;
+      if (i !== 0) subCnvHeight += this.subcnvOverlap;
       if (subCnvStart + subCnvHeight > this.cnv.height) subCnvHeight = this.cnv.height - subCnvStart;
+      console.log(subCnvStart, subCnvDrawStart, subCnvHeight, subCnvDrawHeight);
+      // create DOM canvas
       const subCnv = document.createElement("canvas");
       subCnv.width = this.cnv.width;
       subCnv.height = subCnvHeight;
@@ -89,20 +89,48 @@ export const VisOutputEngine = class {
       subCnv.style.position = "absolute";
       subCnv.style.left = 0;
       subCnv.style.top = `${subCnvStart}px`;
-      console.log(subCnvStart);
+      // subCnv.style.backgroundColor = "rgba(255, 255, 255, 0.5)";
+      // subCnv.style.borderTop = "1px solid white";
+      // transfer canvas control to worker
       this.subcnvs.push(subCnv.transferControlToOffscreen());
       this.workers[i].postMessage(
         {
           task: "setup",
           canvas: this.subcnvs[i],
           start: subCnvStart,
+          drawStart: subCnvDrawStart,
           height: subCnvHeight,
+          drawHeight: subCnvDrawHeight,
         },
         [this.subcnvs[i]]
       );
-      subCnvStart = subCnvStart + subCnvHeight - this.subcnvOverlap;
+      // next sub canvas
+      subCnvStart = 1 + subCnvStart + subCnvHeight - this.subcnvOverlap * 2;
+      subCnvDrawStart = this.subcnvOverlap;
     }
 
+    // let subCnvStart = 0,
+    //   subCnvDrawStart = 0,
+    //   subCnvHeight = 0;
+    // for (let i = 0; i < this.numWorkers; i++) {
+    //   // setup subcanvas
+    //   if (i !== 0) subCnvHeight += this.subcnvOverlap;
+    //   if (subCnvStart + subCnvHeight > this.cnv.height) {
+    //     subCnvHeight = this.cnv.height - subCnvStart + this.subcnvOverlap;
+    //   }
+    //   subCnvStart = subCnvStart + subCnvHeight - this.subcnvOverlap * 2;
+    //   subCnvDrawStart = this.subcnvOverlap;
+    // }
+  };
+
+  /**
+   * Sets up the HTML5 canvas, video input and audio input
+   */
+  setupCanvas = async () => {
+    let audioSource;
+    [this.cnv, this.vidCnv, this.vidIn, audioSource] = await setupVisualiserCanvas();
+
+    this.setupSubCnvs();
     // set up canvas and video contexts
     this.cnvContext = this.cnv.getContext("2d");
     this.vidContext = this.vidCnv.getContext("2d");
@@ -120,6 +148,7 @@ export const VisOutputEngine = class {
    * Draw loop - called every frame
    */
   drawCanvas = async () => {
+    // return;
     const drawFrame = async (timestamp) => {
       if (this.numWorkers == 0) {
         await this.drawBackground();

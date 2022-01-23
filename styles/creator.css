@@ -209,6 +209,7 @@ main {
 
 #canvasContainer {
   width: 100%;
+  position: relative;
   outline: 1px solid white;
 }
 
