@@ -23,7 +23,7 @@ export class vidThru extends Visualiser {
         filters.push(`invert(${invAmt}%)`);
         context.cnvContext.save();
         context.cnvContext.filter = filters.join(' ');
-        context.cnvContext.drawImage(vidIn, 0, 0, context.cnv.width, context.cnv.height);
+        context.cnvContext.drawImage(vidIn, 0, context.drawStart, context.cnv.width, context.drawHeight);
         context.cnvContext.restore();
 
     }

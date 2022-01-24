@@ -30,6 +30,7 @@ export const VisOutputEngine = class {
     this.workers = []; // will hold the Web Workers
     this.subcnvs = []; // will hold partial canvases for transferring to workers
     this.subcnvOverlap = 4; // overlap subcanvases for convolution effects
+    this.subcnvParams = []; // hold the settings locally for each subcanvas
     this.workerPath = "/scripts/modules/workers/canvasWorker.js";
 
     // debugging
@@ -46,6 +47,8 @@ export const VisOutputEngine = class {
    */
   setCurrentVisChain = (currentVisChain) => {
     this.currentVisChain = currentVisChain;
+    for (const worker of this.workers)
+      worker.postMessage({ task: 'setCurrentVisChain', data: currentVisChain });
   };
 
   /**
@@ -54,6 +57,8 @@ export const VisOutputEngine = class {
    */
   setOutputSettings = (outputSettings) => {
     this.outputSettings = outputSettings;
+    for (const worker of this.workers) 
+      worker.postMessage({ task: 'setOutputSettings', data: outputSettings });
   };
 
   /**
@@ -80,7 +85,6 @@ export const VisOutputEngine = class {
       subCnvDrawHeight = subCnvHeight - this.subcnvOverlap + 1;
       if (i !== 0) subCnvHeight += this.subcnvOverlap;
       if (subCnvStart + subCnvHeight > this.cnv.height) subCnvHeight = this.cnv.height - subCnvStart;
-      console.log(subCnvStart, subCnvDrawStart, subCnvHeight, subCnvDrawHeight);
       // create DOM canvas
       const subCnv = document.createElement("canvas");
       subCnv.width = this.cnv.width;
@@ -93,6 +97,14 @@ export const VisOutputEngine = class {
       // subCnv.style.borderTop = "1px solid white";
       // transfer canvas control to worker
       this.subcnvs.push(subCnv.transferControlToOffscreen());
+      this.subcnvParams.push(
+        {
+        start: subCnvStart,
+        drawStart: subCnvDrawStart,
+        height: subCnvHeight,
+        drawHeight: subCnvDrawHeight,
+        }
+      );
       this.workers[i].postMessage(
         {
           task: "setup",
@@ -108,19 +120,6 @@ export const VisOutputEngine = class {
       subCnvStart = 1 + subCnvStart + subCnvHeight - this.subcnvOverlap * 2;
       subCnvDrawStart = this.subcnvOverlap;
     }
-
-    // let subCnvStart = 0,
-    //   subCnvDrawStart = 0,
-    //   subCnvHeight = 0;
-    // for (let i = 0; i < this.numWorkers; i++) {
-    //   // setup subcanvas
-    //   if (i !== 0) subCnvHeight += this.subcnvOverlap;
-    //   if (subCnvStart + subCnvHeight > this.cnv.height) {
-    //     subCnvHeight = this.cnv.height - subCnvStart + this.subcnvOverlap;
-    //   }
-    //   subCnvStart = subCnvStart + subCnvHeight - this.subcnvOverlap * 2;
-    //   subCnvDrawStart = this.subcnvOverlap;
-    // }
   };
 
   /**
@@ -150,12 +149,15 @@ export const VisOutputEngine = class {
   drawCanvas = async () => {
     // return;
     const drawFrame = async (timestamp) => {
+      // get current video frame
+      this.vidContext.drawImage(this.vidIn, 0, 0, this.cnv.width, this.cnv.height);
+      // get dynamic variable values
+      const dyn = dynamicGenerator(this.frameCount);
+      const rand = pseudoRandomGenerator();
+      this.audioEngine.getAudioAnalysis();
       if (this.numWorkers == 0) {
         await this.drawBackground();
         // get dynamic and modulation variables
-        const dyn = dynamicGenerator(this.frameCount);
-        const rand = pseudoRandomGenerator();
-        this.audioEngine.getAudioAnalysis();
         // this.audioEngine.draw(this.cnvContext, this.cnv);
         // set params, once per frame, included in processFramePre loop
         const visParams = {};
@@ -167,7 +169,6 @@ export const VisOutputEngine = class {
           this.visualiserModules[module.name].processFramePre(this.vidIn, kwargs, this);
         }
         if (this.currentVisChain.length > 0) {
-          this.vidContext.drawImage(this.vidIn, 0, 0, this.cnv.width, this.cnv.height);
           this.vidPixels = this.vidContext.getImageData(0, 0, this.cnv.width, this.cnv.height);
           this.cnvPixels = this.cnvContext.getImageData(0, 0, this.cnv.width, this.cnv.height);
           for (let vy = 0; vy < this.cnv.height; vy++) {
@@ -199,18 +200,26 @@ export const VisOutputEngine = class {
       } else {
         let drawStart = 0;
         for (let i in this.workers) {
+          const subcnvParams = this.subcnvParams[i];
+          const videoFrameFull = this.vidContext.getImageData(0, subcnvParams.start, this.cnv.width, subcnvParams.height);
+          const videoFrame = this.vidContext.getImageData(0, subcnvParams.start + subcnvParams.drawStart, this.cnv.width, subcnvParams.drawHeight);
+          // console.log(0, subcnvParams.start + subcnvParams.drawStart, this.cnv.width, subcnvParams.drawHeight);
+          const videoFrameImage = await createImageBitmap(this.vidIn, 0, subcnvParams.start + subcnvParams.drawStart, this.cnv.width, subcnvParams.drawHeight);
           const worker = this.workers[i];
           worker.postMessage({
             task: "draw",
-            kwargs: {
+            data: {
               index: i,
+              videoFrame: videoFrame,
+              videoFrameFull: videoFrameFull,
+              videoFrameImage: videoFrameImage,
             },
           });
         }
       }
       // this.cnvContext.drawImage(this.vidIn, 0, 0, this.cnv.width, this.cnv.height);
       ++this.frameCount;
-      // if (this.frameCount > 10) return;
+      // if (this.frameCount > 120) return;
       if (this.debug) {
         while (this.frametimes.length > 0 && this.frametimes[0] <= timestamp - 1000) this.frametimes.shift();
         this.frametimes.push(timestamp);

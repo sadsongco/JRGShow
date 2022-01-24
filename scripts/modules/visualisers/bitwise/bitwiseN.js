@@ -3,6 +3,7 @@ import { greyscaleCalc } from "../../util/utils.js";
 
 export const bitwiseN = class extends Visualiser {
     processPixels = function(pixIdx, pixVals, kwargs={}, context) {
+        console.log(context);
         // setup visualiser parameters with default values
         let { threshold = 100 } = kwargs;
         const { dynThresh = false } = kwargs;

@@ -38,9 +38,7 @@ export const outputParameters = [
 
 export let outputParamVals = {
     bg_opacity: 255,
-    bg_r: 0,
-    bg_g: 0,
-    bg_b: 0,
+    bg_col: [0, 0, 0],
     transitionInTime: 3,
     transitionOutTime: 3
 };
