@@ -1,6 +1,5 @@
 import { importModules } from "./importModules.js";
 import { setupVisualiserCanvas } from "./setupVisualisers.js";
-import ProcessCanvas from "../workers/canvasWorker.js";
 import { dynamicGenerator, pseudoRandomGenerator } from '../util/generators.js';
 import { AudioEngine } from './audioEngine.js';
 
@@ -11,20 +10,9 @@ import { AudioEngine } from './audioEngine.js';
  */
 export const VisOutputEngine = class {
   constructor() {
-    /**
-     * if never numWorkers = 0, can do without:
-     * currentVisChain
-     * outputSettings
-     * processCanvas
-     * 
-     * if no debug can do without: 
-     * fps
-     */
     // visualiser settings
     this.currentVisChain = []; // will hold the chain of visualiser processors
-    this.outputSettings = {}; // will hold the current output settings
     this.vidPos = {}; // for scaling video input
-    this.fps = 10; // target fps for the visualiser
 
     // processing
     this.processCanvas = null; // will hold an instance of the ProcessCanvas class for the main thread
@@ -42,7 +30,7 @@ export const VisOutputEngine = class {
     this.frameCount = 0; // keep track of the number of frames rendered
     this.frameRate = 1; // framerate of visualiser
     this.debug = true; // show debug info
-    this.fr = null; // DOM this.cnv for displaying framerate
+    this.fr = null; // DOM element for displaying framerate
     this.frametimes = []; // array of timestamps when frames were drawn
   }
 
@@ -52,19 +40,16 @@ export const VisOutputEngine = class {
    */
   setCurrentVisChain = (currentVisChain) => {
     this.currentVisChain = currentVisChain;
-    if (this.processCanvas) this.processCanvas.setCurrentVisChain(currentVisChain);
     for (let i = 0; i < this.numWorkers; i++) {
       this.workers[i].postMessage({ task: 'setCurrentVisChain', data: currentVisChain });
     }
   };
 
   /**
-   * Setter for this.outputSettings
+   * Setter for outputSettings
    * @param {Object} outputSettings
    */
   setOutputSettings = (outputSettings) => {
-    this.outputSettings = outputSettings;
-    if (this.processCanvas) this.processCanvas.setOutputSettings(outputSettings);
     for (const worker of this.workers) worker.postMessage({ task: 'setOutputSettings', data: outputSettings });
   };
 
@@ -84,6 +69,7 @@ export const VisOutputEngine = class {
     let subCnvHeight = 0;
     let subCnvDrawStart = 0;
     let subCnvDrawHeight = 0;
+    let workerJobs = [];
     for (let i = 0; i < this.numWorkers; i++) {
       // setup workers
       this.workers.push(new Worker(this.workerPath, { type: 'module' }));
@@ -109,8 +95,9 @@ export const VisOutputEngine = class {
         height: subCnvHeight,
         drawHeight: subCnvDrawHeight,
       });
-      this.workers[i].postMessage(
-        {
+      workerJobs.push(
+        this.invokeWorker(
+          this.workers[i], {
           task: 'setup',
           canvas: this.subcnvs[i],
           start: subCnvStart,
@@ -119,11 +106,14 @@ export const VisOutputEngine = class {
           drawHeight: subCnvDrawHeight,
         },
         [this.subcnvs[i]]
+        )
       );
       // next sub canvas
       subCnvStart = subCnvStart + subCnvHeight - (this.subcnvOverlap * 2);
       subCnvDrawStart = this.subcnvOverlap;
     }
+    await Promise.all(workerJobs);
+    return true;
   };
 
   /**
@@ -152,24 +142,19 @@ export const VisOutputEngine = class {
       drawHeight: this.cnv.height,
     };
 
-    // setup main thread processor
-    this.processCanvas = new ProcessCanvas();
-    let processCanvasData = {
-      start: 0,
-      drawStart: 0,
-      height: this.cnv.height,
-      drawHeight: this.cnv.height,
-      canvas: this.cnv,
-    };
-    this.processCanvas.setup(processCanvasData);
-
     // initialise output settings and target DOM elements
-    this.outputSettings = { bg_opacity: 255, bg_col: [0, 0, 0] };
     this.fr = document.getElementById('fr');
     this.visContainer = document.getElementById('outerContainer');
     this.visReady = true;
   };
 
+  /**
+   * Calls the draw method of a worker, resolves a promise when message recieved from worker
+   * @param {Worker} worker - web worker to be invoked
+   * @param {Object} context - passed data
+   * @param {Array} transfers - array of objects to be transferred to worker scope
+   * @returns {Promise}
+   */
   invokeWorker = (worker, context, transfers = []) => {
     return new Promise((resolve) => {
       worker.postMessage(context, transfers);
@@ -190,55 +175,30 @@ export const VisOutputEngine = class {
         const rand = pseudoRandomGenerator();
         this.audioEngine.getAudioAnalysis();
         this.vidContext.drawImage(this.vidIn, 0, 0, this.cnv.width, this.cnv.height);
-        if (this.numWorkers === 0) {
-          const subcnvParams = this.cnvParams;
+        let workerJobs = [];
+        for (let i = 0; i < this.numWorkers; i++) {
+          const subcnvParams = this.subcnvParams[i];
           const videoPixels = this.vidContext.getImageData(0, subcnvParams.start, this.cnv.width, subcnvParams.height);
-          const videoFrame = await createImageBitmap(this.vidIn, 0, (subcnvParams.start + subcnvParams.drawStart) / this.vidPos.scale, this.cnv.width / this.vidPos.scale, subcnvParams.drawHeight / this.vidPos.scale);
-          let kwargs = {
-            index: this.frameCount % 4,
-            videoFrame: videoFrame,
-            videoPixels: videoPixels,
-            dyn: dyn,
-            rand: rand,
-          };
-          this.processCanvas.draw(kwargs);
-        } else {
-          let workerJobs = [];
-          for (let i = 0; i < this.numWorkers; i++) {
-            const subcnvParams = this.subcnvParams[i];
-            const videoPixels = this.vidContext.getImageData(0, subcnvParams.start, this.cnv.width, subcnvParams.height);
-            const videoFrame = await createImageBitmap(this.vidIn, 0, (subcnvParams.start + subcnvParams.drawStart) / this.vidPos.scale, this.vidIn.videoWidth, subcnvParams.drawHeight / this.vidPos.scale, { resizeWidth: this.cnv.width, resizeHeight: subcnvParams.drawHeight, resizeQuality: 'low' });
-            workerJobs.push(
-              this.invokeWorker(
-                this.workers[i],
-                {
-                  task: 'draw',
-                  data: {
-                    index: (this.frameCount + i) % 4,
-                    videoFrame: videoFrame,
-                    videoPixels: videoPixels,
-                    dyn: dyn,
-                    rand: rand,
-                  },
+          const videoFrame = await createImageBitmap(this.vidIn, 0, (subcnvParams.start + subcnvParams.drawStart) / this.vidPos.scale, this.vidIn.videoWidth, subcnvParams.drawHeight / this.vidPos.scale, { resizeWidth: this.cnv.width, resizeHeight: subcnvParams.drawHeight, resizeQuality: 'low' });
+          workerJobs.push(
+            this.invokeWorker(
+              this.workers[i],
+              {
+                task: 'draw',
+                data: {
+                  index: (this.frameCount + i) % 4,
+                  videoFrame: videoFrame,
+                  videoPixels: videoPixels,
+                  dyn: dyn,
+                  rand: rand,
                 },
-                [videoFrame]
-              )
-            );
-          }
-          await Promise.all(workerJobs);
+              },
+              [videoFrame]
+            )
+          );
         }
+        await Promise.all(workerJobs);
       }
-      // crude throttling for debugging https://stackoverflow.com/questions/19764018/controlling-fps-with-requestanimationframe
-      // setTimeout(() => {
-      //   this.frameCount++;
-      //   if (this.debug) {
-      //     while (this.frametimes.length > 0 && this.frametimes[0] <= timestamp - 1000) this.frametimes.shift();
-      //     this.frametimes.push(timestamp);
-      //     this.frameRate = this.frametimes.length;
-      //     this.fr.innerText = this.frameRate;
-      //   }
-      //   requestAnimationFrame(drawFrame);
-      // }, 1000 / this.fps);
       if (this.debug) {
         while (this.frametimes.length > 0 && this.frametimes[0] <= timestamp - 1000) this.frametimes.shift();
         this.frametimes.push(timestamp);
@@ -251,6 +211,9 @@ export const VisOutputEngine = class {
     requestAnimationFrame(drawFrame);
   };
 
+  /**
+   * Launches fullscreen for visualiser
+   */
   launchFullscreen() {
     const enabled = document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled;
     if (!enabled) {
@@ -267,6 +230,9 @@ export const VisOutputEngine = class {
     }
   }
 
+  /**
+   * Exits fullscreen for visualiser
+   */
   exitFullscreen() {
     if (document.exitFullscreen) {
       document.exitFullscreen();

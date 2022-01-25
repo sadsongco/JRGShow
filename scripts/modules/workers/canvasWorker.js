@@ -1,19 +1,27 @@
 import { importModules } from "../common/importModules.js";
 import getPixelValues from "../util/getPixelValues.js";
 
+/**
+ * @class Class for drawing to a canvas each frame
+ * after processing via visualiser modules
+ */
 class ProcessCanvas {
   constructor() {
+    // canvas and pixel properties
     this.cnv = null; // will hold this worker's canvas
     this.cnvContext = null; // will hold this worker's canvas context
     this.cnvPixels = []; // will hold pixel array of the canvas for each frame
+
     // subcanvas parameters passed at instantiation
     this.start = 0; // starting line of subcanvas in main canvas
     this.drawStart = 0; // where to draw the canvas from
     this.height = 0; // height of sub canvas
     this.drawHeight = 0; // how many rows of pixels to draw
+
     // local copies of global parameters
     this.outputSettings = {};
-    // class variables
+
+    // visualiser properties
     this.visualiserModules = {}; // will hold the registered visualiser modules
     this.currentVisChain = []; // will hold the chain of visualiser processors
     this.outputSettings = {}; // will hold the current output settings
@@ -35,6 +43,10 @@ class ProcessCanvas {
     this.outputSettings = outputSettings;
   };
 
+  /**
+   * Setup the canvas processor
+   * @param {Object} data - supplied arguments
+   */
   async setup(data) {
     // register worker subcanvas and details
     this.start = data.start;
@@ -47,8 +59,13 @@ class ProcessCanvas {
     this.outputSettings = { bg_opacity: 255, bg_col: [0, 0, 0] };
     // collect registered visualiser modules
     this.visualiserModules = await importModules();
+    postMessage('setupComplete');
   }
 
+  /**
+   * Draw each frame
+   * @param {Object} data - supplied arguments
+   */
   draw(data) {
     this.drawBackground();
     // set params, once per frame, included in processFramePre loop
@@ -88,31 +105,12 @@ class ProcessCanvas {
         this.visualiserModules[module.name].processFramePost(this.vidPixels.data, kwargs, this);
       }
       data.videoFrame.close();
-    // }
-    // this.tmpOutputTest(data);
     requestAnimationFrame(()=>postMessage('frameComplete'));
   }
   
-  tmpOutputTest(kwargs) {
-    switch (parseInt(kwargs.index) % 4) {
-      case 0:
-        this.cnvContext.fillStyle = `rgba(255, 0, 0, 0.5)`;
-        break;
-      case 1:
-        this.cnvContext.fillStyle = `rgba(0, 255, 0, 0.5)`;
-        break;
-      case 2:
-        this.cnvContext.fillStyle = `rgba(0, 0, 255, 0.5)`;
-        break;
-      case 3:
-        this.cnvContext.fillStyle = `rgba(255, 255, 0, 0.5)`;
-        break;
-    }
-  
-    this.cnvContext.fillRect(0, this.drawStart, this.cnv.width, this.drawHeight);
-    // this.cnvContext.fillRect(0, 0, this.cnv.width, this.height);
-  }
-
+  /**
+   * Draws the background for the current frame
+   */
   drawBackground = async () => {
     // set background
     const { bg_opacity = 255, bg_col = [0, 0, 0] } = this.outputSettings;
@@ -136,16 +134,10 @@ onmessage = (e) => {
     case "draw":
       processCanvas.draw(e.data.data);
       break;
-    // case "setOutputSettings":
-    //   processCanvas.setOutputSettings(e.data.data);
-    //   break;
-    // case "setCurrentVisChain":
-    //   processCanvas.setCurrentVisChain(e.data.data);
-    //   break;
     default:
       const method = processCanvas[e.data.task];
       if (typeof method === 'function') method(e.data.data);
   }
 };
 
-export default ProcessCanvas;
+export default ProcessCanvas; // used when testing with no workers
