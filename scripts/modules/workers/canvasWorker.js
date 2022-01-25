@@ -5,6 +5,7 @@ class ProcessCanvas {
   constructor() {
     this.cnv = null; // will hold this worker's canvas
     this.cnvContext = null; // will hold this worker's canvas context
+    this.cnvPixels = []; // will hold pixel array of the canvas for each frame
     // subcanvas parameters passed at instantiation
     this.start = 0; // starting line of subcanvas in main canvas
     this.drawStart = 0; // where to draw the canvas from
@@ -24,7 +25,6 @@ class ProcessCanvas {
    */
   setCurrentVisChain = (currentVisChain) => {
     this.currentVisChain = currentVisChain;
-    console.log(this.currentVisChain)
   };
 
   /**
@@ -52,35 +52,36 @@ class ProcessCanvas {
   draw(data) {
     this.drawBackground();
     // set params, once per frame, included in processFramePre loop
+    // console.log('canvasWorker draw')
     const visParams = {};
     for (const module of this.currentVisChain) {
       visParams[module.name] = { ...module.params };
       const kwargs = visParams[module.name];
       // kwargs.dyn = dyn;
       // kwargs.audioInfo = this.audioEngine;
-      this.visualiserModules[module.name].processFramePre(data.videoFrameImage, kwargs, this);
+      this.visualiserModules[module.name].processFramePre(data.videoFrame, kwargs, this);
     }
     // if (this.currentVisChain.length > 0) {
-    //   this.vidPixels = videoFrame;
-    //   this.cnvPixels = this.cnvContext.getImageData(0, 0, this.cnv.width, this.cnv.height);
-    //   for (let vy = 0; vy < this.cnv.height; vy++) {
-    //     for (let vx = 0; vx < this.cnv.width; vx++) {
-    //       const pixIdx = (vy * this.cnv.width + vx) * 4;
-    //       // let randIdx = pixIdx % rand.length;
-    //       let pixVals = getPixelValues(pixIdx, this.vidPixels.data);
-    //       for (const module of this.currentVisChain) {
-    //         // include module parameters in arguments
-    //         const kwargs = visParams[module.name];
-    //         // include common parameters in arguments
-    //         kwargs.vx = vx;
-    //         kwargs.vy = vy;
-    //         // kwargs.rand = rand[randIdx];
-    //         // kwargs.audioInfo = this.audioEngine;
-    //         this.visualiserModules[module.name].processPixels(pixIdx, pixVals, kwargs, this);
-    //       }
-    //     }
-    //   }
-    //   this.cnvContext.putImageData(this.cnvPixels, 0, 0);
+      this.vidPixels = data.videoPixels;
+      this.cnvPixels = this.cnvContext.getImageData(0, 0, this.cnv.width, this.cnv.height);
+      for (let vy = 0; vy < this.cnv.height; vy++) {
+        for (let vx = 0; vx < this.cnv.width; vx++) {
+          const pixIdx = (vy * this.cnv.width + vx) * 4;
+          // let randIdx = pixIdx % rand.length;
+          let pixVals = getPixelValues(pixIdx, this.vidPixels.data);
+          for (const module of this.currentVisChain) {
+            // include module parameters in arguments
+            const kwargs = visParams[module.name];
+            // include common parameters in arguments
+            kwargs.vx = vx;
+            kwargs.vy = vy;
+            // kwargs.rand = rand[randIdx];
+            // kwargs.audioInfo = this.audioEngine;
+            this.visualiserModules[module.name].processPixels(pixIdx, pixVals, kwargs, this);
+          }
+        }
+      }
+      this.cnvContext.putImageData(this.cnvPixels, 0, 0);
     //   for (const module of this.currentVisChain) {
     //     visParams[module.name] = { ...module.params };
     //     const kwargs = visParams[module.name];
@@ -88,8 +89,10 @@ class ProcessCanvas {
     //     // kwargs.audioInfo = this.audioEngine;
     //     this.visualiserModules[module.name].processFramePost(this.vidPixels.data, kwargs, this);
     //   }
+      data.videoFrame.close();
     // }
-    // this.tmpOutputTest(kwargs);
+    // this.tmpOutputTest(data);
+    // requestAnimationFrame(()=>postMessage('frameComplete'));
   }
   
   tmpOutputTest(kwargs) {
@@ -145,5 +148,6 @@ onmessage = (e) => {
       const method = processCanvas[e.data.task];
       if (typeof method === 'function') method(e.data.data);
   }
-
 };
+
+export default ProcessCanvas;

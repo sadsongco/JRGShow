@@ -1,8 +1,6 @@
-import { setupVisualiserCanvas } from "./setupVisualisers.js";
-import { AudioEngine } from "./audioEngine.js";
 import { importModules } from "./importModules.js";
-import { dynamicGenerator, pseudoRandomGenerator } from "../util/generators.js";
-import getPixelValues from "../util/getPixelValues.js";
+import { setupVisualiserCanvas } from "./setupVisualisers.js";
+import ProcessCanvas from "../workers/canvasWorker.js";
 
 /**
  * @class Class that sets up and processes the HTML5 canvas, processing visuals according to the
@@ -10,35 +8,30 @@ import getPixelValues from "../util/getPixelValues.js";
  */
 export const VisOutputEngine = class {
   constructor() {
-    this.visContainer = null; // DOM element containing canvas
-    this.cnv = null; // will hold the HTML5 canvas
-    this.cnvPixels = []; // will hold the pixel array for the canvas
-    this.cnvContext = []; // will hold the graphics context for the canvas
-    this.vidIn = null; // will hold the video input object
-    this.vidCnv = null; // will hold the HTML5 canvas for reading the video input
-    this.vidPixels = []; // will hold the pixel array for video input
-    this.vidContext = []; // will hold the graphics context for the video input
-    this.audioEngine = null;
-    this.audioContext = null; // will hold the class audio context
-    this.visualiserModules = {}; // will hold the registered visualiser modules
+    // visualiser settings
     this.currentVisChain = []; // will hold the chain of visualiser processors
     this.outputSettings = {}; // will hold the current output settings
-    this.prevFramePixels = []; // will hold the pixel array of previous frame
+    this.vidPos = {}; // for scaling video input
+    this.fps = 10; // target fps for the visualiser
 
-    // workers
+    // processing
+    this.processCanvas = null; // will hold an instance of the ProcessCanvas class for the main thread
+
+    // worker settings
     this.numWorkers = 2; // number of Web Workers to spawn
     this.workers = []; // will hold the Web Workers
     this.subcnvs = []; // will hold partial canvases for transferring to workers
-    this.subcnvOverlap = 4; // overlap subcanvases for convolution effects
+    this.subcnvOverlap = 0; // overlap subcanvases for convolution effects
     this.subcnvParams = []; // hold the settings locally for each subcanvas
-    this.workerPath = "/scripts/modules/workers/canvasWorker.js";
+    this.cnvParams = {}; // equivalent settings for the canvas when rendering in main thread
+    this.workerPath = '/scripts/modules/workers/canvasWorker.js';
 
     // debugging
     this.frameCount = 0; // keep track of the number of frames rendered
     this.frameRate = 1; // framerate of visualiser
     this.debug = true; // show debug info
     this.fr = null; // DOM this.cnv for displaying framerate
-    this.frametimes = []; // array of timestamps when frames were drawn
+    this.frametimes = []; // array of timestamps when frames were drawn    
   }
 
   /**
@@ -47,8 +40,11 @@ export const VisOutputEngine = class {
    */
   setCurrentVisChain = (currentVisChain) => {
     this.currentVisChain = currentVisChain;
-    for (const worker of this.workers)
-      worker.postMessage({ task: 'setCurrentVisChain', data: currentVisChain });
+    if (this.processCanvas)
+      this.processCanvas.setCurrentVisChain(currentVisChain);
+    for (let i = 0; i < this.numWorkers; i++) {
+      this.workers[i].postMessage({ task: 'setCurrentVisChain', data: currentVisChain });
+    }
   };
 
   /**
@@ -57,8 +53,9 @@ export const VisOutputEngine = class {
    */
   setOutputSettings = (outputSettings) => {
     this.outputSettings = outputSettings;
-    for (const worker of this.workers) 
-      worker.postMessage({ task: 'setOutputSettings', data: outputSettings });
+    if (this.processCanvas)
+      this.processCanvas.setOutputSettings(outputSettings);
+    for (const worker of this.workers) worker.postMessage({ task: 'setOutputSettings', data: outputSettings });
   };
 
   /**
@@ -70,44 +67,41 @@ export const VisOutputEngine = class {
     return this.visualiserModules;
   };
 
-  setupSubCnvs = () => {
+  setupWorkers = async () => {
     // setup workers and subcanvases
-    const cnvTarget = document.getElementById("canvasContainer");
-    const cnvDisplayHeight = (this.cnv.height / this.numWorkers) << 0;
+    const cnvTarget = document.getElementById('canvasContainer');
     let subCnvStart = 0;
     let subCnvHeight = 0;
     let subCnvDrawStart = 0;
     let subCnvDrawHeight = 0;
     for (let i = 0; i < this.numWorkers; i++) {
       // setup workers
-      this.workers.push(new Worker(this.workerPath, { type: "module" }));
+      this.workers.push(new Worker(this.workerPath, { type: 'module' }));
       subCnvHeight = (this.cnv.height / this.numWorkers + this.subcnvOverlap) << 0;
       subCnvDrawHeight = subCnvHeight - this.subcnvOverlap + 1;
       if (i !== 0) subCnvHeight += this.subcnvOverlap;
       if (subCnvStart + subCnvHeight > this.cnv.height) subCnvHeight = this.cnv.height - subCnvStart;
       // create DOM canvas
-      const subCnv = document.createElement("canvas");
+      const subCnv = document.createElement('canvas');
       subCnv.width = this.cnv.width;
       subCnv.height = subCnvHeight;
       cnvTarget.appendChild(subCnv);
-      subCnv.style.position = "absolute";
+      subCnv.style.position = 'absolute';
       subCnv.style.left = 0;
       subCnv.style.top = `${subCnvStart}px`;
       // subCnv.style.backgroundColor = "rgba(255, 255, 255, 0.5)";
       // subCnv.style.borderTop = "1px solid white";
       // transfer canvas control to worker
       this.subcnvs.push(subCnv.transferControlToOffscreen());
-      this.subcnvParams.push(
-        {
+      this.subcnvParams.push({
         start: subCnvStart,
         drawStart: subCnvDrawStart,
         height: subCnvHeight,
         drawHeight: subCnvDrawHeight,
-        }
-      );
+      });
       this.workers[i].postMessage(
         {
-          task: "setup",
+          task: 'setup',
           canvas: this.subcnvs[i],
           start: subCnvStart,
           drawStart: subCnvDrawStart,
@@ -128,98 +122,88 @@ export const VisOutputEngine = class {
   setupCanvas = async () => {
     let audioSource;
     [this.cnv, this.vidCnv, this.vidIn, audioSource] = await setupVisualiserCanvas();
+    this.vidPos.scale = Math.min(this.cnv.width / this.vidIn.videoWidth, this.cnv.height / this.vidIn.videoHeight);
+    this.vidPos.xInset = ((this.cnv.width - this.vidIn.videoWidth * this.vidPos.scale) / 2) << 0;
+    this.vidPos.yInset = ((this.cnv.height - this.vidIn.videoHeight * this.vidPos.scale) / 2) << 0;
 
-    this.setupSubCnvs();
     // set up canvas and video contexts
-    this.cnvContext = this.cnv.getContext("2d");
-    this.vidContext = this.vidCnv.getContext("2d");
-    // setup audio context and engine
-    this.audioContext = new AudioContext();
-    this.audioEngine = new AudioEngine(this.audioContext, audioSource);
-    await this.audioEngine.init();
+    this.cnvContext = this.cnv.getContext('2d');
+    this.vidContext = this.vidCnv.getContext('2d');
+
+    // setup workers and main thread settings
+    await this.setupWorkers();
+    this.cnvParams = {
+      start: 0,
+      drawStart: 0,
+      height: this.cnv.height,
+      drawHeight: this.cnv.height,
+    };
+
+    // setup main thread processor
+    this.processCanvas = new ProcessCanvas();
+    let processCanvasData = {
+      start: 0,
+      drawStart: 0,
+      height: this.cnv.height,
+      drawHeight: this.cnv.height,
+      canvas: this.cnv,
+    };
+    this.processCanvas.setup(processCanvasData);
+
     // initialise output settings and target DOM elements
     this.outputSettings = { bg_opacity: 255, bg_col: [0, 0, 0] };
-    this.fr = document.getElementById("fr");
-    this.visContainer = document.getElementById("outerContainer");
+    this.fr = document.getElementById('fr');
+    this.visContainer = document.getElementById('outerContainer');
+    this.visReady = true;
   };
 
   /**
    * Draw loop - called every frame
    */
   drawCanvas = async () => {
-    // return;
     const drawFrame = async (timestamp) => {
-      // get current video frame
-      this.vidContext.drawImage(this.vidIn, 0, 0, this.cnv.width, this.cnv.height);
-      // get dynamic variable values
-      const dyn = dynamicGenerator(this.frameCount);
-      const rand = pseudoRandomGenerator();
-      this.audioEngine.getAudioAnalysis();
-      if (this.numWorkers == 0) {
-        await this.drawBackground();
-        // get dynamic and modulation variables
-        // this.audioEngine.draw(this.cnvContext, this.cnv);
-        // set params, once per frame, included in processFramePre loop
-        const visParams = {};
-        for (const module of this.currentVisChain) {
-          visParams[module.name] = { ...module.params };
-          const kwargs = visParams[module.name];
-          kwargs.dyn = dyn;
-          kwargs.audioInfo = this.audioEngine;
-          this.visualiserModules[module.name].processFramePre(this.vidIn, kwargs, this);
-        }
-        if (this.currentVisChain.length > 0) {
-          this.vidPixels = this.vidContext.getImageData(0, 0, this.cnv.width, this.cnv.height);
-          this.cnvPixels = this.cnvContext.getImageData(0, 0, this.cnv.width, this.cnv.height);
-          for (let vy = 0; vy < this.cnv.height; vy++) {
-            for (let vx = 0; vx < this.cnv.width; vx++) {
-              const pixIdx = (vy * this.cnv.width + vx) * 4;
-              let randIdx = pixIdx % rand.length;
-              let pixVals = getPixelValues(pixIdx, this.vidPixels.data);
-              for (const module of this.currentVisChain) {
-                // include module parameters in arguments
-                const kwargs = visParams[module.name];
-                // include common parameters in arguments
-                kwargs.vx = vx;
-                kwargs.vy = vy;
-                kwargs.rand = rand[randIdx];
-                kwargs.audioInfo = this.audioEngine;
-                this.visualiserModules[module.name].processPixels(pixIdx, pixVals, kwargs, this);
-              }
-            }
+      if (this.visReady && this.currentVisChain.length > 0) {
+        this.vidContext.drawImage(this.vidIn, 0, 0, this.cnv.width, this.cnv.height);
+        if (this.numWorkers === 0) {
+          const subcnvParams = this.cnvParams;
+          const videoPixels = this.vidContext.getImageData(0, subcnvParams.start, this.cnv.width, subcnvParams.height);
+          const videoFrame = await createImageBitmap(this.vidIn, 0, (subcnvParams.start + subcnvParams.drawStart) / this.vidPos.scale, this.cnv.width / this.vidPos.scale, subcnvParams.drawHeight / this.vidPos.scale);
+          let kwargs = {
+            index: this.frameCount % 4,
+            videoFrame: videoFrame,
+            videoPixels: videoPixels,
+          };
+          this.processCanvas.draw(kwargs);
+        } else {
+          for (let i = 0; i < this.numWorkers; i++) {
+            const subcnvParams = this.subcnvParams[i];
+            const videoPixels = this.vidContext.getImageData(0, subcnvParams.start, this.cnv.width, subcnvParams.height);
+            const videoFrame = await createImageBitmap(this.vidIn, 0, (subcnvParams.start + subcnvParams.drawStart) / this.vidPos.scale, this.cnv.width / this.vidPos.scale, subcnvParams.drawHeight / this.vidPos.scale);
+            this.workers[i].postMessage(
+              {
+                task: 'draw',
+                data: {
+                  index: (this.frameCount + i) % 4,
+                  videoFrame: videoFrame,
+                  videoPixels: videoPixels,
+                },
+              },
+              [videoFrame]
+            );
           }
-          this.cnvContext.putImageData(this.cnvPixels, 0, 0);
-          for (const module of this.currentVisChain) {
-            visParams[module.name] = { ...module.params };
-            const kwargs = visParams[module.name];
-            kwargs.dyn = dyn;
-            kwargs.audioInfo = this.audioEngine;
-            this.visualiserModules[module.name].processFramePost(this.vidPixels.data, kwargs, this);
-          }
-        }
-      } else {
-        let drawStart = 0;
-        for (let i in this.workers) {
-          const subcnvParams = this.subcnvParams[i];
-          const videoFrameFull = this.vidContext.getImageData(0, subcnvParams.start, this.cnv.width, subcnvParams.height);
-          const videoFrame = this.vidContext.getImageData(0, subcnvParams.start + subcnvParams.drawStart, this.cnv.width, subcnvParams.drawHeight);
-          // console.log(0, subcnvParams.start + subcnvParams.drawStart, this.cnv.width, subcnvParams.drawHeight);
-          const videoFrameImage = await createImageBitmap(this.vidIn, 0, subcnvParams.start + subcnvParams.drawStart, this.cnv.width, subcnvParams.drawHeight);
-          const worker = this.workers[i];
-          worker.postMessage({
-            task: "draw",
-            data: {
-              index: i,
-              videoFrame: videoFrame,
-              videoFrameFull: videoFrameFull,
-              videoFrameImage: videoFrameImage,
-            },
-          });
         }
       }
-      // this.cnvContext.drawImage(this.vidIn, 0, 0, this.cnv.width, this.cnv.height);
-      ++this.frameCount;
-      // if (this.frameCount > 120) return;
+      // crude throttling for debugging https://stackoverflow.com/questions/19764018/controlling-fps-with-requestanimationframe
+      // setTimeout(() => {
+      //   this.frameCount++;
+      //   if (this.debug) {
+      //     while (this.frametimes.length > 0 && this.frametimes[0] <= timestamp - 1000) this.frametimes.shift();
+      //     this.frametimes.push(timestamp);
+      //     this.frameRate = this.frametimes.length;
+      //     this.fr.innerText = this.frameRate;
+      //   }
+      //   requestAnimationFrame(drawFrame);
+      // }, 1000 / this.fps);
       if (this.debug) {
         while (this.frametimes.length > 0 && this.frametimes[0] <= timestamp - 1000) this.frametimes.shift();
         this.frametimes.push(timestamp);
@@ -230,21 +214,11 @@ export const VisOutputEngine = class {
     };
     requestAnimationFrame(drawFrame);
   };
-
-  drawBackground = async () => {
-    // set background
-    const { bg_opacity = 255, bg_col = [0, 0, 0] } = this.outputSettings;
-    const bgCol = `rgba(${bg_col[0]}, ${bg_col[1]}, ${bg_col[2]}, ${bg_opacity / 255})`;
-    this.cnvContext.save();
-    this.cnvContext.fillStyle = bgCol;
-    this.cnvContext.fillRect(0, 0, this.cnv.width, this.cnv.height);
-    this.cnvContext.restore();
-  };
-
+    
   launchFullscreen() {
     const enabled = document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled;
     if (!enabled) {
-      throw new Error("Fullscreen not enabled in this browser.");
+      throw new Error('Fullscreen not enabled in this browser.');
     }
     if (this.visContainer.requestFullscreen) {
       this.visContainer.requestFullscreen();
@@ -269,3 +243,4 @@ export const VisOutputEngine = class {
     }
   }
 };
+

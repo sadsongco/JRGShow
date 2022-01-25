@@ -36,7 +36,7 @@ import { openDB } from "https://cdn.jsdelivr.net/npm/idb@7/+esm";
 
 /**
  * Creates and initialises HTML Canvas, initialises audio and video input
- * @returns {Array} - Canvas, Video Canvas, Video In and Audio In objects
+ * @returns {Promise} - resolves to array of Canvas, Video Canvas, Video In and Audio In objects
  */
 const setupVisualiserCanvas = async () => {
   const cnvTarget = document.getElementById("canvasContainer");
@@ -47,8 +47,7 @@ const setupVisualiserCanvas = async () => {
   cnvTarget.appendChild(cnv);
   // window.onresize = () => resizeCanvas(cnvTarget, outputRes, cnv);
   // create video node, attach to video input stream
-  const vidIn = document.createElement("video");
-  vidIn.srcObject = await navigator.mediaDevices.getUserMedia(inputDevice.constraints);
+  const vidIn = await getVideoInput(inputDevice);
   vidIn.play();
   // create video canvas to read video pixels into
   const vidCnv = document.createElement("canvas");
@@ -56,6 +55,17 @@ const setupVisualiserCanvas = async () => {
   // TODO - create audio in
   return [cnv, vidCnv, vidIn, audioSource];
 };
+
+const getVideoInput = (inputDevice) => {
+  return new Promise(resolve => {
+    const vidIn = document.createElement("video");
+    navigator.mediaDevices.getUserMedia(inputDevice.constraints)
+    .then(src => vidIn.srcObject = src)
+    vidIn.addEventListener('loadedmetadata', () =>{
+      resolve(vidIn);
+    })
+  })
+}
 
 /**
  * Sizes the canvas to fit the containing DOM element
