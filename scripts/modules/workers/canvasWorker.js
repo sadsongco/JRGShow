@@ -52,22 +52,20 @@ class ProcessCanvas {
   draw(data) {
     this.drawBackground();
     // set params, once per frame, included in processFramePre loop
-    // console.log('canvasWorker draw')
     const visParams = {};
     for (const module of this.currentVisChain) {
       visParams[module.name] = { ...module.params };
       const kwargs = visParams[module.name];
-      // kwargs.dyn = dyn;
+      kwargs.dyn = data.dyn;
       // kwargs.audioInfo = this.audioEngine;
       this.visualiserModules[module.name].processFramePre(data.videoFrame, kwargs, this);
     }
-    // if (this.currentVisChain.length > 0) {
       this.vidPixels = data.videoPixels;
       this.cnvPixels = this.cnvContext.getImageData(0, 0, this.cnv.width, this.cnv.height);
       for (let vy = 0; vy < this.cnv.height; vy++) {
         for (let vx = 0; vx < this.cnv.width; vx++) {
           const pixIdx = (vy * this.cnv.width + vx) * 4;
-          // let randIdx = pixIdx % rand.length;
+          let randIdx = pixIdx % data.rand.length;
           let pixVals = getPixelValues(pixIdx, this.vidPixels.data);
           for (const module of this.currentVisChain) {
             // include module parameters in arguments
@@ -75,24 +73,24 @@ class ProcessCanvas {
             // include common parameters in arguments
             kwargs.vx = vx;
             kwargs.vy = vy;
-            // kwargs.rand = rand[randIdx];
+            kwargs.rand = data.rand[randIdx];
             // kwargs.audioInfo = this.audioEngine;
             this.visualiserModules[module.name].processPixels(pixIdx, pixVals, kwargs, this);
           }
         }
       }
       this.cnvContext.putImageData(this.cnvPixels, 0, 0);
-    //   for (const module of this.currentVisChain) {
-    //     visParams[module.name] = { ...module.params };
-    //     const kwargs = visParams[module.name];
-    //     // kwargs.dyn = dyn;
-    //     // kwargs.audioInfo = this.audioEngine;
-    //     this.visualiserModules[module.name].processFramePost(this.vidPixels.data, kwargs, this);
-    //   }
+      for (const module of this.currentVisChain) {
+        visParams[module.name] = { ...module.params };
+        const kwargs = visParams[module.name];
+        kwargs.dyn = data.dyn;
+        // kwargs.audioInfo = this.audioEngine;
+        this.visualiserModules[module.name].processFramePost(this.vidPixels.data, kwargs, this);
+      }
       data.videoFrame.close();
     // }
     // this.tmpOutputTest(data);
-    // requestAnimationFrame(()=>postMessage('frameComplete'));
+    requestAnimationFrame(()=>postMessage('frameComplete'));
   }
   
   tmpOutputTest(kwargs) {
@@ -123,7 +121,7 @@ class ProcessCanvas {
     this.cnvContext.save();
     this.cnvContext.fillStyle = bgCol;
     this.cnvContext.fillRect(0, this.drawStart, this.cnv.width, this.drawHeight);
-    // this.cnvContext.clearRect(0, 0, this.cnv.width, this.cnv.height);
+    // this.cnvContext.clearRect(0, this.drawStart, this.cnv.width, this.cnv.drawHeight);
     this.cnvContext.restore();
   };
 }

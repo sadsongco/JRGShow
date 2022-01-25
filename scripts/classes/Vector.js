@@ -1,9 +1,8 @@
 export default class Vector {
     constructor(x, y, z = false) {
-        this.x = x;
-        this.y = y;
-        if (z)
-            this.z = z;
+        this.x = parseInt(x);
+        this.y = parseInt(y);
+        this.z = parseInt(z);
     }
     magSq() {
         if (this.z)
