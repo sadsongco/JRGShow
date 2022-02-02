@@ -17,6 +17,7 @@ export const VisOutputEngine = class {
     this.currentVisChain = []; // will hold the chain of visualiser processors
     this.vidPos = {}; // for scaling video input
     this.vignetteMask = []; // will hold pixel opacity mask for vignette - global because calculated on whole canvas
+    this.previewSize = 1; // relative size of output canvas to desired output size
 
     // processing
     this.audioAnalysis = []; // will hold frequency and volume analysis for each frame
@@ -112,6 +113,7 @@ export const VisOutputEngine = class {
             height: subCnvHeight,
             drawHeight: subCnvDrawHeight,
             vignetteMask: subVignette,
+            previewSize: this.previewSize,
           },
           [this.subcnvs[i]]
         )
@@ -129,7 +131,7 @@ export const VisOutputEngine = class {
    */
   setupCanvas = async () => {
     let audioSource;
-    [this.cnv, this.vidCnv, this.vidIn, audioSource] = await setupVisualiserCanvas();
+    [this.cnv, this.vidCnv, this.vidIn, audioSource, this.previewSize] = await setupVisualiserCanvas();
     this.vidPos.scale = Math.min(this.cnv.width / this.vidIn.videoWidth, this.cnv.height / this.vidIn.videoHeight);
 
     // set up canvas and video contexts

@@ -11,6 +11,7 @@ class ProcessCanvas {
     this.cnv = null; // will hold this worker's canvas
     this.cnvContext = null; // will hold this worker's canvas context
     this.cnvPixels = []; // will hold pixel array of the canvas for each frame
+    this.previewSize = 1; // size of the output canvas relative to target output resolution
 
     // subcanvas parameters passed at instantiation
     this.start = 0; // starting line of subcanvas in main canvas
@@ -56,6 +57,8 @@ class ProcessCanvas {
     this.drawHeight = data.drawHeight;
     this.cnv = data.canvas;
     this.cnvContext = this.cnv.getContext('2d');
+    this.previewSize = data.previewSize;
+    // console.log(this.previewSize);
     // initialise output settings
     this.outputSettings = { bg_opacity: 255, bg_col: [0, 0, 0] };
     // collect registered visualiser modules
@@ -93,6 +96,7 @@ class ProcessCanvas {
           // include module parameters in arguments
           const kwargs = visParams[module.name];
           // include common parameters in arguments
+          kwargs.previewSize = this.previewSize;
           kwargs.vx = vx;
           kwargs.vy = vy;
           kwargs.rand = data.rand[randIdx];
@@ -110,6 +114,7 @@ class ProcessCanvas {
       // kwargs.audioInfo = this.audioEngine;
       this.visualiserModules[module.name].processFramePost(this.vidPixels.data, kwargs, this);
     }
+    this.cnvContext.clearRect(0, 0, this.cnv.width, this.drawStart);
     data.videoFrame.close();
     requestAnimationFrame(() => postMessage('frameComplete'));
   }
@@ -125,7 +130,6 @@ class ProcessCanvas {
     this.cnvContext.save();
     this.cnvContext.fillStyle = bgCol;
     this.cnvContext.fillRect(0, this.drawStart, this.cnv.width, this.drawHeight);
-    // this.cnvContext.clearRect(0, this.drawStart, this.cnv.width, this.cnv.drawHeight);
     this.cnvContext.restore();
   };
 }

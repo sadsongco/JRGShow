@@ -30,7 +30,7 @@ export const visList = [
   {
     visGroup: 'loRes',
     visualisers: [
-      // {name: "boxes"},
+      { name: 'boxes' },
       //         {name: "circles"},
       //         {name: "lines"},
     ],
