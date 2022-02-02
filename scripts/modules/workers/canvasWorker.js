@@ -1,5 +1,5 @@
-import { importModules } from "../common/importModules.js";
-import getPixelValues from "../util/getPixelValues.js";
+import { importModules } from '../common/importModules.js';
+import getPixelValues from '../util/getPixelValues.js';
 
 /**
  * @class Class for drawing to a canvas each frame
@@ -59,6 +59,9 @@ class ProcessCanvas {
     this.outputSettings = { bg_opacity: 255, bg_col: [0, 0, 0] };
     // collect registered visualiser modules
     this.visualiserModules = await importModules();
+    Object.values(this.visualiserModules).map((module) => {
+      if (module.setPixelArraySize) module.setPixelArraySize(this.cnv.width * this.cnv.height);
+    });
     postMessage('setupComplete');
   }
 
@@ -74,40 +77,41 @@ class ProcessCanvas {
       visParams[module.name] = { ...module.params };
       const kwargs = visParams[module.name];
       kwargs.dyn = data.dyn;
-      // kwargs.audioInfo = this.audioEngine;
+      kwargs.audioInfo = data.audioInfo;
       this.visualiserModules[module.name].processFramePre(data.videoFrame, kwargs, this);
     }
-      this.vidPixels = data.videoPixels;
-      this.cnvPixels = this.cnvContext.getImageData(0, 0, this.cnv.width, this.cnv.height);
-      for (let vy = 0; vy < this.cnv.height; vy++) {
-        for (let vx = 0; vx < this.cnv.width; vx++) {
-          const pixIdx = (vy * this.cnv.width + vx) * 4;
-          let randIdx = pixIdx % data.rand.length;
-          let pixVals = getPixelValues(pixIdx, this.vidPixels.data);
-          for (const module of this.currentVisChain) {
-            // include module parameters in arguments
-            const kwargs = visParams[module.name];
-            // include common parameters in arguments
-            kwargs.vx = vx;
-            kwargs.vy = vy;
-            kwargs.rand = data.rand[randIdx];
-            // kwargs.audioInfo = this.audioEngine;
-            this.visualiserModules[module.name].processPixels(pixIdx, pixVals, kwargs, this);
-          }
+    this.vidPixels = data.videoPixels;
+    this.cnvPixels = this.cnvContext.getImageData(0, 0, this.cnv.width, this.cnv.height);
+    for (let vy = 0; vy < this.cnv.height; vy++) {
+      for (let vx = 0; vx < this.cnv.width; vx++) {
+        const pixIdx = (vy * this.cnv.width + vx) * 4;
+        let randIdx = pixIdx % data.rand.length;
+        let pixVals = getPixelValues(pixIdx, this.vidPixels.data);
+        for (const module of this.currentVisChain) {
+          // include module parameters in arguments
+          const kwargs = visParams[module.name];
+          // include common parameters in arguments
+          kwargs.vx = vx;
+          kwargs.vy = vy;
+          kwargs.rand = data.rand[randIdx];
+          kwargs.dyn = data.dyn;
+          kwargs.audioInfo = data.audioInfo;
+          this.visualiserModules[module.name].processPixels(pixIdx, pixVals, kwargs, this);
         }
       }
-      this.cnvContext.putImageData(this.cnvPixels, 0, 0);
-      for (const module of this.currentVisChain) {
-        visParams[module.name] = { ...module.params };
-        const kwargs = visParams[module.name];
-        kwargs.dyn = data.dyn;
-        // kwargs.audioInfo = this.audioEngine;
-        this.visualiserModules[module.name].processFramePost(this.vidPixels.data, kwargs, this);
-      }
-      data.videoFrame.close();
-    requestAnimationFrame(()=>postMessage('frameComplete'));
+    }
+    this.cnvContext.putImageData(this.cnvPixels, 0, 0);
+    for (const module of this.currentVisChain) {
+      visParams[module.name] = { ...module.params };
+      const kwargs = visParams[module.name];
+      kwargs.dyn = data.dyn;
+      // kwargs.audioInfo = this.audioEngine;
+      this.visualiserModules[module.name].processFramePost(this.vidPixels.data, kwargs, this);
+    }
+    data.videoFrame.close();
+    requestAnimationFrame(() => postMessage('frameComplete'));
   }
-  
+
   /**
    * Draws the background for the current frame
    */
@@ -128,10 +132,10 @@ const processCanvas = new ProcessCanvas();
 
 onmessage = (e) => {
   switch (e.data.task) {
-    case "setup":
+    case 'setup':
       processCanvas.setup(e.data);
       break;
-    case "draw":
+    case 'draw':
       processCanvas.draw(e.data.data);
       break;
     default:

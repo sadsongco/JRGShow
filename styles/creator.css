@@ -17,6 +17,27 @@ main {
   z-index: 1;
 }
 
+select {
+  margin: 0;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+  min-width: 15ch;
+  max-width: 30ch;
+  border: 1px solid #0a0a0a;
+  border-radius: 0.25em;
+  padding: 0.25em 0.5em;
+  font-size: 0.9rem;
+  cursor: pointer;
+  line-height: 1;
+  background-color: #eee;
+}
+
+option {
+  font-family: inherit;
+  font-size: 0.9em;
+}
+
 /* rows of stuff */
 
 .row {
@@ -71,7 +92,7 @@ main {
   border-top: 2px dashed var(--arrow-col);
 }
 .audio-path::after {
-  content: "";
+  content: '';
   position: absolute;
   top: calc(50% - 10px);
   left: calc(100% - 7px);
@@ -147,7 +168,7 @@ main {
   border-bottom: 2px dashed var(--arrow-col);
 }
 .mod-out::after {
-  content: "";
+  content: '';
   position: absolute;
   top: 90%;
   width: 0;
@@ -184,7 +205,7 @@ main {
   grid-column-end: 2;
 }
 
-.param-container input[type="range"] {
+.param-container input[type='range'] {
   height: 1em;
 }
 

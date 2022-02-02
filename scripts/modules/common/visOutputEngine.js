@@ -1,21 +1,24 @@
-import { importModules } from "./importModules.js";
-import { setupVisualiserCanvas } from "./setupVisualisers.js";
+import { importModules } from './importModules.js';
+import { setupVisualiserCanvas } from './setupVisualisers.js';
 import { dynamicGenerator, pseudoRandomGenerator } from '../util/generators.js';
 import { AudioEngine } from './audioEngine.js';
-
 
 /**
  * @class Class that sets up and processes the HTML5 canvas, processing visuals according to the
  * user generated chain of visualisers and their parameters
  */
 export const VisOutputEngine = class {
+  /**
+   * Initialise class properties
+   */
   constructor() {
     // visualiser settings
+    /** @private */
     this.currentVisChain = []; // will hold the chain of visualiser processors
     this.vidPos = {}; // for scaling video input
 
     // processing
-    this.processCanvas = null; // will hold an instance of the ProcessCanvas class for the main thread
+    this.audioAnalysis = []; // will hold frequency and volume analysis for each frame
 
     // worker settings
     this.numWorkers = 4; // number of Web Workers to spawn
@@ -97,19 +100,20 @@ export const VisOutputEngine = class {
       });
       workerJobs.push(
         this.invokeWorker(
-          this.workers[i], {
-          task: 'setup',
-          canvas: this.subcnvs[i],
-          start: subCnvStart,
-          drawStart: subCnvDrawStart,
-          height: subCnvHeight,
-          drawHeight: subCnvDrawHeight,
-        },
-        [this.subcnvs[i]]
+          this.workers[i],
+          {
+            task: 'setup',
+            canvas: this.subcnvs[i],
+            start: subCnvStart,
+            drawStart: subCnvDrawStart,
+            height: subCnvHeight,
+            drawHeight: subCnvDrawHeight,
+          },
+          [this.subcnvs[i]]
         )
       );
       // next sub canvas
-      subCnvStart = subCnvStart + subCnvHeight - (this.subcnvOverlap * 2);
+      subCnvStart = subCnvStart + subCnvHeight - this.subcnvOverlap * 2;
       subCnvDrawStart = this.subcnvOverlap;
     }
     await Promise.all(workerJobs);
@@ -164,7 +168,6 @@ export const VisOutputEngine = class {
     });
   };
 
-
   /**
    * Draw loop - called every frame
    */
@@ -173,7 +176,8 @@ export const VisOutputEngine = class {
       if (this.visReady && this.currentVisChain.length > 0) {
         const dyn = dynamicGenerator(this.frameCount);
         const rand = pseudoRandomGenerator();
-        this.audioEngine.getAudioAnalysis();
+        this.audioAnalysis = this.audioEngine.getAudioAnalysis();
+        // console.log(this.audioAnalysis);
         this.vidContext.drawImage(this.vidIn, 0, 0, this.cnv.width, this.cnv.height);
         let workerJobs = [];
         for (let i = 0; i < this.numWorkers; i++) {
@@ -191,6 +195,7 @@ export const VisOutputEngine = class {
                   videoPixels: videoPixels,
                   dyn: dyn,
                   rand: rand,
+                  audioInfo: this.audioAnalysis,
                 },
               },
               [videoFrame]
@@ -245,4 +250,3 @@ export const VisOutputEngine = class {
     }
   }
 };
-

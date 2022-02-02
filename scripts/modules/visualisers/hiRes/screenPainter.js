@@ -2,13 +2,14 @@ import { Visualiser } from '../../../_prototype/modules/visualisers/Visualiser.j
 import { greyscaleCalc } from '../../util/utils.js';
 import Vector from '../../../classes/Vector.js';
 
-export class motion extends Visualiser {
+export class screenPainter extends Visualiser {
   constructor() {
     super();
     this.prevFrame = false;
     this.motion = false;
     this.motionTracker = [];
     this.pixelArraySize = null;
+    this.motionSmooth = 0.71;
   }
 
   setPixelArraySize = function (value) {
@@ -23,7 +24,6 @@ export class motion extends Visualiser {
     if (pixIdx % resolution !== 0) return;
     let [iR, iG, iB] = pixVals;
     const { motionThresh = 20 } = kwargs;
-    const { motionSmooth = 0.71 } = kwargs;
     const { lyrOpacity = 1 } = kwargs;
     const { bw = false } = kwargs;
     const { motionColToggle = false } = kwargs;
@@ -37,7 +37,7 @@ export class motion extends Visualiser {
     const prevVec = new Vector(this.prevFrame[pixIdx + 0], this.prevFrame[pixIdx + 1], this.prevFrame[pixIdx + 2]);
     const motionVec = currVec.distSq(prevVec);
     // const currMotion = motionVec > this.motionTracker[pixIdx / 4] ? motionVec : this.motionTracker[pixIdx / 4] + this.motionSmooth * (this.motionTracker[pixIdx / 4] - motionVec);
-    const currMotion = motionVec > this.motionTracker[pixIdx / 4] ? motionVec : this.motionTracker[pixIdx / 4] - motionSmooth * (this.motionTracker[pixIdx / 4] - motionVec);
+    const currMotion = motionVec > this.motionTracker[pixIdx / 4] ? motionVec : this.motionTracker[pixIdx / 4];
     this.motion = currMotion > motionThresh * motionThresh;
     this.motionTracker[pixIdx / 4] = currMotion;
     if (!this.motion) return;
@@ -72,14 +72,6 @@ export class motion extends Visualiser {
       type: 'val',
       range: [0, 255],
       value: 20,
-    },
-    {
-      name: 'motionSmooth',
-      displayName: 'Motion Smoothing',
-      type: 'val',
-      range: [0, 1],
-      value: 0.71,
-      step: 0.005,
     },
     {
       name: 'lyrOpacity',
