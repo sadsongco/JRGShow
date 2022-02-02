@@ -14,7 +14,7 @@ export const visList = [
     visGroup: 'common',
     visualisers: [
       //         {name: "randomBoxes"},
-      // {name: "vignette"},
+      { name: 'vignette' },
     ],
   },
   {

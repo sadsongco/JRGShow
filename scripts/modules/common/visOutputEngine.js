@@ -2,6 +2,7 @@ import { importModules } from './importModules.js';
 import { setupVisualiserCanvas } from './setupVisualisers.js';
 import { dynamicGenerator, pseudoRandomGenerator } from '../util/generators.js';
 import { AudioEngine } from './audioEngine.js';
+import vignetteMask from '../util/vignetteMask.js';
 
 /**
  * @class Class that sets up and processes the HTML5 canvas, processing visuals according to the
@@ -13,9 +14,9 @@ export const VisOutputEngine = class {
    */
   constructor() {
     // visualiser settings
-    /** @private */
     this.currentVisChain = []; // will hold the chain of visualiser processors
     this.vidPos = {}; // for scaling video input
+    this.vignetteMask = []; // will hold pixel opacity mask for vignette - global because calculated on whole canvas
 
     // processing
     this.audioAnalysis = []; // will hold frequency and volume analysis for each frame
@@ -84,12 +85,14 @@ export const VisOutputEngine = class {
       const subCnv = document.createElement('canvas');
       subCnv.width = this.cnv.width;
       subCnv.height = subCnvHeight;
+      const arrayIdxStart = subCnvStart * this.cnv.width;
+      const arrayIdxEnd = subCnvStart * this.cnv.width + subCnvHeight * this.cnv.width;
+      const subVignette = this.vignetteMask.slice(arrayIdxStart, arrayIdxEnd);
       cnvTarget.appendChild(subCnv);
       subCnv.style.position = 'absolute';
       subCnv.style.left = 0;
       subCnv.style.top = `${subCnvStart}px`;
-      // subCnv.style.backgroundColor = "rgba(255, 255, 255, 0.5)";
-      // subCnv.style.borderTop = "1px solid white";
+
       // transfer canvas control to worker
       this.subcnvs.push(subCnv.transferControlToOffscreen());
       this.subcnvParams.push({
@@ -108,6 +111,7 @@ export const VisOutputEngine = class {
             drawStart: subCnvDrawStart,
             height: subCnvHeight,
             drawHeight: subCnvDrawHeight,
+            vignetteMask: subVignette,
           },
           [this.subcnvs[i]]
         )
@@ -136,6 +140,9 @@ export const VisOutputEngine = class {
     this.audioContext = new AudioContext();
     this.audioEngine = new AudioEngine(this.audioContext, audioSource);
     await this.audioEngine.init();
+
+    // initialise class scope properties
+    this.vignetteMask = await vignetteMask(this.cnv.width, this.cnv.height);
 
     // setup workers and main thread settings
     await this.setupWorkers();

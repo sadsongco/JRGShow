@@ -20,6 +20,7 @@ class ProcessCanvas {
 
     // local copies of global parameters
     this.outputSettings = {};
+    this.vignetteMask = [];
 
     // visualiser properties
     this.visualiserModules = {}; // will hold the registered visualiser modules
@@ -61,6 +62,7 @@ class ProcessCanvas {
     this.visualiserModules = await importModules();
     Object.values(this.visualiserModules).map((module) => {
       if (module.setPixelArraySize) module.setPixelArraySize(this.cnv.width * this.cnv.height);
+      if (module.setVignetteMask) module.setVignetteMask(data.vignetteMask);
     });
     postMessage('setupComplete');
   }
