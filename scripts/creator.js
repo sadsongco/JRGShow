@@ -1,5 +1,5 @@
 // async indexeddb wrapper https://github.com/jakearchibald/idb
-import { openDB } from 'https://cdn.jsdelivr.net/npm/idb@7/+esm';
+import { openDB } from '../lib/openDB.js';
 
 // import registered visualisers for selector
 import { visList } from './modules/visualisers/registeredVis.js';
