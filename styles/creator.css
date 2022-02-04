@@ -184,16 +184,22 @@ option {
 .parameters {
   color: #222;
   padding: 0 2em 1em 2em;
-  width: 45%;
+  width: 40%;
   height: 90%;
   background-color: var(--bg-col);
   border-radius: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
 }
-
+#parameters-title {
+  flex-basis: 100%;
+}
 .param-container {
   width: 100%;
+  min-width: 100%;
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr 2fr 1fr;
   gap: 0.5em;
 }
 .param-name {

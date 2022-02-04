@@ -10,9 +10,12 @@ export const ascii = class extends Visualiser {
     this.currRowNum = 0;
     this.currRow = '';
     this.visReady = false;
+    this.prevCharsPerRow = 0;
+    this.prevNumRows = 0;
+    this.prevFontSize = 0;
   }
 
-  setup() {
+  setup({ cnv, numWorkers }) {
     /* https://stackoverflow.com/questions/53808106/chrome-offscreencanvas-custom-fonts */
     /* https://developer.mozilla.org/en-US/docs/Web/API/FontFace */
     const CourierPrime = new FontFace('CourierPrime', "local('CourierPrime-Regular'), url(/assets/fonts/CourierPrime-Regular.ttf)");
@@ -22,92 +25,98 @@ export const ascii = class extends Visualiser {
       self.fonts.add(VT323);
       this.visReady = true;
     });
+    this.overallCnv = cnv;
+    this.numWorkers = numWorkers;
   }
-  processFramePre = function (vidPix, kwargs, context) {
+
+  processFramePre = function (vidPix, { lyrOpacity = 1, mono = true, monoCol = [255, 255, 255], selectedFont = 'CourierPrime', ...kwargs } = {}, context) {
     if (!this.visReady) return;
-    const { lyrOpacity = 1 } = kwargs;
-    let { selectedFont = 'CourierPrime' } = kwargs;
-    this.selectedFont = selectedFont;
-    let { charsPerRow = 40 } = kwargs;
-    this.charsPerRow = charsPerRow;
-    const { bw = true } = kwargs;
-    this.bw = bw;
-    this.charsPerCol = 10;
     this.lyrOpacity = lyrOpacity;
-    this.colPix = (context.cnv.width / charsPerRow) << 0;
-    this.rowPix = (context.cnv.height / this.charsPerCol) << 0;
+    this.mono = mono;
+    this.monoCol = monoCol;
+    this.selectedFont = selectedFont;
+    const { charsPerRow = 40 } = kwargs;
+    const { numRows = 3 } = kwargs;
+    const { fontSize = 5 } = kwargs;
+    if (charsPerRow === this.prevCharsPerRow && numRows === this.prevNumRows && fontSize === this.prevFontSize) return;
+    this.charsPerRow = charsPerRow;
+    this.numRows = numRows;
+    // console.log('numRows: ', this.numRows);
+    this.fontSize = fontSize;
+    this.colPix = Math.round(context.cnv.width / charsPerRow);
+    this.rowPix = Math.round(context.drawHeight / this.numRows);
+
     this.asciiRows = [];
-    this.symbolCols = [];
-    this.symbolRowCols = [];
     this.currRowNum = 0;
   };
+
   processPixels = function (pixIdx, pixVals, kwargs = {}, context) {
-    if (!this.visReady) return;
-    if (kwargs.vx % this.rowPix != 0 || kwargs.vy % this.colPix != 0) return;
+    if (!this.visReady || kwargs.vy < context.drawStart || kwargs.vy > context.drawStart + context.drawHeight) return;
+    if (kwargs.vx % this.rowPix != (this.rowPix / 2) << 0 || kwargs.vy % this.colPix != (this.colPix / 2) << 0) return;
     if (kwargs.vy > this.currRowNum) {
       this.currRowNum = kwargs.vy;
       this.asciiRows.push(this.currRow);
-      this.currRow = '';
-      this.symbolCols.push(this.symbolRowCols);
-      this.symbolRowCols = [];
+      this.currRow = [];
     }
-    const cnvCol = [context.cnvPixels.data[pixIdx + 0], context.cnvPixels.data[pixIdx + 1], context.cnvPixels.data[pixIdx + 2]];
     const grayscale = greyscaleCalc(pixVals);
-    this.symbolRowCols.push(pixVals);
-    let symbolIdx = Math.round(map(grayscale, 0, 255, 0, this.dictLen - 1));
-    this.currRow += this.asciiDict[symbolIdx];
-    // console.log(this.currRow);
-    // const outCols = alphaBlend([...cnvCol, 1], [...pixVals, this.lyrOpacity]);
-    // context.cnvPixels.data[pixIdx + 0] = grayscale;
-    // context.cnvPixels.data[pixIdx + 1] = grayscale;
-    // context.cnvPixels.data[pixIdx + 2] = grayscale;
+    let symbolIdx = Math.round(map(grayscale, 0, 255, this.dictLen - 1, 0));
+    this.currRow.push({ symbol: this.asciiDict[symbolIdx], col: [...pixVals] });
   };
+
   processFramePost = function (vidPx, kwargs, context) {
     if (!this.visReady) return;
-    if (this.bw) {
-      this.drawAsciiBW(context);
-      return;
-    }
-    this.drawAsciiCol(context);
+    this.drawAscii(context);
   };
-  drawAsciiBW = function (context) {
-    context.cnvContext.font = `${this.rowPix * 1.65}px "${this.selectedFont}"`;
-    // console.log(`${this.rowPix * 1.65}px ${this.selectedFont}`);
-    const numRows = this.asciiRows.length;
-    for (let i = 0; i < numRows; i++) {
-      const ty = this.rowPix * i;
-      context.cnvContext.fillStyle = `rgba(255, 255, 255, ${this.lyrOpacity})`;
-      context.cnvContext.fillText(this.asciiRows[i], 0, ty);
-    }
-  };
-  drawAsciiCol = function (context) {
-    const numRows = this.asciiRows.length;
-    for (let i = 0; i < numRows; i++) {
-      const ty = this.rowPix * i;
-      const currRow = [...this.asciiRows[i]];
-      const currRowCols = this.symbolCols[i];
-      for (let x = 0; x < this.charsPerRow; x++) {
+
+  drawAscii = function (context) {
+    context.cnvContext.font = `${this.fontSize}px "${this.selectedFont}"`;
+    const m = this.asciiRows.length;
+    for (let y = 0; y < m; y++) {
+      const ty = this.rowPix * y + context.drawStart;
+      const currRow = [...this.asciiRows[y]];
+      const n = currRow.length;
+      for (let x = 0; x < n; x++) {
         const tx = this.colPix * x;
-        const [r, g, b] = currRowCols[x];
-        context.cnvContext.fillStyle = `rgba(${r}, ${g}, ${b}, ${this.lyrOpacity})`;
-        context.cnvContext.font = `${this.rowPix}px "${this.selectedFont}", monospace`;
-        context.cnvContext.fillText(currRow[x], tx, ty);
+        context.cnvContext.fillStyle = this.mono ? `rgba(${this.monoCol[0]}, ${this.monoCol[1]}, ${this.monoCol[2]}, ${this.lyrOpacity})` : `rgba(${currRow[x].col[0]}, ${currRow[x].col[1]}, ${currRow[x].col[2]}, ${this.lyrOpacity})`;
+        context.cnvContext.fillText(currRow[x].symbol, tx, ty);
+        // context.cnvContext.fillRect(tx, ty, 2, 2);
       }
     }
   };
+
   params = [
     {
       name: 'charsPerRow',
-      displayName: 'Num chars per row.',
+      displayName: 'Chars per row',
       type: 'val',
       range: [30, 100],
       value: 40,
     },
     {
-      name: 'bw',
-      displayName: 'Black and White',
+      name: 'numRows',
+      displayName: 'Rows per canvas',
+      type: 'val',
+      range: [3, 30],
+      value: 5,
+    },
+    {
+      name: 'fontSize',
+      displayName: 'Font Size',
+      type: 'val',
+      range: [2, 20],
+      value: 5,
+    },
+    {
+      name: 'mono',
+      displayName: 'Mono',
       type: 'toggle',
       value: false,
+    },
+    {
+      name: 'monoCol',
+      displayName: 'Mono Colour',
+      type: 'colour',
+      value: '#ffffff',
     },
     {
       name: 'selectedFont',
@@ -126,79 +135,3 @@ export const ascii = class extends Visualiser {
     },
   ];
 };
-
-// export const ascii = class extends Visualiser {
-//     setup = function(context, kwargs = {}) {
-//         const { asciiCof = 8 } = kwargs;
-//         this.asciiCof = asciiCof;
-//         const asciiart_width = Math.floor((width) / this.asciiCof);
-//         const asciiart_height = Math.floor((height) / this.asciiCof);
-//         this.gfx = createGraphics(asciiart_width, asciiart_height)
-//         this.gfx.pixelDensity(1)
-//         this.myAsciiArt = new AsciiArt(context)
-//         this.weightTable = this.myAsciiArt.createWeightTable()
-//         this.asciiArtWidth = asciiart_width
-//         this.ascciArtHeight = asciiart_height
-//         this.xScale = width / this.asciiArtWidth
-//         this.yScale = height / this.ascciArtHeight
-//         const fontName = 'monospace'
-//         const fontSize = (asciiart_width / asciiCof) >> 0;
-//         textFont(fontName)
-//         textSize(fontSize)
-//         textAlign(CENTER, CENTER)
-//         noStroke()
-//     }
-
-//     processFramePre = function(vidIn, kwargs) {
-//         const { bw = false } = kwargs;
-//         const { bwBrightness = 200 } = kwargs;
-//         const tempMaxWeight = 3 * 255
-//         const tempRange = this.weightTable.length - 1;
-//         let tempWeight
-//         for (let ay = 0; ay < this.ascciArtHeight; ay++) {
-//             for (let ax = 0; ax < this.asciiArtWidth; ax++) {
-//                 const xpos = Math.floor(ax * this.xScale)
-//                 const ypos = Math.floor(ay * this.yScale)
-//                 const pixIdx = ((ypos * width) + xpos) * 4
-//                 tempWeight = (vidIn.pixels[pixIdx + 0] + vidIn.pixels[pixIdx + 1] + vidIn.pixels[pixIdx + 2])/tempMaxWeight
-//                 tempWeight = Math.floor(tempWeight * tempRange)
-//                 if (bw)
-//                     fill(bwBrightness);
-//                 else
-//                     fill(vidIn.pixels[pixIdx + 0] << this.brighten, vidIn.pixels[pixIdx + 1] << this.brighten, vidIn.pixels[pixIdx + 2] << this.brighten)
-//                 if (this.weightTable[tempWeight])
-//                     text(char(this.weightTable[tempWeight].code), xpos, ypos)
-//             }
-//         }
-//     }
-
-//     params = [
-//         {
-//             name: "asciiCof",
-//             displayName: "Resolution (doesn't update in real time)",
-//             type: "val",
-//             range: [
-//                 2, 16
-//             ],
-//             step: 2,
-//             value: 8
-//         },
-//         {
-//             name: "bw",
-//             displayName: "Black and White",
-//             type: "toggle",
-//             value: false
-//         },
-//         {
-//             name: "bwBrightness",
-//             displayName: "B&W Brightness",
-//             type: "toggle",
-//             type: "val",
-//             range: [
-//                 0, 255
-//             ],
-//             value: 200
-//         },
-//     ]
-
-// }

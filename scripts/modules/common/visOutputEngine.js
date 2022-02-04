@@ -114,6 +114,7 @@ export const VisOutputEngine = class {
             drawHeight: subCnvDrawHeight,
             vignetteMask: subVignette,
             previewSize: this.previewSize,
+            numWorkers: this.numWorkers,
           },
           [this.subcnvs[i]]
         )
