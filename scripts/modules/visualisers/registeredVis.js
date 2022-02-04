@@ -47,7 +47,7 @@ export const visList = [
   {
     visGroup: 'text',
     visualisers: [
-      // {name: "ascii"},
+      { name: 'ascii' },
       //         {name: "detunedQuintet"},
       //         {name: "score"},
       //         {name: "scriptText"}

@@ -1,20 +1,12 @@
 import { Visualiser } from '../../../_prototype/modules/visualisers/Visualiser.js';
+import LoResObj from './LoResObj.js';
 
-class loResObj {
-  constructor(x, y, r, g, b, a, size) {
-    this.x = x;
-    this.y = y;
-    this.r = r;
-    this.g = g;
-    this.b = b;
-    this.a = a;
-    this.size = size;
-  }
-
+class Box extends LoResObj {
   draw(ctx) {
     ctx.save();
     ctx.fillStyle = `rgba(${this.r}, ${this.g}, ${this.b}, ${this.a})`;
-    ctx.fillRect(this.x, this.y, this.size, this.size);
+    const drawSize = this.size - this.size * this.spacing;
+    ctx.fillRect(this.x, this.y, drawSize, drawSize);
     ctx.restore();
   }
 }
@@ -32,18 +24,23 @@ export class boxes extends Visualiser {
   processPixels = function (pixIdx, pixVals, kwargs = {}, context) {
     const { vx = 0, vy = 0 } = kwargs;
     let { resolution = 1 } = kwargs;
+    let { spacing = 0 } = kwargs;
+    const { dyn = [] } = kwargs;
     if (kwargs.dynRes === true) {
-      const { dyn = 0 } = kwargs;
       const { dynRange = 80 } = kwargs;
       const { dynResSpeed = 1 } = kwargs;
       resolution += dyn[dynResSpeed] * dynRange;
     }
+    if (kwargs.dynSpace === true) {
+      const { dynSpaceRange = 0 } = kwargs;
+      const { dynSpaceSpeed = 1 } = kwargs;
+      spacing = dyn[dynSpaceSpeed] * dynSpaceRange;
+    }
     let loResStep = (context.cnv.width / resolution) << 0;
-    const { previewSize = 1 } = kwargs;
     if (vx % loResStep != 0 || vy % loResStep != 0) return;
     let [iR, iG, iB] = pixVals;
     const { lyrOpacity = 1 } = kwargs;
-    this.loResObjs.push(new loResObj(vx, vy, iR, iG, iB, lyrOpacity, loResStep));
+    this.loResObjs.push(new Box(vx, vy, iR, iG, iB, lyrOpacity, loResStep, spacing));
   };
 
   processFramePost(vidPixels, kwargs, context) {
@@ -75,6 +72,35 @@ export class boxes extends Visualiser {
     {
       name: 'dynResSpeed',
       displayName: 'Dynamic Resolution Speed',
+      type: 'val',
+      range: [0, 7],
+      value: 0,
+    },
+    {
+      name: 'spacing',
+      displayName: 'Spacing',
+      type: 'val',
+      range: [0, 1],
+      step: 0.05,
+      value: 0,
+    },
+    {
+      name: 'dynSpace',
+      displayName: 'Dynamic Spacing',
+      type: 'toggle',
+      value: 'false',
+    },
+    {
+      name: 'dynSpaceRange',
+      displayName: 'Dynamic Spacing Range',
+      type: 'val',
+      range: [0, 1],
+      value: 0,
+      step: 0.05,
+    },
+    {
+      name: 'dynSpaceSpeed',
+      displayName: 'Dynamic Spcing Speed',
       type: 'val',
       range: [0, 7],
       value: 0,

@@ -64,6 +64,7 @@ class ProcessCanvas {
     // collect registered visualiser modules
     this.visualiserModules = await importModules();
     Object.values(this.visualiserModules).map((module) => {
+      if (module.setup) module.setup();
       if (module.setPixelArraySize) module.setPixelArraySize(this.cnv.width * this.cnv.height);
       if (module.setVignetteMask) module.setVignetteMask(data.vignetteMask);
     });
