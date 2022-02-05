@@ -57,8 +57,7 @@ class ProcessCanvas {
     this.drawHeight = data.drawHeight;
     this.cnv = data.canvas;
     this.cnvContext = this.cnv.getContext('2d');
-    this.previewSize = data.previewSize;
-    // console.log(this.previewSize);
+    this.previewSize = data.previewSize || 1;
     // initialise output settings
     this.outputSettings = { bg_opacity: 255, bg_col: [0, 0, 0] };
     // collect registered visualiser modules
@@ -68,6 +67,7 @@ class ProcessCanvas {
         module.setup({
           cnv: { width: this.cnv.width, height: this.cnv.height },
           numWorkers: data.numWorkers,
+          previewSize: this.previewSize,
         });
       if (module.setPixelArraySize) module.setPixelArraySize(this.cnv.width * this.cnv.height);
       if (module.setVignetteMask) module.setVignetteMask(data.vignetteMask);
@@ -101,7 +101,6 @@ class ProcessCanvas {
           // include module parameters in arguments
           const kwargs = visParams[module.name];
           // include common parameters in arguments
-          kwargs.previewSize = this.previewSize;
           kwargs.vx = vx;
           kwargs.vy = vy;
           kwargs.rand = data.rand[randIdx];
