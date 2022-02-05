@@ -6,15 +6,21 @@ export const vignette = class extends Visualiser {
     this.vignetteMask = vignetteMask;
   };
 
+  processFramePre = function (vidPix, { lyrOpacity = 1, vigCol = [0, 0, 0], ...kwargs } = {}, context) {
+    this.lyrOpacity = lyrOpacity;
+    this.vigCol = vigCol;
+    // console.log(this.vigCol);
+  };
+
   processPixels = function (pixIdx, pixVals, kwargs = {}, context) {
-    const { lyrOpacity = 1 } = kwargs;
-    const { vigCol = [0, 0, 0] } = kwargs;
+    // const { lyrOpacity = 1 } = kwargs;
+    // const { vigCol = [0, 0, 0] } = kwargs;
     const cnvCol = [context.cnvPixels.data[pixIdx + 0], context.cnvPixels.data[pixIdx + 1], context.cnvPixels.data[pixIdx + 2]];
-    const [oR, oG, oB] = alphaBlend([...vigCol, 1], [...cnvCol, this.vignetteMask[pixIdx / 4] / 255]);
+    const [oR, oG, oB] = alphaBlend([...this.vigCol, 1], [...cnvCol, this.vignetteMask[pixIdx / 4] / 255]);
     if (kwargs.vy < context.drawStart || kwargs.vy > context.drawStart + context.drawHeight) return;
-    context.cnvPixels.data[pixIdx + 0] = oR * lyrOpacity + context.cnvPixels.data[pixIdx + 0] * (1 - lyrOpacity);
-    context.cnvPixels.data[pixIdx + 1] = oG * lyrOpacity + context.cnvPixels.data[pixIdx + 1] * (1 - lyrOpacity);
-    context.cnvPixels.data[pixIdx + 2] = oB * lyrOpacity + context.cnvPixels.data[pixIdx + 2] * (1 - lyrOpacity);
+    context.cnvPixels.data[pixIdx + 0] = oR * this.lyrOpacity + context.cnvPixels.data[pixIdx + 0] * (1 - this.lyrOpacity);
+    context.cnvPixels.data[pixIdx + 1] = oG * this.lyrOpacity + context.cnvPixels.data[pixIdx + 1] * (1 - this.lyrOpacity);
+    context.cnvPixels.data[pixIdx + 2] = oB * this.lyrOpacity + context.cnvPixels.data[pixIdx + 2] * (1 - this.lyrOpacity);
   };
 
   params = [

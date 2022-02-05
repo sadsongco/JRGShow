@@ -43,7 +43,10 @@ const updateModuleChain = () => {
     const modObj = {};
     modObj.name = modSlot.innerText;
     const moduleParams = {};
-    for (let param of visualiserModules[modSlot.innerText].params) moduleParams[param.name] = param.value;
+    for (let param of visualiserModules[modSlot.innerText].params) {
+      if (param.type === 'colour' && !Array.isArray(param.value)) param.value = hexToRgb(param.value);
+      moduleParams[param.name] = param.value;
+    }
     modObj.params = moduleParams;
     tempVisChain.push(modObj);
   }
@@ -179,9 +182,9 @@ const updateParameter = (e) => {
     newValue = rgbToHex(...newValue);
     return;
   }
-  if (paramType === 'select') {
-    console.log(newValue);
-  }
+  // if (paramType === 'select') {
+  //   console.log(newValue);
+  // }
   document.getElementById(`${e.target.name}-value`).innerText = newValue;
 };
 
@@ -241,7 +244,7 @@ const updateSlots = () => {
  */
 const clearSlot = () => {
   if (!selectedSlot) return;
-  selectedSlot.innerText = '';
+  selectedSlot.innerText = 'Empty Slot';
   selectedSlot.filled = false;
   selectedSlot.classList.remove('slot-filled');
   clearParams();
@@ -494,4 +497,9 @@ window.onload = async () => {
     document.getElementById('saveSettings').appendChild(document.createTextNode(' - Change the Track Name to save a copy'));
   }
   visOutputEngine.drawCanvas();
+  const loading = document.getElementById('loading');
+  loading.style.opacity = 0;
+  loading.ontransitionend = () => {
+    loading.style.visibility = 'hidden';
+  };
 };

@@ -66,6 +66,22 @@ input {
   font-family: "CourierPrime-Regular", "Courier New", Courier, monospace;
 }
 
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8);
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 1s ease-in;
+  z-index: 3;
+}
+
 .setlistItem {
   display: block;
   border: 1px solid white;
