@@ -20,7 +20,7 @@ export const visList = [
   {
     visGroup: 'hiRes',
     visualisers: [
-      //         {name: "edgeDetect"},
+      {name: "edgeDetect"},
       //         {name: "gradReveal"},
       { name: 'motion' },
       { name: 'screenPainter' },

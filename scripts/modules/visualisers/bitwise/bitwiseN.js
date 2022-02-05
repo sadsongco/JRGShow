@@ -19,9 +19,17 @@ export const bitwiseN = class extends Visualiser {
     const { dyn = 0 } = kwargs;
     let { rand = 0 } = kwargs;
     let { noise = 0 } = kwargs;
-    let [iR, iG, iB] = pixVals;
+    const { procSource = 'Video In'} = kwargs;
+    let iR, iG, iB;
+    if (procSource === 'Video In')
+      [iR, iG, iB] = pixVals;
+    else {
+      iR = context.cnvPixels.data[pixIdx + 0];
+      iG = context.cnvPixels.data[pixIdx + 1];
+      iB = context.cnvPixels.data[pixIdx + 2];
+    }
     // process pixel
-    const grayscale = greyscaleCalc(pixVals);
+    const grayscale = greyscaleCalc([iR, iG, iB]);
     let oR = iR - iR * rand * noise;
     let oG = iG - iG * rand * noise;
     let oB = iB - iB * rand * noise;
@@ -43,6 +51,13 @@ export const bitwiseN = class extends Visualiser {
     }
   };
   params = [
+    {
+      name: 'procSource',
+      displayName: 'Processing Source',
+      type: 'select',
+      options: ['Video In', 'Prev Module'],
+      value: 'Video In',
+    },
     {
       name: 'threshold',
       displayName: 'Effect Threshold',
