@@ -43,108 +43,112 @@ const audioSelector = document.createElement('select');
  * @param {array} deviceInfos - available video input devices
  */
 const gotDevices = (deviceInfos) => {
-    for (let deviceInfo of deviceInfos) {
-        if (deviceInfo.kind == 'videoinput') {
-            devices.push({
-                label: deviceInfo.label,
-                id: deviceInfo.deviceId
-            });
-        }
-        if (deviceInfo.kind == 'audioinput') {
-            console.log(deviceInfo)
-            audioSources.push({
-                label: deviceInfo.label,
-                id: deviceInfo.deviceId
-            });
-        }
+  for (let deviceInfo of deviceInfos) {
+    if (deviceInfo.kind == 'videoinput') {
+      devices.push({
+        label: deviceInfo.label,
+        id: deviceInfo.deviceId,
+      });
     }
-    for (let deviceIdx in devices) {
-        const device = devices[deviceIdx];
-        let supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
-        device.constraints = {
-            video: {
-                deviceId: {
-                    exact: device.id
-                },
-            },
-            resize: supportedConstraints['height'] && supportedConstraints['width']
-        };
-        const option = document.createElement('option');
-        option.value = deviceIdx
-        option.text = device.label;
-        deviceSelector.add(option)
+    if (deviceInfo.kind == 'audioinput') {
+      console.log(deviceInfo);
+      audioSources.push({
+        label: deviceInfo.label,
+        id: deviceInfo.deviceId,
+      });
     }
-    deviceTarget.appendChild(deviceSelector);
-    for (let audioIdx in audioSources) {
-        const device = audioSources[audioIdx];
-        device.constraints = {
-            audio: {
-                devideId: {
-                    exact: device.id
-                }
-            }
-        }
-        const option = document.createElement('option');
-        option.value = audioIdx
-        option.text = device.label;
-        audioSelector.add(option)
-    }
-    audioTarget.appendChild(audioSelector);
-}
+  }
+  for (let deviceIdx in devices) {
+    const device = devices[deviceIdx];
+    let supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
+    device.constraints = {
+      video: {
+        deviceId: {
+          exact: device.id,
+        },
+      },
+      resize: supportedConstraints['height'] && supportedConstraints['width'],
+    };
+    const option = document.createElement('option');
+    option.value = deviceIdx;
+    option.text = device.label;
+    deviceSelector.add(option);
+  }
+  deviceTarget.appendChild(deviceSelector);
+  for (let audioIdx in audioSources) {
+    const device = audioSources[audioIdx];
+    device.constraints = {
+      audio: {
+        devideId: {
+          exact: device.id,
+        },
+      },
+    };
+    const option = document.createElement('option');
+    option.value = audioIdx;
+    option.text = device.label;
+    audioSelector.add(option);
+  }
+  audioTarget.appendChild(audioSelector);
+  const loading = document.getElementById('loading');
+  loading.style.opacity = 0;
+  loading.ontransitionend = (e) => {
+    loading.style.visibility = 'hidden';
+  };
+};
 
 const gotSources = (deviceList) => {
-    console.log(deviceList);
-}
+  console.log(deviceList);
+};
 
 /**
  * Writes resolution and input device to database, redirects to hub page
  */
 const launchVis = () => {
-    console.log(resolutions[resSelector.value])
-    console.log(devices[deviceSelector.value])
-    console.log(audioSources[audioSelector.value])
-    let openRequest = indexedDB.open('visDB', 1);
-    openRequest.onerror = () => {
-        throw new Error('Database error');
-    }
-    openRequest.onsuccess = () => {
-        let db = openRequest.result;
-        // write output resolution to db
-        let transaction = db.transaction('outputResolution', 'readwrite');
-        let writeSettings = transaction.objectStore('outputResolution');
-        let outputSettings = {
-            id: 1,
-            outputResolution: resolutions[resSelector.value]
-        }
-        writeSettings.put(outputSettings);
-        // write video input settings to db
-        transaction = db.transaction('inputDevice', 'readwrite');
-        writeSettings = transaction.objectStore('inputDevice');
-        let inputDevice = {
-            id: 1,
-            inputDevice: devices[deviceSelector.value]
-        }
-        writeSettings.put(inputDevice);
-        // write audio input settings to db
-        transaction = db.transaction('audioSource', 'readwrite');
-        writeSettings = transaction.objectStore('audioSource');
-        let audioDevice = {
-            id: 1,
-            sources: audioSources,
-            sourceIdx: parseInt(audioSelector.value),
-            source: audioSources[audioSelector.value]
-        }
-        writeSettings.put(audioDevice);
-    }
-    window.location.href = "hub.html";
-}
+  console.log(resolutions[resSelector.value]);
+  console.log(devices[deviceSelector.value]);
+  console.log(audioSources[audioSelector.value]);
+  let openRequest = indexedDB.open('visDB', 1);
+  openRequest.onerror = () => {
+    throw new Error('Database error');
+  };
+  openRequest.onsuccess = () => {
+    let db = openRequest.result;
+    // write output resolution to db
+    let transaction = db.transaction('outputResolution', 'readwrite');
+    let writeSettings = transaction.objectStore('outputResolution');
+    let outputSettings = {
+      id: 1,
+      outputResolution: resolutions[resSelector.value],
+    };
+    writeSettings.put(outputSettings);
+    // write video input settings to db
+    transaction = db.transaction('inputDevice', 'readwrite');
+    writeSettings = transaction.objectStore('inputDevice');
+    let inputDevice = {
+      id: 1,
+      inputDevice: devices[deviceSelector.value],
+    };
+    writeSettings.put(inputDevice);
+    // write audio input settings to db
+    transaction = db.transaction('audioSource', 'readwrite');
+    writeSettings = transaction.objectStore('audioSource');
+    let audioDevice = {
+      id: 1,
+      sources: audioSources,
+      sourceIdx: parseInt(audioSelector.value),
+      source: audioSources[audioSelector.value],
+    };
+    writeSettings.put(audioDevice);
+  };
+  window.location.href = 'hub.html';
+};
 
 // get video and audio sources
 // TODO selected device doesn't carry over - look here: https://jsfiddle.net/bomzj/beap6n2g/
-const permissions = await navigator.mediaDevices.getUserMedia({video: true, audio: true})
+const permissions = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
 
-navigator.mediaDevices.enumerateDevices()
-.then(gotDevices)
+await navigator.mediaDevices.enumerateDevices().then(gotDevices);
 
 // create dropbown selector for output options
 const resolutions = [

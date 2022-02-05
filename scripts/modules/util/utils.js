@@ -20,7 +20,9 @@ const htmlToElement = function (html) {
 const d2b = (x) => x.toString(2);
 
 const greyscaleCalc = ([iR, iG, iB]) => {
-  return iR * 0.3 + iG * 0.59 + iB * 0.11;
+  // return iR * 0.3 + iG * 0.59 + iB * 0.11;
+  /* updated with performant formula from https://stackoverflow.com/questions/596216/formula-to-determine-perceived-brightness-of-rgb-color */
+  return ((iR << 1) + iR + (iG << 2) + iB) >> 3;
 };
 
 // https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
