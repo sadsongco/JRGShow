@@ -12,7 +12,7 @@ export const VisOutputEngine = class {
   /**
    * Initialise class properties
    */
-  constructor() {
+  constructor({ debug = false }) {
     // visualiser settings
     this.currentVisChain = []; // will hold the chain of visualiser processors
     this.vidPos = {}; // for scaling video input
@@ -34,9 +34,13 @@ export const VisOutputEngine = class {
     // debugging
     this.frameCount = 0; // keep track of the number of frames rendered
     this.frameRate = 1; // framerate of visualiser
-    this.debug = true; // show debug info
+    this.debug = debug; // show debug info
     this.fr = null; // DOM element for displaying framerate
     this.frametimes = []; // array of timestamps when frames were drawn
+    this.fr = document.getElementById('fr');
+    if (!this.debug) {
+      this.fr.style.visibility = 'hidden';
+    }
   }
 
   /**
@@ -65,6 +69,15 @@ export const VisOutputEngine = class {
   loadVisModules = async () => {
     // exposes for the use of creator.js that needs visualiser modules to know their parameters
     return await importModules();
+  };
+
+  setDebug = (debug) => {
+    if (debug) {
+      this.fr.style.visibility = 'visible';
+    } else {
+      this.fr.style.visibility = 'hidden';
+    }
+    this.debug = debug;
   };
 
   setupWorkers = async () => {
@@ -157,7 +170,7 @@ export const VisOutputEngine = class {
     };
 
     // initialise output settings and target DOM elements
-    this.fr = document.getElementById('fr');
+
     this.visContainer = document.getElementById('outerContainer');
     this.visReady = true;
   };

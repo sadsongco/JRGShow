@@ -18,11 +18,9 @@ export const bitwiseN = class extends Visualiser {
     const { audioInfo = { vol: 255 } } = kwargs;
     const { dyn = 0 } = kwargs;
     let { rand = 0 } = kwargs;
-    let { noise = 0 } = kwargs;
-    const { procSource = 'Video In'} = kwargs;
+    const { procSource = 'Video In' } = kwargs;
     let iR, iG, iB;
-    if (procSource === 'Video In')
-      [iR, iG, iB] = pixVals;
+    if (procSource === 'Video In') [iR, iG, iB] = pixVals;
     else {
       iR = context.cnvPixels.data[pixIdx + 0];
       iG = context.cnvPixels.data[pixIdx + 1];
@@ -30,9 +28,9 @@ export const bitwiseN = class extends Visualiser {
     }
     // process pixel
     const grayscale = greyscaleCalc([iR, iG, iB]);
-    let oR = iR - iR * rand * noise;
-    let oG = iG - iG * rand * noise;
-    let oB = iB - iB * rand * noise;
+    let oR = iR;
+    let oG = iG;
+    let oB = iB;
     if (bw) oR = oG = oB = grayscale;
     if (dynThresh) {
       threshold = Math.abs(dynThreshMin + (dynThreshMax - dynThreshMin) * dyn[dynThreshSpeed]);
@@ -57,6 +55,7 @@ export const bitwiseN = class extends Visualiser {
       type: 'select',
       options: ['Video In', 'Prev Module'],
       value: 'Video In',
+      tooltip: 'Using the Prev Module as the source allows you to threshold what is already showing. Using Video In as the source overlays thresholded video onto what is already showing',
     },
     {
       name: 'threshold',
@@ -131,6 +130,7 @@ export const bitwiseN = class extends Visualiser {
       range: [0, 1],
       step: 0.1,
       value: 1,
+      tooltip: 'Any pixels below the threshold level (or above, when invert is selected) will allow the background to show through when this is set to 0, black when set to 1',
     },
     {
       name: 'lyrOpacity',
@@ -139,14 +139,7 @@ export const bitwiseN = class extends Visualiser {
       range: [0, 1],
       step: 0.1,
       value: 1,
-    },
-    {
-      name: 'noise',
-      displayName: 'Noise',
-      type: 'val',
-      range: [0, 1],
-      step: 0.01,
-      value: 0,
+      tooltip: 'Opacity of the visualiser layer',
     },
   ];
 };

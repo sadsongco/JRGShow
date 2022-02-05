@@ -205,6 +205,11 @@ option {
 .param-name {
   grid-column-start: 0;
   grid-column-end: 1;
+  cursor: pointer;
+}
+
+.param-name:hover {
+  font-weight: bold;
 }
 .param-container input {
   grid-column-start: 1;
@@ -246,4 +251,36 @@ option {
   bottom: 8px;
   background-color: #222;
   padding: 2px;
+}
+
+/* TOOLTIPS */
+/* http://jsfiddle.net/AndreaLigios/jtLbpy62/2281/ */
+[data-tooltip]:before {
+  /* needed - do not touch */
+  content: attr(data-tooltip);
+  position: absolute;
+  opacity: 0;
+  
+  /* customizable */
+  transition: all 0.15s ease;
+  padding: 10px;
+  max-width: 30%;
+  font: 0.8em Montserrat, sans-serif;
+  color: #333;
+  border-radius: 10px;
+  box-shadow: 2px 2px 1px silver;    
+}
+
+[data-tooltip]:hover:before {
+  /* needed - do not touch */
+  opacity: 1;
+  
+  /* customizable */
+  background: #eaeaff;
+  margin-top: -5%;
+  margin-left: -7%;    
+}
+
+[data-tooltip]:not([data-tooltip-persistent]):before {
+  pointer-events: none;
 }

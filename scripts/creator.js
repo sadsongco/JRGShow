@@ -112,11 +112,18 @@ const showParams = (modName) => {
   const params = modName === 'Output' ? outputParameters : visualiserModules[modName].params;
   let paramContainer;
   paramContainer = document.createElement('div');
+  if (params.length === 0) {
+    paramContainer.innerText = 'No user parameters for this visualiser';
+    return;
+  }
   for (let param of params) {
     paramContainer.classList.add('param-container');
     const paramNameEl = document.createElement('div');
     paramNameEl.classList.add('param-name');
     paramNameEl.innerText = param.displayName;
+    if (param.tooltip) {
+      paramNameEl.dataset.tooltip = param.tooltip;
+    }
     paramContainer.appendChild(paramNameEl);
     let paramEntry = document.createElement('input');
     paramEntry.name = `${modName}-${param.name}`;
@@ -478,7 +485,7 @@ let visualiserModules, visOutputEngine;
 let outputSettings;
 
 window.onload = async () => {
-  visOutputEngine = new VisOutputEngine();
+  visOutputEngine = new VisOutputEngine({ debug: true });
   visualiserModules = await visOutputEngine.loadVisModules();
   outputSettings = outputParamVals;
   // creator page specific preload

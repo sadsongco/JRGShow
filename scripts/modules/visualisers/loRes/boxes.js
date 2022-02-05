@@ -112,6 +112,7 @@ export class boxes extends Visualiser {
       range: [0, 1],
       step: 0.1,
       value: 1,
+      tooltip: 'Because of how this visualiser works, it will draw to the entire canvas, overriding other visualisers. You can make it more transparent overall using this control.',
     },
   ];
 }

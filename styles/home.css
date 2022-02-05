@@ -1,4 +1,9 @@
 @import url("../assets/fonts/CourierPrime-Regular.ttf");
+@font-face {
+  font-family: Montserrat;
+  src: url(../assets/fonts/Montserrat-VariableFont_wght.ttf);
+}
+
 html {
   box-sizing: border-box;
 }
