@@ -72,7 +72,7 @@ class ProcessCanvas {
       if (module.setPixelArraySize) module.setPixelArraySize(this.cnv.width * this.cnv.height);
       if (module.setVignetteMask) module.setVignetteMask(data.vignetteMask);
     });
-    postMessage('setupComplete');
+    postMessage({setupComplete: true});
   }
 
   /**
@@ -88,6 +88,10 @@ class ProcessCanvas {
       const kwargs = visParams[module.name];
       kwargs.dyn = data.dyn;
       kwargs.audioInfo = data.audioInfo;
+      if (data.extVideoFrame) {
+        kwargs.extVideoFrame = data.extVideoFrame;
+      }
+      // console.log(data.extVideoFrame)
       this.visualiserModules[module.name].processFramePre(data.videoFrame, kwargs, this);
     }
     this.vidPixels = data.videoPixels;
@@ -120,7 +124,7 @@ class ProcessCanvas {
     }
     this.cnvContext.clearRect(0, 0, this.cnv.width, this.drawStart);
     data.videoFrame.close();
-    requestAnimationFrame(() => postMessage('frameComplete'));
+    requestAnimationFrame(() => postMessage({ frameComplete: true }));
   }
 
   /**

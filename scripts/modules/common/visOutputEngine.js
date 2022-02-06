@@ -2,6 +2,7 @@ import { importModules } from './importModules.js';
 import { setupVisualiserCanvas } from './setupVisualisers.js';
 import { dynamicGenerator, pseudoRandomGenerator } from '../util/generators.js';
 import { AudioEngine } from './audioEngine.js';
+import { ExtMediaEngine } from './ExtMediaEngine.js';
 import vignetteMask from '../util/vignetteMask.js';
 
 /**
@@ -18,6 +19,7 @@ export const VisOutputEngine = class {
     this.vidPos = {}; // for scaling video input
     this.vignetteMask = []; // will hold pixel opacity mask for vignette - global because calculated on whole canvas
     this.previewSize = 1; // relative size of output canvas to desired output size
+    this.extMediaEngine = null; // class instance for managing external media
 
     // processing
     this.audioAnalysis = []; // will hold frequency and volume analysis for each frame
@@ -151,6 +153,7 @@ export const VisOutputEngine = class {
     // set up canvas and video contexts
     this.cnvContext = this.cnv.getContext('2d');
     this.vidContext = this.vidCnv.getContext('2d');
+    this.extMediaEngine = new ExtMediaEngine({ numWorkers: this.numWorkers, targetWidth: this.cnv.width });
 
     // setup audio context and engine
     this.audioContext = new AudioContext();
@@ -186,7 +189,23 @@ export const VisOutputEngine = class {
     return new Promise((resolve) => {
       worker.postMessage(context, transfers);
       worker.onmessage = (e) => {
-        resolve(true);
+        if (e.data.frameComplete || e.data.setupComplete) resolve(true);
+        if (Object.keys(e.data).includes('videoFile')) {
+          const URLinput = document.getElementById('videoFile-mediaURL');
+          if (e.data.videoFile === false) {
+            URLinput.classList.add('invalidURL');
+            this.extMediaEngine.videoSrc = '';
+            this.extMediaEngine.validURL = false;
+            return;
+          } else {
+            if (this.extMediaEngine.videoSrc !== e.data.videoFile) {
+              this.extMediaEngine.videoSrc = e.data.videoFile;
+              this.extMediaEngine.validURL = true;
+              URLinput.classList.remove('invalidURL');
+              return;
+            }
+          }
+        }
       };
     });
   };
@@ -200,13 +219,16 @@ export const VisOutputEngine = class {
         const dyn = dynamicGenerator(this.frameCount);
         const rand = pseudoRandomGenerator();
         this.audioAnalysis = this.audioEngine.getAudioAnalysis();
-        // console.log(this.audioAnalysis);
         this.vidContext.drawImage(this.vidIn, 0, 0, this.cnv.width, this.cnv.height);
         let workerJobs = [];
         for (let i = 0; i < this.numWorkers; i++) {
           const subcnvParams = this.subcnvParams[i];
           const videoPixels = this.vidContext.getImageData(0, subcnvParams.start, this.cnv.width, subcnvParams.height);
-          const videoFrame = await createImageBitmap(this.vidIn, 0, (subcnvParams.start + subcnvParams.drawStart) / this.vidPos.scale, this.vidIn.videoWidth, subcnvParams.drawHeight / this.vidPos.scale, { resizeWidth: this.cnv.width, resizeHeight: subcnvParams.drawHeight, resizeQuality: 'low' });
+          const videoFrame = await createImageBitmap(this.vidIn, 0, (subcnvParams.start + subcnvParams.drawStart) / this.vidPos.scale, this.vidIn.videoWidth, subcnvParams.drawHeight / this.vidPos.scale, {
+            resizeWidth: this.cnv.width,
+            resizeHeight: subcnvParams.drawHeight,
+            resizeQuality: 'low',
+          });
           workerJobs.push(
             this.invokeWorker(
               this.workers[i],
@@ -215,6 +237,11 @@ export const VisOutputEngine = class {
                 data: {
                   index: (this.frameCount + i) % 4,
                   videoFrame: videoFrame,
+                  extVideoFrame: await this.extMediaEngine.getFrame({
+                    worker: i,
+                    resizeWidth: this.cnv.width,
+                    resizeHeight: subcnvParams.drawHeight,
+                  }),
                   videoPixels: videoPixels,
                   dyn: dyn,
                   rand: rand,

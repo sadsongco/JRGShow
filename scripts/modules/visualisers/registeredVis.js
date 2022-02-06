@@ -20,7 +20,7 @@ export const visList = [
   {
     visGroup: 'hiRes',
     visualisers: [
-      {name: "edgeDetect"},
+      { name: 'edgeDetect' },
       //         {name: "gradReveal"},
       { name: 'motion' },
       { name: 'screenPainter' },
@@ -52,5 +52,9 @@ export const visList = [
       //         {name: "score"},
       //         {name: "scriptText"}
     ],
+  },
+  {
+    visGroup: 'media',
+    visualisers: [{ name: 'videoFile' }],
   },
 ];

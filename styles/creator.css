@@ -38,6 +38,15 @@ option {
   font-size: 0.9em;
 }
 
+input {
+  font: 0.8em Montserrat, sans-serif;
+}
+
+input.invalidURL {
+  color: #6e0000;
+  border: 2px solid #6e0000;
+}
+
 /* rows of stuff */
 
 .row {
@@ -201,6 +210,7 @@ option {
   display: grid;
   grid-template-columns: 1fr 2fr 1fr;
   gap: 0.5em;
+  align-items: baseline;
 }
 .param-name {
   grid-column-start: 0;

@@ -126,7 +126,9 @@ const showParams = (modName) => {
     }
     paramContainer.appendChild(paramNameEl);
     let paramEntry = document.createElement('input');
+    paramEntry.classList.add('param-entry');
     paramEntry.name = `${modName}-${param.name}`;
+    paramEntry.id = `${modName}-${param.name}`;
     paramEntry.addEventListener('input', updateParameter);
     switch (param.type) {
       case 'val':
@@ -146,6 +148,11 @@ const showParams = (modName) => {
         break;
       case 'select':
         paramEntry = createParamSelect(param, `${modName}-${param.name}`);
+        break;
+      case 'text':
+        paramEntry.type = 'text';
+        if (param.name === 'mediaURL') paramEntry.classList.add('invalidURL');
+        paramEntry.value = paramVals[param.name] || '';
         break;
     }
     paramContainer.appendChild(paramEntry);
@@ -209,6 +216,7 @@ const getParameterValue = (e) => {
       return hexToRgb(e.target.value);
       break;
     case 'select-one':
+    case 'text':
       return e.target.value;
       break;
     default:
