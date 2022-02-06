@@ -69,8 +69,8 @@ canvas {
   left: 0;
   bottom: 30px;
   height: 20px;
-  width: 60px;
-  padding-left: 20px;
+  width: auto;
+  padding: 5px 20px;
   font-size: 14px;
 }
 
@@ -78,12 +78,12 @@ canvas {
   position: absolute;
   background-color: #222;
   color: #e22;
-  right: 100px;
+  right: 0px;
   bottom: 30px;
   height: 20px;
-  width: 180px;
-  padding: 3px;
-  font-size: 13px;
+  width: auto;
+  padding: 5px 20px;
+  font-size: 14px;
   z-index: 2;
 }
 

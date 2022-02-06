@@ -11,7 +11,7 @@ const setupVisualiserCanvas = async () => {
   // create canvas
   const cnv = document.createElement('canvas');
   const previewSize = await resizeCanvas(cnvTarget, outputRes, cnv);
-  cnvTarget.appendChild(cnv);
+  // cnvTarget.appendChild(cnv);
   // window.onresize = () => resizeCanvas(cnvTarget, outputRes, cnv);
   // create video node, attach to video input stream
   const vidIn = await getVideoInput(inputDevice);

@@ -37,11 +37,12 @@ export const VisOutputEngine = class {
     this.frameCount = 0; // keep track of the number of frames rendered
     this.frameRate = 1; // framerate of visualiser
     this.debug = debug; // show debug info
-    this.fr = null; // DOM element for displaying framerate
     this.frametimes = []; // array of timestamps when frames were drawn
-    this.fr = document.getElementById('fr');
+    this.fr = document.getElementById('fr'); // DOM element for displaying framerate
+    this.info = document.getElementById('info'); // DOM element for displaying debug info
     if (!this.debug) {
       this.fr.style.visibility = 'hidden';
+      this.info.style.visibility = 'hidden';
     }
   }
 
@@ -76,8 +77,10 @@ export const VisOutputEngine = class {
   setDebug = (debug) => {
     if (debug) {
       this.fr.style.visibility = 'visible';
+      this.info.style.visibility = 'visible';
     } else {
       this.fr.style.visibility = 'hidden';
+      this.info.style.visibility = 'hidden';
     }
     this.debug = debug;
   };
@@ -259,6 +262,7 @@ export const VisOutputEngine = class {
         this.frametimes.push(timestamp);
         this.frameRate = this.frametimes.length;
         this.fr.innerText = this.frameRate;
+        this.info.innerText = `workers: ${this.numWorkers} | canvas dimensions ${this.cnv.width} x ${this.cnv.height} | vis chain length ${this.currentVisChain.length}`;
       }
       this.frameCount++;
       requestAnimationFrame(drawFrame);
