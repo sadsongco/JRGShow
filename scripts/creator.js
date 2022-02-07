@@ -18,40 +18,20 @@ import { VisOutputEngine } from './modules/common/VisOutputEngine.js';
 const addModule = (e) => {
   if (!selectedSlot) return; // don't try and fill output, or if no slot is selected somehow
   if (e.target.id === 'output') return; // can't fill output slot
+  // update vis chain
+  const visObj = {};
+  visObj.name = visualiserSelector.value;
+  const paramsObj = {};
+  Object.values(visualiserModules[visualiserSelector.value].params).map((param) => (paramsObj[param.name] = param.value));
+  visObj.params = paramsObj;
+  currentVisChain[selectedSlot.dataset.visIdx] = visObj;
+  // update screen module
   selectedSlot.innerText = visualiserSelector.value;
   selectedSlot.filled = true;
   selectedSlot.classList.add('slot-filled');
   setOutputPath();
-  updateModuleChain();
-  showParams(visualiserSelector.value);
-};
-
-/**
- * Updates the chain of modules to match screen slots
- */
-const updateModuleChain = () => {
-  let tempVisChain = [];
-  for (let modSlot of document.getElementsByClassName('slot-filled')) {
-    let slotObjUpdated = false;
-    for (let visMod of currentVisChain) {
-      if (visMod.name === modSlot.innerText) {
-        tempVisChain.push(visMod);
-        slotObjUpdated = true;
-      }
-    }
-    if (slotObjUpdated) continue;
-    const modObj = {};
-    modObj.name = modSlot.innerText;
-    const moduleParams = {};
-    for (let param of visualiserModules[modSlot.innerText].params) {
-      if (param.type === 'colour' && !Array.isArray(param.value)) param.value = hexToRgb(param.value);
-      moduleParams[param.name] = param.value;
-    }
-    modObj.params = moduleParams;
-    tempVisChain.push(modObj);
-  }
-  currentVisChain = tempVisChain;
   visOutputEngine.setCurrentVisChain(currentVisChain);
+  showParams(selectedSlot.dataset.visIdx);
 };
 
 /**
@@ -64,12 +44,11 @@ const selectSlot = (slot) => {
   selectedSlot = slot;
   slot.selected = true;
   slot.classList.add('slot-selected');
-  if (slot.classList.contains('slot-filled')) showParams(slot.innerText);
+  if (slot.classList.contains('slot-filled')) showParams(slot.dataset.visIdx);
   else clearParams();
 };
 
 const selectOutput = () => {
-  // audioIn.start()
   deselectAll();
   outSlot.classList.add('slot-selected');
   showParams('Output');
@@ -79,7 +58,7 @@ const deselectOutput = () => {
   outSlot.classList.remove('slot-selected');
 };
 
-const createParamSelect = (param, name) => {
+const createParamSelect = (param, paramVal, name) => {
   const selecter = document.createElement('select');
   selecter.name = name;
   selecter.addEventListener('change', updateParameter);
@@ -87,7 +66,7 @@ const createParamSelect = (param, name) => {
     let opt = document.createElement('option');
     opt.value = option;
     opt.text = option;
-    if (option === param.value) opt.selected = true;
+    if (option === paramVal) opt.selected = true;
     selecter.add(opt);
   });
   return selecter;
@@ -97,13 +76,16 @@ const createParamSelect = (param, name) => {
  * Display parameters for visualiser in selected module
  * @param {string} modName - module to show params of
  */
-const showParams = (modName) => {
-  let paramVals;
-  if (modName === 'Output') paramVals = outputSettings;
-  else
-    for (let visMod of currentVisChain) {
-      if (visMod.name === modName) paramVals = visMod.params;
-    }
+const showParams = (visIdx) => {
+  let paramVals, modName;
+  if (visIdx === 'Output') {
+    modName = 'Output';
+    paramVals = outputSettings;
+  } else {
+    if (!currentVisChain[visIdx]) return;
+    paramVals = currentVisChain[visIdx].params;
+    modName = currentVisChain[visIdx].name;
+  }
   const paramsEl = document.getElementById('params');
   // empty parameters element
   while (paramsEl.firstChild) paramsEl.removeChild(paramsEl.firstChild);
@@ -116,7 +98,7 @@ const showParams = (modName) => {
     paramContainer.innerText = 'No user parameters for this visualiser';
     return;
   }
-  for (let param of params) {
+  for (let param of Object.values(params)) {
     paramContainer.classList.add('param-container');
     const paramNameEl = document.createElement('div');
     paramNameEl.classList.add('param-name');
@@ -147,7 +129,7 @@ const showParams = (modName) => {
         paramEntry.value = paramVals[param.name];
         break;
       case 'select':
-        paramEntry = createParamSelect(param, `${modName}-${param.name}`);
+        paramEntry = createParamSelect(param, paramVals[param.name], `${modName}-${param.name}`);
         break;
       case 'text':
         paramEntry.type = 'text';
@@ -182,11 +164,8 @@ const updateParameter = (e) => {
   if (moduleName === 'Output') {
     outputSettings[paramName] = newValue;
   } else {
-    for (let visMod of currentVisChain) {
-      if (visMod.name == moduleName) {
-        visMod.params[paramName] = newValue;
-      }
-    }
+    const visIdx = selectedSlot.dataset.visIdx;
+    currentVisChain[visIdx].params[paramName] = newValue;
   }
   moduleName === 'Output' ? visOutputEngine.setOutputSettings(outputSettings) : visOutputEngine.setCurrentVisChain(currentVisChain);
   // hacky - didn't realise I'd need a type until much later
@@ -196,9 +175,6 @@ const updateParameter = (e) => {
     newValue = rgbToHex(...newValue);
     return;
   }
-  // if (paramType === 'select') {
-  //   console.log(newValue);
-  // }
   document.getElementById(`${e.target.name}-value`).innerText = newValue;
 };
 
@@ -240,17 +216,24 @@ const clearParams = () => {
  */
 const updateSlots = () => {
   let currSlot;
+  currFilledSlots = [];
   for (const visIdx in currentVisChain) {
     const currVis = currentVisChain[visIdx];
-    currSlot = modSlots[parseInt(visIdx) + (modSlots.length - currentVisChain.length)];
-    currSlot.innerText = currVis.name;
-    currSlot.filled = true;
-    currSlot.classList.add('slot-filled');
-    visualiserSelector.value = currVis.name;
+    currSlot = document.querySelector(`[data-vis-idx='${visIdx}']`);
+    if (currVis) {
+      currSlot.innerText = currVis.name;
+      currSlot.filled = true;
+      currSlot.classList.add('slot-filled');
+      currFilledSlots[currSlot.dataset.visIdx] = currSlot;
+      visualiserSelector.value = currVis.name;
+    } else {
+      currSlot.innerText = 'Empty Slot';
+    }
   }
   currSlot.classList.add('slot-selected');
   setOutputPath();
-  updateModuleChain();
+  visOutputEngine.setCurrentVisChain(currentVisChain);
+  showParams(selectedSlot.dataset.visIdx);
   showParams(visualiserSelector.value);
 };
 
@@ -259,12 +242,13 @@ const updateSlots = () => {
  */
 const clearSlot = () => {
   if (!selectedSlot) return;
+  currentVisChain[selectedSlot.dataset.visIdx] = null;
   selectedSlot.innerText = 'Empty Slot';
   selectedSlot.filled = false;
   selectedSlot.classList.remove('slot-filled');
   clearParams();
   setOutputPath();
-  updateModuleChain();
+  visOutputEngine.setCurrentVisChain(currentVisChain);
 };
 
 /**
@@ -352,12 +336,9 @@ const saveSettings = (e) => {
     position: -1,
     outputSettings: outputSettings, // placeholder, value retrieved from database
   };
+
   for (let visModule of currentVisChain) {
-    const trackModule = {
-      name: visModule.name,
-      params: visModule.params,
-    };
-    track.visChain.push(trackModule);
+    track.visChain.push(visModule);
   }
   let openRequest = indexedDB.open('visDB', 1);
   openRequest.onerror = (err) => {
@@ -464,10 +445,13 @@ const buildCreatorUI = () => {
   // initialise module slots, make selectable
   modSlots = document.getElementsByClassName('vis-module');
   let modSlot;
+  let idx = 0;
   for (modSlot of modSlots) {
     modSlot.addEventListener('click', (e) => selectSlot(e.target));
     modSlot.selected = false;
     modSlot.filled = false;
+    modSlot.dataset.visIdx = idx;
+    idx++;
   }
   // initialise last slot as selected
   modSlot.selected = true;
@@ -478,11 +462,14 @@ const buildCreatorUI = () => {
   // setup Output slot
   outSlot = document.getElementById('output');
   outSlot.addEventListener('click', selectOutput);
+  outSlot.dataset.visIdx = 'Output';
 };
 
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 let currentVisChain = [];
+let visChainLength = 0;
+let currFilledSlots = [];
 
 // global variables
 let visualiserSelector,

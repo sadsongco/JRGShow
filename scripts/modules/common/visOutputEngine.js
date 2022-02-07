@@ -51,9 +51,10 @@ export const VisOutputEngine = class {
    * @param {Array} currentVisChain - objects of visualiser processors
    */
   setCurrentVisChain = (currentVisChain) => {
-    this.currentVisChain = currentVisChain;
+    const messageBody = { task: 'setCurrentVisChain', data: [...currentVisChain.filter((vis) => vis != undefined)] };
+    this.currentVisChain = messageBody.data;
     for (let i = 0; i < this.numWorkers; i++) {
-      this.workers[i].postMessage({ task: 'setCurrentVisChain', data: currentVisChain });
+      this.workers[i].postMessage(messageBody);
     }
   };
 

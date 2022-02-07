@@ -263,6 +263,15 @@ input.invalidURL {
   padding: 2px;
 }
 
+#info {
+  position: absolute;
+  right: 3px;
+  bottom: -15%;
+  background-color: #222;
+  padding: 2px;
+  max-width: 90%;
+}
+
 /* TOOLTIPS */
 /* http://jsfiddle.net/AndreaLigios/jtLbpy62/2281/ */
 [data-tooltip]:before {

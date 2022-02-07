@@ -26,6 +26,7 @@ class ProcessCanvas {
     // visualiser properties
     this.visualiserModules = {}; // will hold the registered visualiser modules
     this.currentVisChain = []; // will hold the chain of visualiser processors
+    this.visChainLength = 0; // stored as an int for speed
     this.outputSettings = {}; // will hold the current output settings
   }
 
@@ -35,6 +36,8 @@ class ProcessCanvas {
    */
   setCurrentVisChain = (currentVisChain) => {
     this.currentVisChain = currentVisChain;
+    // console.log(this.currentVisChain)
+    this.visChainLength = this.currentVisChain.length;
   };
 
   /**
@@ -82,10 +85,11 @@ class ProcessCanvas {
   draw(data) {
     this.drawBackground();
     // set params, once per frame, included in processFramePre loop
-    const visParams = {};
-    for (const module of this.currentVisChain) {
-      visParams[module.name] = { ...module.params };
-      const kwargs = visParams[module.name];
+    const visParams = [];
+    for (let i = 0; i < this.visChainLength; i++) {
+      const module = this.currentVisChain[i];
+      visParams[i] = { ...module.params };
+      const kwargs = visParams[i];
       kwargs.dyn = data.dyn;
       kwargs.audioInfo = data.audioInfo;
       if (data.extVideoFrame) {
@@ -101,9 +105,10 @@ class ProcessCanvas {
         const pixIdx = (vy * this.cnv.width + vx) * 4;
         let randIdx = pixIdx % data.rand.length;
         let pixVals = getPixelValues(pixIdx, this.vidPixels.data);
-        for (const module of this.currentVisChain) {
+        for (let i = 0; i < this.visChainLength; i++) {
+          const module = this.currentVisChain[i];
           // include module parameters in arguments
-          const kwargs = visParams[module.name];
+          const kwargs = visParams[i];
           // include common parameters in arguments
           kwargs.vx = vx;
           kwargs.vy = vy;
@@ -115,9 +120,10 @@ class ProcessCanvas {
       }
     }
     this.cnvContext.putImageData(this.cnvPixels, 0, 0);
-    for (const module of this.currentVisChain) {
-      visParams[module.name] = { ...module.params };
-      const kwargs = visParams[module.name];
+    for (let i = 0; i < this.visChainLength; i++) {
+      const module = this.currentVisChain[i];
+      visParams[i] = { ...module.params };
+      const kwargs = visParams[i];
       kwargs.dyn = data.dyn;
       // kwargs.audioInfo = this.audioEngine;
       this.visualiserModules[module.name].processFramePost(this.vidPixels.data, kwargs, this);
