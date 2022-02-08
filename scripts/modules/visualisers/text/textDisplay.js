@@ -2,16 +2,7 @@ import { Visualiser } from '/scripts/modules/visualisers/Visualiser.js';
 import { greyscaleCalc } from '/scripts/modules/util/utils.js';
 import alphaBlend from '/scripts/modules/util/alphaBlend.js';
 
-/**
- * Dummy class to act as documentation / guide on building a visualiser.
- * Class name must match the filename exactly, minus the .js filename extension.
- * To activate it, register the class in registeredVis.js.
- * Remove this comment when you create your new visualiser!
- */
-export class VisualiserTemplate extends Visualiser {
-  /**
-   * Initialise the attributes of the visualiser
-   */
+export class textDisplay extends Visualiser {
   constructor() {
     super();
   }
@@ -19,7 +10,7 @@ export class VisualiserTemplate extends Visualiser {
   /**
    * Manipulate the frame before the pixels have been processed.
    * Draw general images and graphics to the canvas.
-   * Can improve performance to save frame class attributes here rather than destructure them
+   * Can improve performance to save class attributes here rather than destructure them
    * for every pixel in processPixels
    * @param {ImageData} vidPixels - image data for the current frame of video input
    * @param {Object} kwargs - parameters passed to visualiser

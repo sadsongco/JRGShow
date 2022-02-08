@@ -3,7 +3,10 @@ import { greyscaleCalc } from '../../util/utils.js';
 import alphaBlend from '/scripts/modules/util/alphaBlend.js';
 
 export const bitwiseBrighten = class extends Visualiser {
-  processPixels = function (pixIdx, pixVals, { bw = false, brighten = 0, lyrOpacity = 1, procSource = 'Video In', ...kwargs }, context) {
+  processPixels = function (pixIdx, pixVals, kwargs, context) {
+    const { lyrOpacity = 1 } = kwargs;
+    const { procSource = 'Video In' } = kwargs;
+    const { brighten = 0 } = kwargs;
     const cnvCol = [context.cnvPixels.data[pixIdx + 0], context.cnvPixels.data[pixIdx + 1], context.cnvPixels.data[pixIdx + 2]];
     let iR, iG, iB;
     if (procSource === 'Video In') [iR, iG, iB] = pixVals;

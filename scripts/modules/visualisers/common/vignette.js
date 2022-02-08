@@ -6,15 +6,14 @@ export const vignette = class extends Visualiser {
     this.vignetteMask = vignetteMask;
   };
 
-  processFramePre = function (vidPix, { lyrOpacity = 1, vigCol = [0, 0, 0], ...kwargs } = {}, context) {
+  processFramePre = function (vidPix, kwargs = {}, context) {
+    const { lyrOpacity = 1 } = kwargs;
+    const { vigCol = [0, 0, 0] } = kwargs;
     this.lyrOpacity = lyrOpacity;
     this.vigCol = vigCol;
-    // console.log(this.vigCol);
   };
 
   processPixels = function (pixIdx, pixVals, kwargs = {}, context) {
-    // const { lyrOpacity = 1 } = kwargs;
-    // const { vigCol = [0, 0, 0] } = kwargs;
     const cnvCol = [context.cnvPixels.data[pixIdx + 0], context.cnvPixels.data[pixIdx + 1], context.cnvPixels.data[pixIdx + 2]];
     const [oR, oG, oB] = alphaBlend([...this.vigCol, 1], [...cnvCol, this.vignetteMask[pixIdx / 4] / 255]);
     if (kwargs.vy < context.drawStart || kwargs.vy > context.drawStart + context.drawHeight) return;

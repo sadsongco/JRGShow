@@ -33,7 +33,8 @@ export const ascii = class extends Visualiser {
     this.previewSize = previewSize;
   }
 
-  processFramePre = function (vidPix, { lyrOpacity = 1, mono = true, monoCol = [255, 255, 255], selectedFont = 'CourierPrime', ...kwargs } = {}, context) {
+  processFramePre = function (vidPix, kwargs = {}, context) {
+    let { lyrOpacity = 1, mono = true, monoCol = [255, 255, 255], selectedFont = 'CourierPrime' } = kwargs;
     if (!this.visReady) return;
     this.lyrOpacity = lyrOpacity;
     this.mono = mono;

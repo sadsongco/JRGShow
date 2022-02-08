@@ -41,7 +41,8 @@ export const videoFile = class extends Visualiser {
     this.mediaLoaded = false;
   }
 
-  processFramePre = function (vidPix, { mediaURL = '', ...kwargs } = {}, context) {
+  processFramePre = function (vidPix, kwargs = {}, context) {
+    const { mediaURL = '' } = kwargs;
     if (this.mediaURL !== mediaURL && mediaURL != '') {
       this.mediaURL = mediaURL;
       this.doesMediaExist();

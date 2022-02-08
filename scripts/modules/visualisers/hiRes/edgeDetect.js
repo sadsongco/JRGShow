@@ -8,7 +8,8 @@ export class edgeDetect extends Visualiser {
     this.convMatrix = [-1, -1, -1, -1, 8, -1, -1, -1, -1];
   }
 
-  processPixels = function (pixIdx, pixVals, { vx, vy, brighten = 0, lyrOpacity = 1, negThresh = 0, procSource = 'Video In', ...kwargs } = {}, context) {
+  processPixels = function (pixIdx, pixVals, kwargs = {}, context) {
+    let { vx, vy, brighten = 0, lyrOpacity = 1, negThresh = 0, procSource = 'Video In' } = kwargs;
     const pixLeft = (vy * context.cnv.width + vx - 1) * 4;
     const pixRight = (vy * context.cnv.width + vx + 1) * 4;
     const pixUp = ((vy - 1) * context.cnv.width + vx) * 4;

@@ -105,6 +105,7 @@ class ProcessCanvas {
         const pixIdx = (vy * this.cnv.width + vx) * 4;
         let randIdx = pixIdx % data.rand.length;
         let pixVals = getPixelValues(pixIdx, this.vidPixels.data);
+        this.cnvPixVals = getPixelValues(pixIdx, this.cnvPixels.data);
         for (let i = 0; i < this.visChainLength; i++) {
           const module = this.currentVisChain[i];
           // include module parameters in arguments
