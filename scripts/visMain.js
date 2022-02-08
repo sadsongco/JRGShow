@@ -2,7 +2,7 @@
 import { htmlToElement } from "./modules/util/utils.js";
 
 // import default settings
-import { VisOutputEngine } from "./modules/common/visOutputEngine.js"
+import { VisOutputEngine } from './classes/VisOutputEngine.js';
 
 // CONTROLLER VARIABLES
 let currTrack = {

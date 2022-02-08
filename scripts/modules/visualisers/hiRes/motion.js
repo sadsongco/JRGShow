@@ -1,6 +1,6 @@
-import { Visualiser } from '../../../_prototype/modules/visualisers/Visualiser.js';
-import { greyscaleCalc } from '../../util/utils.js';
-import Vector from '../../../classes/Vector.js';
+import { Visualiser } from '/scripts/modules/visualisers/Visualiser.js';
+import { greyscaleCalc } from '/scripts/modules/util/utils.js';
+import Vector from '/scripts/classes/Vector.js';
 
 export class motion extends Visualiser {
   constructor() {

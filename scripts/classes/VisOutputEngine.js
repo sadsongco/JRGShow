@@ -1,9 +1,9 @@
-import { importModules } from './importModules.js';
-import { setupVisualiserCanvas } from './setupVisualisers.js';
-import { dynamicGenerator, pseudoRandomGenerator } from '../util/generators.js';
-import { AudioEngine } from './audioEngine.js';
+import { importModules } from '../modules/common/importModules.js';
+import { setupVisualiserCanvas } from '../modules/common/setupVisualisers.js';
+import { dynamicGenerator, pseudoRandomGenerator } from '../modules/util/generators.js';
+import { AudioEngine } from './AudioEngine.js';
 import { ExtMediaEngine } from './ExtMediaEngine.js';
-import vignetteMask from '../util/vignetteMask.js';
+import vignetteMask from '../modules/util/vignetteMask.js';
 
 /**
  * @class Class that sets up and processes the HTML5 canvas, processing visuals according to the

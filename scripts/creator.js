@@ -9,7 +9,7 @@ import { outputParameters, outputParamVals } from './modules/parameters/outputPa
 import { rgbToHex, hexToRgb } from './modules/util/utils.js';
 
 // import visualiser engine for preview
-import { VisOutputEngine } from './modules/common/VisOutputEngine.js';
+import { VisOutputEngine } from './classes/VisOutputEngine.js';
 
 /**
  * Adds a visualiser to a screen slot
