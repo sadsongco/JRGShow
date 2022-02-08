@@ -1,7 +1,7 @@
 import { Visualiser } from '../Visualiser.js';
 import { greyscaleCalc } from '../../util/utils.js';
 
-export const bitwiseN = class extends Visualiser {
+export const threshold = class extends Visualiser {
   processPixels = function (pixIdx, pixVals, kwargs = {}, context) {
     // setup visualiser parameters with default values
     let { threshold = 100 } = kwargs;

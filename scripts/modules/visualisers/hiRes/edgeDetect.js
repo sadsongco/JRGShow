@@ -8,7 +8,7 @@ export class edgeDetect extends Visualiser {
     this.convMatrix = [-1, -1, -1, -1, 8, -1, -1, -1, -1];
   }
 
-  processPixels = function (pixIdx, pixVals, { vx, vy, brighten = 0, lyrOpacity = 1, negThresh = 0, ...kwargs } = {}, context) {
+  processPixels = function (pixIdx, pixVals, { vx, vy, brighten = 0, lyrOpacity = 1, negThresh = 0, procSource = 'Video In', ...kwargs } = {}, context) {
     const pixLeft = (vy * context.cnv.width + vx - 1) * 4;
     const pixRight = (vy * context.cnv.width + vx + 1) * 4;
     const pixUp = ((vy - 1) * context.cnv.width + vx) * 4;
@@ -19,14 +19,14 @@ export class edgeDetect extends Visualiser {
     const pixDownRight = ((vy - 1) * context.cnv.width + vx + 1) * 4;
 
     const cnvCol = [context.cnvPixels.data[pixIdx + 0], context.cnvPixels.data[pixIdx + 1], context.cnvPixels.data[pixIdx + 2]];
+    const sourcePixels = procSource === 'Prev Module' ? context.cnvPixels.data : context.vidPixels.data;
 
-    let pR = context.vidPixels.data[pixUpLeft + 0] * this.convMatrix[0] + context.vidPixels.data[pixUp + 0] * this.convMatrix[1] + context.vidPixels.data[pixUpRight + 0] * this.convMatrix[2] + context.vidPixels.data[pixLeft + 0] * this.convMatrix[3] + context.vidPixels.data[pixIdx + 0] * this.convMatrix[4] + context.vidPixels.data[pixRight + 0] * this.convMatrix[5] + context.vidPixels.data[pixDownLeft + 0] * this.convMatrix[6] + context.vidPixels.data[pixDown + 0] * this.convMatrix[7] + context.vidPixels.data[pixDownRight + 0] * this.convMatrix[8];
-    let pG = context.vidPixels.data[pixUpLeft + 1] * this.convMatrix[0] + context.vidPixels.data[pixUp + 1] * this.convMatrix[1] + context.vidPixels.data[pixUpRight + 1] * this.convMatrix[2] + context.vidPixels.data[pixLeft + 1] * this.convMatrix[3] + context.vidPixels.data[pixIdx + 1] * this.convMatrix[4] + context.vidPixels.data[pixRight + 1] * this.convMatrix[5] + context.vidPixels.data[pixDownLeft + 1] * this.convMatrix[6] + context.vidPixels.data[pixDown + 1] * this.convMatrix[7] + context.vidPixels.data[pixDownRight + 1] * this.convMatrix[8];
-    let pB = context.vidPixels.data[pixUpLeft + 2] * this.convMatrix[0] + context.vidPixels.data[pixUp + 2] * this.convMatrix[1] + context.vidPixels.data[pixUpRight + 2] * this.convMatrix[2] + context.vidPixels.data[pixLeft + 2] * this.convMatrix[3] + context.vidPixels.data[pixIdx + 2] * this.convMatrix[4] + context.vidPixels.data[pixRight + 2] * this.convMatrix[5] + context.vidPixels.data[pixDownLeft + 2] * this.convMatrix[6] + context.vidPixels.data[pixDown + 2] * this.convMatrix[7] + context.vidPixels.data[pixDownRight + 2] * this.convMatrix[8];
+    let pR = sourcePixels[pixUpLeft + 0] * this.convMatrix[0] + sourcePixels[pixUp + 0] * this.convMatrix[1] + sourcePixels[pixUpRight + 0] * this.convMatrix[2] + sourcePixels[pixLeft + 0] * this.convMatrix[3] + sourcePixels[pixIdx + 0] * this.convMatrix[4] + sourcePixels[pixRight + 0] * this.convMatrix[5] + sourcePixels[pixDownLeft + 0] * this.convMatrix[6] + sourcePixels[pixDown + 0] * this.convMatrix[7] + sourcePixels[pixDownRight + 0] * this.convMatrix[8];
+    let pG = sourcePixels[pixUpLeft + 1] * this.convMatrix[0] + sourcePixels[pixUp + 1] * this.convMatrix[1] + sourcePixels[pixUpRight + 1] * this.convMatrix[2] + sourcePixels[pixLeft + 1] * this.convMatrix[3] + sourcePixels[pixIdx + 1] * this.convMatrix[4] + sourcePixels[pixRight + 1] * this.convMatrix[5] + sourcePixels[pixDownLeft + 1] * this.convMatrix[6] + sourcePixels[pixDown + 1] * this.convMatrix[7] + sourcePixels[pixDownRight + 1] * this.convMatrix[8];
+    let pB = sourcePixels[pixUpLeft + 2] * this.convMatrix[0] + sourcePixels[pixUp + 2] * this.convMatrix[1] + sourcePixels[pixUpRight + 2] * this.convMatrix[2] + sourcePixels[pixLeft + 2] * this.convMatrix[3] + sourcePixels[pixIdx + 2] * this.convMatrix[4] + sourcePixels[pixRight + 2] * this.convMatrix[5] + sourcePixels[pixDownLeft + 2] * this.convMatrix[6] + sourcePixels[pixDown + 2] * this.convMatrix[7] + sourcePixels[pixDownRight + 2] * this.convMatrix[8];
 
     const grayscale = greyscaleCalc([pR, pG, pB]);
-    if (grayscale < negThresh)
-        lyrOpacity = 0;
+    if (grayscale < negThresh) lyrOpacity = 0;
 
     const [oR, oG, oB] = alphaBlend([...cnvCol, 255], [pR << brighten, pG << brighten, pB << brighten, lyrOpacity]);
 
@@ -37,19 +37,28 @@ export class edgeDetect extends Visualiser {
 
   params = [
     {
-        name: 'lyrOpacity',
-        displayName: 'Layer Opacity',
-        type: 'val',
-        range: [0, 1],
-        step: 0.1,
-        value: 1,
-      },    {
-        name: 'negThresh',
-        displayName: 'Threshold',
-        type: 'val',
-        range: [0, 255],
-        value: 0,
-      },
+      name: 'procSource',
+      displayName: 'Processing Source',
+      type: 'select',
+      options: ['Video In', 'Prev Module'],
+      value: 'Video In',
+      tooltip: 'Using the Prev Module as the source allows you to threshold what is already showing. Using Video In as the source overlays thresholded video onto what is already showing',
+    },
+    {
+      name: 'lyrOpacity',
+      displayName: 'Layer Opacity',
+      type: 'val',
+      range: [0, 1],
+      step: 0.1,
+      value: 1,
+    },
+    {
+      name: 'negThresh',
+      displayName: 'Threshold',
+      type: 'val',
+      range: [0, 255],
+      value: 0,
+    },
     {
       name: 'brighten',
       displayName: 'Brighten',

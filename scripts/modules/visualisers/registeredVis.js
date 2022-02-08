@@ -2,11 +2,11 @@ export const visList = [
   {
     visGroup: 'bitwise',
     visualisers: [
-      { name: 'bitwiseN' },
+      // { name: 'bitwiseN' },
       { name: 'bitwise1' },
       // {name: "dynTest"},
       // {name: "bitwise2"},
-      // {name: "bitwiseBrighten"},
+      { name: 'bitwiseBrighten' },
       // {name: "specLoading"},
     ],
   },
@@ -24,7 +24,7 @@ export const visList = [
       //         {name: "gradReveal"},
       { name: 'motion' },
       { name: 'screenPainter' },
-      //         {name: "threshold"},
+      { name: 'threshold' },
     ],
   },
   {
