@@ -3,6 +3,7 @@ import { Visualiser } from '/scripts/modules/visualisers/Visualiser.js';
 export const videoFile = class extends Visualiser {
   // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Synchronous_and_Asynchronous_Requests
   doesMediaExist = async function () {
+    console.log(`videoFile ${this.chainIdx} doesMediaExist for ${this.mediaPath + this.mediaURL}`);
     const xhr = new XMLHttpRequest();
     xhr.open('GET', this.mediaPath + this.mediaURL, true);
     xhr.onload = (e) => {
@@ -12,24 +13,30 @@ export const videoFile = class extends Visualiser {
           return true;
         } else {
           this.mediaLoaded = false;
+          console.log(`videoFile ${this.chainIdx} posting message false`);
           postMessage({
             videoFile: false,
+            chainIdx: this.chainIdx,
           });
         }
       }
     };
     xhr.onerror = function (e) {
       this.mediaLoaded = false;
+      console.log(`videoFile ${this.chainIdx} posting message false`);
       postMessage({
         videoFile: false,
+        chainIdx: this.chainIdx,
       });
     };
     xhr.send(null);
   };
 
   initialiseVideo = async function () {
+    console.log(`videoFile ${this.chainIdx} posting message true`);
     postMessage({
       videoFile: this.mediaPath + this.mediaURL,
+      chainIdx: this.chainIdx,
     });
     this.mediaLoaded = true;
   };
@@ -42,6 +49,7 @@ export const videoFile = class extends Visualiser {
   }
 
   processFramePre = function (vidPix, kwargs = {}, context) {
+    this.chainIdx = kwargs.idx;
     const { mediaURL = '' } = kwargs;
     if (this.mediaURL !== mediaURL && mediaURL != '') {
       this.mediaURL = mediaURL;
@@ -64,7 +72,7 @@ export const videoFile = class extends Visualiser {
       displayName: 'Video file name',
       type: 'text',
       value: '',
-      tooltip: "Put a video file for display into the 'userMedia' directory, then select it by typing the full file name here",
+      tooltip: "Put a video file for display into the 'userMedia' directory, then select it by typing the full file name here. ***IN THE CURRENT ITERATION ONLY ONE OF THESE VISUALISERS WILL WORK AT A TIME IN THE CHAIN***",
     },
     {
       name: 'compMethod',

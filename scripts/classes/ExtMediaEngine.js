@@ -8,8 +8,12 @@ export const ExtMediaEngine = class {
    * Initialise video parameters and set event listeners for loading of source video
    * @param {Object<Integer, Integer>} params - total number of subcanvases and the master canvas width
    */
-  constructor({ numWorkers, targetWidth }) {
+  constructor(numWorkers, targetWidth, idx) {
+    this.idx = idx;
     this.videoEl = document.createElement('video'); // DOM element to hold external video
+    this.videoEl.setAttribute('preload', 'auto');
+    this.videoEl.setAttribute('loop', 'loop');
+    this.videoEl.setAttribute('muted', 'true');
     this.validMedia = false; // public variable showing whether there is a viable external media source
     this.metaDataLoaded = false;
     this.videoReady = false;
@@ -46,6 +50,7 @@ export const ExtMediaEngine = class {
    * Setter for video source
    */
   set videoSrc(url) {
+    this.videoReady = false;
     this.videoEl.setAttribute('src', url);
   }
 
@@ -60,11 +65,16 @@ export const ExtMediaEngine = class {
    * Setter for if the video source exists
    */
   set validURL(val) {
+    // https://developers.google.com/web/updates/2017/06/play-request-was-interrupted
+    console.log(`validURL engine ${this.idx}, ${val}`);
     this.validMedia = val;
     if (this.validMedia) {
-      this.videoEl.play();
-      this.videoEl.setAttribute('loop', 'loop');
-      this.videoEl.setAttribute('muted', 'muted');
+      let playPromise = this.videoEl.play();
+      if (playPromise !== undefined) {
+        playPromise.then((_) => {
+          this.videoReady = true;
+        });
+      }
     } else this.videoEl.pause();
   }
 
@@ -74,6 +84,9 @@ export const ExtMediaEngine = class {
    * @returns {Promise<ImageBitmap>}
    */
   getFrame = async function ({ worker, resizeWidth, resizeHeight }) {
+    // console.log(worker, resizeWidth, resizeHeight);
+    // console.log(this.videoSrc);
+    // console.log(this.videoReady);
     if (this.videoReady) {
       const vid = await createImageBitmap(this.videoEl, 0, worker * this.subCnvHeight, this.videoEl.videoWidth, this.subCnvHeight, {
         resizeWidth: resizeWidth,

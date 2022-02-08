@@ -36,9 +36,16 @@ class ProcessCanvas {
    */
   setCurrentVisChain = (currentVisChain) => {
     this.currentVisChain = currentVisChain;
-    // console.log(this.currentVisChain)
     this.visChainLength = this.currentVisChain.length;
   };
+
+  /**
+   * Update parameters of visualiser in the chain
+   * @param {Object} params - index of visualiser in chain to update, parameters
+   */
+  setParameters = ({idx, params}) => {
+    this.currentVisChain[idx].params = params;
+  }
 
   /**
    * Setter for this.outputSettings
@@ -84,18 +91,23 @@ class ProcessCanvas {
    */
   draw(data) {
     this.drawBackground();
+    const filledVisModules = [];
+    this.currentVisChain.map((visModule, idx) => {
+      if (visModule) filledVisModules.push(idx);
+    })
     // set params, once per frame, included in processFramePre loop
     const visParams = [];
-    for (let i = 0; i < this.visChainLength; i++) {
+    for (let i of filledVisModules) {
       const module = this.currentVisChain[i];
       visParams[i] = { ...module.params };
       const kwargs = visParams[i];
+      kwargs.idx = i;
       kwargs.dyn = data.dyn;
       kwargs.audioInfo = data.audioInfo;
-      if (data.extVideoFrame) {
-        kwargs.extVideoFrame = data.extVideoFrame;
+      if (data.extVideoFrames) {
+        // console.log(data.extVideoFrames);
+        kwargs.extVideoFrame = data.extVideoFrames[i];
       }
-      // console.log(data.extVideoFrame)
       this.visualiserModules[module.name].processFramePre(data.videoFrame, kwargs, this);
     }
     this.vidPixels = data.videoPixels;
@@ -106,7 +118,7 @@ class ProcessCanvas {
         let randIdx = pixIdx % data.rand.length;
         let pixVals = getPixelValues(pixIdx, this.vidPixels.data);
         this.cnvPixVals = getPixelValues(pixIdx, this.cnvPixels.data);
-        for (let i = 0; i < this.visChainLength; i++) {
+        for (let i of filledVisModules) {
           const module = this.currentVisChain[i];
           // include module parameters in arguments
           const kwargs = visParams[i];
@@ -121,7 +133,7 @@ class ProcessCanvas {
       }
     }
     this.cnvContext.putImageData(this.cnvPixels, 0, 0);
-    for (let i = 0; i < this.visChainLength; i++) {
+    for (let i of filledVisModules) {
       const module = this.currentVisChain[i];
       visParams[i] = { ...module.params };
       const kwargs = visParams[i];

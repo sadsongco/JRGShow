@@ -4,6 +4,7 @@ import { dynamicGenerator, pseudoRandomGenerator } from '../modules/util/generat
 import { AudioEngine } from './AudioEngine.js';
 import { ExtMediaEngine } from './ExtMediaEngine.js';
 import vignetteMask from '../modules/util/vignetteMask.js';
+import { TextDisplayEngine } from './TextDisplayEngine.js';
 
 /**
  * @class Class that sets up and processes the HTML5 canvas, processing visuals according to the
@@ -19,7 +20,9 @@ export const VisOutputEngine = class {
     this.vidPos = {}; // for scaling video input
     this.vignetteMask = []; // will hold pixel opacity mask for vignette - global because calculated on whole canvas
     this.previewSize = 1; // relative size of output canvas to desired output size
-    this.extMediaEngine = null; // class instance for managing external media
+    // this.extMediaEngine = null; // class instance for managing external media
+    this.engines = []; // to hold external class engines for special cases that can't be processed within workers
+    this.enginesReady = true; // to stop render when engines are initialising
 
     // processing
     this.audioAnalysis = []; // will hold frequency and volume analysis for each frame
@@ -51,8 +54,20 @@ export const VisOutputEngine = class {
    * @param {Array} currentVisChain - objects of visualiser processors
    */
   setCurrentVisChain = (currentVisChain) => {
-    const messageBody = { task: 'setCurrentVisChain', data: [...currentVisChain.filter((vis) => vis != undefined)] };
-    this.currentVisChain = messageBody.data;
+    // console.log(currentVisChain);
+    // const workerVisChain = [...currentVisChain.filter((vis) => vis != undefined)];
+    // if (workerVisChain.length > 0) this.doDraw = true;
+    // else this.doDraw = false;
+    const messageBody = { task: 'setCurrentVisChain', data: currentVisChain };
+    this.currentVisChain = currentVisChain;
+    for (let i = 0; i < this.numWorkers; i++) {
+      this.workers[i].postMessage(messageBody);
+    }
+  };
+
+  setParameters = (idx, params) => {
+    this.currentVisChain[idx].params = params;
+    const messageBody = { task: 'setParameters', data: { idx: idx, params: params } };
     for (let i = 0; i < this.numWorkers; i++) {
       this.workers[i].postMessage(messageBody);
     }
@@ -75,6 +90,10 @@ export const VisOutputEngine = class {
     return await importModules();
   };
 
+  /**
+   * Sets the debug status of the visualiser and updates DOM accordingly
+   * @param {Boolean} debug
+   */
   setDebug = (debug) => {
     if (debug) {
       this.fr.style.visibility = 'visible';
@@ -84,6 +103,25 @@ export const VisOutputEngine = class {
       this.info.style.visibility = 'hidden';
     }
     this.debug = debug;
+  };
+
+  addVis = (vis, idx) => {
+    this.currentVisChain[idx] = vis;
+    this.workers.map((worker) => worker.postMessage({ task: 'setCurrentVisChain', data: this.currentVisChain }));
+    switch (vis.name) {
+      case 'videoFile':
+        // make sure garbage collector cleans up any previous engine instances
+        this.engines[idx] = null;
+        this.engines[idx] = new ExtMediaEngine(this.numWorkers, this.cnv.width, idx);
+        this.enginesReady = false;
+        break;
+    }
+  };
+
+  removeVis = (idx) => {
+    this.currentVisChain[idx] = null;
+    this.engines[idx] = null;
+    this.workers.map((worker) => worker.postMessage({ task: 'setCurrentVisChain', data: this.currentVisChain }));
   };
 
   setupWorkers = async () => {
@@ -157,7 +195,10 @@ export const VisOutputEngine = class {
     // set up canvas and video contexts
     this.cnvContext = this.cnv.getContext('2d');
     this.vidContext = this.vidCnv.getContext('2d');
-    this.extMediaEngine = new ExtMediaEngine({ numWorkers: this.numWorkers, targetWidth: this.cnv.width });
+    // TODO - instatiate media and text engines per module of this type
+    // as is, only one module will work in a chain
+    // this.extMediaEngine = new ExtMediaEngine(this.numWorkers, this.cnv.width);
+    this.textDisplayEngine = new TextDisplayEngine({ numWorkers: this.numWorkers, width: this.cnv.width, height: this.cnv.height });
 
     // setup audio context and engine
     this.audioContext = new AudioContext();
@@ -198,13 +239,16 @@ export const VisOutputEngine = class {
           const URLinput = document.getElementById('videoFile-mediaURL');
           if (e.data.videoFile === false) {
             URLinput.classList.add('invalidURL');
-            this.extMediaEngine.videoSrc = '';
-            this.extMediaEngine.validURL = false;
+            this.engines[e.data.chainIdx].videoSrc = '';
+            console.log(`visOutputEngine calling validURL ${e.data.chainIdx} with false`);
+            this.engines[e.data.chainIdx].validURL = false;
+            this.enginesReady = false;
             return;
           } else {
-            if (this.extMediaEngine.videoSrc !== e.data.videoFile) {
-              this.extMediaEngine.videoSrc = e.data.videoFile;
-              this.extMediaEngine.validURL = true;
+            if (this.engines[e.data.chainIdx].videoSrc !== e.data.videoFile) {
+              this.engines[e.data.chainIdx].videoSrc = e.data.videoFile;
+              console.log(`visOutputEngine calling validURL ${e.data.chainIdx} with true`);
+              this.engines[e.data.chainIdx].validURL = true;
               URLinput.classList.remove('invalidURL');
               return;
             }
@@ -214,12 +258,32 @@ export const VisOutputEngine = class {
     });
   };
 
+  getExtFrames = async ({ worker, resizeWidth, resizeHeight }) => {
+    let extFrames = [];
+    this.engines.map((engine, idx) => {
+      if (engine?.videoReady)
+        extFrames[idx] = engine.getFrame({
+          worker: worker,
+          resizeWidth: resizeWidth,
+          resizeHeight: resizeHeight,
+        });
+      else extFrames[idx] = false;
+    });
+    return await Promise.all(extFrames);
+  };
+
   /**
    * Draw loop - called every frame
    */
   drawCanvas = async () => {
     const drawFrame = async (timestamp) => {
-      if (this.visReady && this.currentVisChain.length > 0) {
+      // console.log(this.engines);
+      let enginesReady = true;
+      for (let engine of this.engines) {
+        if (engine && !engine?.videoReady) enginesReady = false;
+      }
+      this.enginesReady = enginesReady;
+      if (this.visReady) {
         const dyn = dynamicGenerator(this.frameCount);
         const rand = pseudoRandomGenerator();
         this.audioAnalysis = this.audioEngine.getAudioAnalysis();
@@ -233,6 +297,13 @@ export const VisOutputEngine = class {
             resizeHeight: subcnvParams.drawHeight,
             resizeQuality: 'low',
           });
+          let extVideoFrames;
+          if (this.enginesReady)
+            extVideoFrames = await this.getExtFrames({
+              worker: i,
+              resizeWidth: this.cnv.width,
+              resizeHeight: subcnvParams.drawHeight,
+            });
           workerJobs.push(
             this.invokeWorker(
               this.workers[i],
@@ -241,11 +312,7 @@ export const VisOutputEngine = class {
                 data: {
                   index: (this.frameCount + i) % 4,
                   videoFrame: videoFrame,
-                  extVideoFrame: await this.extMediaEngine.getFrame({
-                    worker: i,
-                    resizeWidth: this.cnv.width,
-                    resizeHeight: subcnvParams.drawHeight,
-                  }),
+                  extVideoFrames: extVideoFrames,
                   videoPixels: videoPixels,
                   dyn: dyn,
                   rand: rand,
@@ -263,9 +330,17 @@ export const VisOutputEngine = class {
         this.frametimes.push(timestamp);
         this.frameRate = this.frametimes.length;
         this.fr.innerText = this.frameRate;
-        this.info.innerText = `workers: ${this.numWorkers} | canvas dimensions ${this.cnv.width} x ${this.cnv.height} | vis chain length ${this.currentVisChain.length}`;
+        this.info.innerText = `workers: ${this.numWorkers}
+        canvas dimensions ${this.cnv.width} x ${this.cnv.height}
+        vis chain length ${this.currentVisChain.length}
+        visReady = ${this.visReady}
+        enginesReady = ${this.enginesReady}`;
       }
       this.frameCount++;
+      // framerate throttle when debugging
+      // setTimeout(() => {
+      //   requestAnimationFrame(drawFrame);
+      // }, 1000 / 1);
       requestAnimationFrame(drawFrame);
     };
     requestAnimationFrame(drawFrame);

@@ -25,12 +25,15 @@ const addModule = (e) => {
   Object.values(visualiserModules[visualiserSelector.value].params).map((param) => (paramsObj[param.name] = param.value));
   visObj.params = paramsObj;
   currentVisChain[selectedSlot.dataset.visIdx] = visObj;
+  visOutputEngine.addVis(visObj, selectedSlot.dataset.visIdx);
+  switch (visualiserSelector.value) {
+    case 'videoFile':
+  }
   // update screen module
   selectedSlot.innerText = visualiserSelector.value;
   selectedSlot.filled = true;
   selectedSlot.classList.add('slot-filled');
   setOutputPath();
-  visOutputEngine.setCurrentVisChain(currentVisChain);
   showParams(selectedSlot.dataset.visIdx);
 };
 
@@ -160,14 +163,14 @@ const updateParameter = (e) => {
   const names = e.target.name.split('-');
   const moduleName = names[0],
     paramName = names[1];
+  const visIdx = selectedSlot.dataset.visIdx;
   let newValue = getParameterValue(e);
   if (moduleName === 'Output') {
     outputSettings[paramName] = newValue;
   } else {
-    const visIdx = selectedSlot.dataset.visIdx;
     currentVisChain[visIdx].params[paramName] = newValue;
   }
-  moduleName === 'Output' ? visOutputEngine.setOutputSettings(outputSettings) : visOutputEngine.setCurrentVisChain(currentVisChain);
+  moduleName === 'Output' ? visOutputEngine.setOutputSettings(outputSettings) : visOutputEngine.setParameters(visIdx, currentVisChain[visIdx].params);
   // hacky - didn't realise I'd need a type until much later
   const paramType = paramName.split('_')[paramName.split('_').length - 1];
   if (paramType === 'col') {
@@ -226,15 +229,14 @@ const updateSlots = () => {
       currSlot.classList.add('slot-filled');
       currFilledSlots[currSlot.dataset.visIdx] = currSlot;
       visualiserSelector.value = currVis.name;
+      visOutputEngine.addVis(currVis, visIdx);
     } else {
       currSlot.innerText = 'Empty Slot';
     }
   }
   currSlot.classList.add('slot-selected');
   setOutputPath();
-  visOutputEngine.setCurrentVisChain(currentVisChain);
   showParams(selectedSlot.dataset.visIdx);
-  showParams(visualiserSelector.value);
 };
 
 /**
@@ -242,13 +244,15 @@ const updateSlots = () => {
  */
 const clearSlot = () => {
   if (!selectedSlot) return;
+  // remove from visualiser chain
   currentVisChain[selectedSlot.dataset.visIdx] = null;
+  visOutputEngine.removeVis(selectedSlot.dataset.visIdx);
+  // updateUI
   selectedSlot.innerText = 'Empty Slot';
   selectedSlot.filled = false;
   selectedSlot.classList.remove('slot-filled');
   clearParams();
   setOutputPath();
-  visOutputEngine.setCurrentVisChain(currentVisChain);
 };
 
 /**
