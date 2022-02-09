@@ -13,6 +13,8 @@
 }
 
 canvas {
+  margin: 0;
+  padding: 0;
   z-index: 1;
 }
 
@@ -21,7 +23,7 @@ canvas {
   position: relative;
   height: auto;
   z-index: 1;
-  opacity: 0;
+  opacity: 1;
 }
 
 #visTitle {
@@ -62,37 +64,28 @@ canvas {
   z-index: 2;
 }
 
-#fr {
+#fr, #info {
   position: absolute;
   background-color: #222;
   color: #e22;
-  left: 0;
-  bottom: 30px;
-  height: 20px;
-  width: auto;
-  padding: 5px 20px;
-  font-size: 14px;
-}
-
-#info {
-  position: absolute;
-  background-color: #222;
-  color: #e22;
-  right: 0px;
-  bottom: 30px;
-  height: 20px;
+  height: auto;
   width: auto;
   padding: 5px 20px;
   font-size: 14px;
   z-index: 2;
 }
 
-canvas {
-  /* background-color: black; */
-  margin: 0;
-  padding: 0;
-  z-index: 1;
+#fr {
+  left: 0;
+  bottom: 30px;
+
 }
+
+#info {
+  right: 0px;
+  bottom: 30px;
+}
+
 
 #ascii {
   position: absolute;

@@ -18,8 +18,6 @@ let currTrack = {
     visChain: []
 }
 
-let debug = false;
-
 // TARGET HTML ELEMENTS
 const visTitle = document.getElementById('visTitle');
 const visSource = document.getElementById('visSource');

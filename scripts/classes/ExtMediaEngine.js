@@ -11,9 +11,10 @@ export const ExtMediaEngine = class {
   constructor(numWorkers, targetWidth, idx) {
     this.idx = idx;
     this.videoEl = document.createElement('video'); // DOM element to hold external video
+    this.videoEl.muted = true;
     this.videoEl.setAttribute('preload', 'auto');
+    this.videoEl.setAttribute('autoplay', false);
     this.videoEl.setAttribute('loop', 'loop');
-    this.videoEl.setAttribute('muted', 'true');
     this.validMedia = false; // public variable showing whether there is a viable external media source
     this.metaDataLoaded = false;
     this.videoReady = false;
@@ -66,9 +67,9 @@ export const ExtMediaEngine = class {
    */
   set validURL(val) {
     // https://developers.google.com/web/updates/2017/06/play-request-was-interrupted
-    console.log(`validURL engine ${this.idx}, ${val}`);
     this.validMedia = val;
     if (this.validMedia) {
+      this.muted = true;
       let playPromise = this.videoEl.play();
       if (playPromise !== undefined) {
         playPromise.then((_) => {

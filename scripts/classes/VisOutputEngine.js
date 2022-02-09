@@ -54,15 +54,37 @@ export const VisOutputEngine = class {
    * @param {Array} currentVisChain - objects of visualiser processors
    */
   setCurrentVisChain = (currentVisChain) => {
-    // console.log(currentVisChain);
-    // const workerVisChain = [...currentVisChain.filter((vis) => vis != undefined)];
-    // if (workerVisChain.length > 0) this.doDraw = true;
-    // else this.doDraw = false;
     const messageBody = { task: 'setCurrentVisChain', data: currentVisChain };
     this.currentVisChain = currentVisChain;
     for (let i = 0; i < this.numWorkers; i++) {
       this.workers[i].postMessage(messageBody);
     }
+    // initialise engines
+    this.engines = [];
+    currentVisChain.map((vis, idx) => {
+      if (vis) {
+        switch (vis.name) {
+          case 'videoFile':
+            this.engines[idx] = new ExtMediaEngine(this.numWorkers, this.cnv.width, idx);
+            this.enginesReady = false;
+            this.workers.map((worker) =>
+              worker.postMessage({
+                task: 'updateVisData',
+                data: {
+                  idx: idx,
+                  data: vis.params.mediaURL,
+                },
+              })
+            );
+            break;
+        }
+      }
+    });
+    // const workerVisChain = [...currentVisChain.filter((vis) => vis != undefined)];
+    // if (workerVisChain.length > 0) this.doDraw = true;
+    // else this.doDraw = false;
+    // console.log(this.currentVisChain);
+    // console.log(this.engines);
   };
 
   setParameters = (idx, params) => {
@@ -107,7 +129,7 @@ export const VisOutputEngine = class {
 
   addVis = (vis, idx) => {
     this.currentVisChain[idx] = vis;
-    this.workers.map((worker) => worker.postMessage({ task: 'setCurrentVisChain', data: this.currentVisChain }));
+    this.workers.map((worker) => worker.postMessage({ task: 'addVis', data: { vis: vis, idx: idx } }));
     switch (vis.name) {
       case 'videoFile':
         // make sure garbage collector cleans up any previous engine instances
@@ -238,18 +260,19 @@ export const VisOutputEngine = class {
         if (Object.keys(e.data).includes('videoFile')) {
           const URLinput = document.getElementById('videoFile-mediaURL');
           if (e.data.videoFile === false) {
-            URLinput.classList.add('invalidURL');
+            // TODO - figure out how to move this to creator. js, it has no plaece here
+            if (URLinput) URLinput.classList.add('invalidURL');
             this.engines[e.data.chainIdx].videoSrc = '';
             console.log(`visOutputEngine calling validURL ${e.data.chainIdx} with false`);
             this.engines[e.data.chainIdx].validURL = false;
             this.enginesReady = false;
             return;
           } else {
-            if (this.engines[e.data.chainIdx].videoSrc !== e.data.videoFile) {
+            if (this.engines[e.data.chainIdx] && this.engines[e.data.chainIdx].videoSrc !== e.data.videoFile) {
               this.engines[e.data.chainIdx].videoSrc = e.data.videoFile;
-              console.log(`visOutputEngine calling validURL ${e.data.chainIdx} with true`);
               this.engines[e.data.chainIdx].validURL = true;
-              URLinput.classList.remove('invalidURL');
+              // TODO - figure out how to move this to creator. js, it has no plaece here
+              if (URLinput) URLinput.classList.remove('invalidURL');
               return;
             }
           }
