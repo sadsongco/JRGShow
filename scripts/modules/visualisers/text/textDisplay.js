@@ -5,7 +5,13 @@ import alphaBlend from '/scripts/modules/util/alphaBlend.js';
 export class textDisplay extends Visualiser {
   constructor() {
     super();
+    this.text = '';
   }
+
+  updateData = function (idx, data) {
+    this.chainIdx = idx;
+    this.text = data;
+  };
 
   /**
    * Manipulate the frame before the pixels have been processed.
@@ -16,7 +22,15 @@ export class textDisplay extends Visualiser {
    * @param {Object} kwargs - parameters passed to visualiser
    * @param {Object} context - methods and attributes of the parent web worker
    */
-  processFramePre = function (vidPixels, kwargs = {}, context) {};
+  processFramePre = function (vidPixels, kwargs = {}, context) {
+    const { extFrame } = kwargs;
+    if (extFrame) {
+      const { compMethod = 'source-over' } = kwargs;
+      context.cnvContext.globalCompositeOperation = compMethod;
+      context.cnvContext.drawImage(extFrame, 0, context.drawStart);
+      context.cnvContext.globalCompositeOperation = 'source-over';
+    }
+  };
 
   /**
    * Manipulate a specific pixel in the pixel array.
@@ -38,9 +52,9 @@ export class textDisplay extends Visualiser {
     let [pR, pG, pB] = bw ? [greyscale, greyscale, greyscale] : [iR, iG, iB];
     /* set output pixel values preserving alpha, put into pixel array */
     let [oR, oG, oB] = alphaBlend([...context.cnvPixVals, 255], [pR, pG, pB, lyrOpacity]);
-    context.cnvPixels.data[pixIdx + 0] = oR;
-    context.cnvPixels.data[pixIdx + 1] = oG;
-    context.cnvPixels.data[pixIdx + 2] = oB;
+    // context.cnvPixels.data[pixIdx + 0] = oR;
+    // context.cnvPixels.data[pixIdx + 1] = oG;
+    // context.cnvPixels.data[pixIdx + 2] = oB;
   };
 
   /**
@@ -59,18 +73,6 @@ export class textDisplay extends Visualiser {
    */
   params = [
     /**
-     * chooses whether the visualiser processes the current video input or the existing
-     * canvas contents from the previous visualiser module
-     */
-    {
-      name: 'procSource',
-      displayName: 'Processing Source',
-      type: 'select',
-      options: ['Video In', 'Prev Module'],
-      value: 'Video In',
-      tooltip: 'Using the Prev Module as the source allows you to threshold what is already showing. Using Video In as the source overlays thresholded video onto what is already showing',
-    },
-    /**
      * sets the opacity of the layer
      */
     {
@@ -83,11 +85,17 @@ export class textDisplay extends Visualiser {
       tooltip: 'How much the previous module, or background, will show through',
     },
     {
-      name: 'bw',
-      displayName: 'Black and White',
-      type: 'toggle',
-      value: false,
-      tooltip: 'Change the visualiser output to black and white',
+      name: 'textCol',
+      displayName: 'Text Colour',
+      type: 'colour',
+      value: '#ffffff',
+    },
+    {
+      name: 'text',
+      displayName: 'Display Text',
+      type: 'textarea',
+      value: '',
+      tooltip: '<TODO: Some tips on how to format text for display here>',
     },
   ];
 }

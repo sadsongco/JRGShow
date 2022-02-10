@@ -17,7 +17,7 @@ export const ExtMediaEngine = class {
     this.videoEl.setAttribute('loop', 'loop');
     this.validMedia = false; // public variable showing whether there is a viable external media source
     this.metaDataLoaded = false;
-    this.videoReady = false;
+    this.engineReady = false;
     this.numWorkers = numWorkers;
     this.targetWidth = targetWidth;
     this.subCnvHeight = 0;
@@ -34,7 +34,7 @@ export const ExtMediaEngine = class {
     this.videoEl.addEventListener(
       'canplay',
       (e) => {
-        if (this.validMedia && this.metaDataLoaded) this.videoReady = true;
+        if (this.validMedia && this.metaDataLoaded) this.engineReady = true;
       },
       false
     );
@@ -51,7 +51,7 @@ export const ExtMediaEngine = class {
    * Setter for video source
    */
   set videoSrc(url) {
-    this.videoReady = false;
+    this.engineReady = false;
     this.videoEl.setAttribute('src', url);
   }
 
@@ -73,7 +73,7 @@ export const ExtMediaEngine = class {
       let playPromise = this.videoEl.play();
       if (playPromise !== undefined) {
         playPromise.then((_) => {
-          this.videoReady = true;
+          this.engineReady = true;
         });
       }
     } else this.videoEl.pause();
@@ -87,8 +87,8 @@ export const ExtMediaEngine = class {
   getFrame = async function ({ worker, resizeWidth, resizeHeight }) {
     // console.log(worker, resizeWidth, resizeHeight);
     // console.log(this.videoSrc);
-    // console.log(this.videoReady);
-    if (this.videoReady) {
+    // console.log(this.engineReady);
+    if (this.engineReady) {
       const vid = await createImageBitmap(this.videoEl, 0, worker * this.subCnvHeight, this.videoEl.videoWidth, this.subCnvHeight, {
         resizeWidth: resizeWidth,
         resizeHeight: resizeHeight,

@@ -54,36 +54,24 @@ export const VisOutputEngine = class {
    * @param {Array} currentVisChain - objects of visualiser processors
    */
   setCurrentVisChain = (currentVisChain) => {
-    const messageBody = { task: 'setCurrentVisChain', data: currentVisChain };
-    this.currentVisChain = currentVisChain;
-    for (let i = 0; i < this.numWorkers; i++) {
-      this.workers[i].postMessage(messageBody);
-    }
+    // const messageBody = { task: 'setCurrentVisChain', data: currentVisChain };
+    // this.currentVisChain = currentVisChain;
+    // for (let i = 0; i < this.numWorkers; i++) {
+    //   this.workers[i].postMessage(messageBody);
+    // }
     // initialise engines
     this.engines = [];
     currentVisChain.map((vis, idx) => {
       if (vis) {
-        switch (vis.name) {
-          case 'videoFile':
-            this.engines[idx] = new ExtMediaEngine(this.numWorkers, this.cnv.width, idx);
-            this.enginesReady = false;
-            this.workers.map((worker) =>
-              worker.postMessage({
-                task: 'updateVisData',
-                data: {
-                  idx: idx,
-                  data: vis.params.mediaURL,
-                },
-              })
-            );
-            break;
-        }
+        this.addVis(vis, idx);
       }
     });
   };
 
   setParameters = (idx, params) => {
     this.currentVisChain[idx].params = params;
+    // ugly hack to get around the subcnv limitations of text display
+    if (this.currentVisChain[idx].name === 'textDisplay') this.engines[idx].setText(params.text);
     const messageBody = { task: 'setParameters', data: { idx: idx, params: params } };
     for (let i = 0; i < this.numWorkers; i++) {
       this.workers[i].postMessage(messageBody);
@@ -140,8 +128,22 @@ export const VisOutputEngine = class {
             },
           })
         );
-
         break;
+      case 'textDisplay':
+        // easiest for this one to just bypass the canvas workers completely
+        this.engines[idx] = null;
+        this.engines[idx] = new TextDisplayEngine({ numworkers: this.numWorkers, width: this.cnv.width, height: this.cnv.height });
+        document.body.appendChild(this.engines[idx].debugCanvas);
+        this.enginesReady = false;
+        this.workers.map((worker) =>
+          worker.postMessage({
+            task: 'updateVisData',
+            data: {
+              idx: idx,
+              data: vis.params.text,
+            },
+          })
+        );
     }
   };
 
@@ -222,10 +224,7 @@ export const VisOutputEngine = class {
     // set up canvas and video contexts
     this.cnvContext = this.cnv.getContext('2d');
     this.vidContext = this.vidCnv.getContext('2d');
-    // TODO - instatiate media and text engines per module of this type
-    // as is, only one module will work in a chain
-    // this.extMediaEngine = new ExtMediaEngine(this.numWorkers, this.cnv.width);
-    this.textDisplayEngine = new TextDisplayEngine({ numWorkers: this.numWorkers, width: this.cnv.width, height: this.cnv.height });
+    // this.textDisplayEngine = new TextDisplayEngine({ numWorkers: this.numWorkers, width: this.cnv.width, height: this.cnv.height });
 
     // setup audio context and engine
     this.audioContext = new AudioContext();
@@ -265,7 +264,8 @@ export const VisOutputEngine = class {
         if (Object.keys(e.data).includes('videoFile')) {
           const URLinput = document.getElementById('videoFile-mediaURL');
           if (e.data.videoFile === false) {
-            // TODO - figure out how to move this to creator. js, it has no plaece here
+            // TODO - figure out how to move this to creator. js, it has no place here
+            // maybe use Signal?
             if (URLinput) URLinput.classList.add('invalidURL');
             this.engines[e.data.chainIdx].videoSrc = '';
             this.engines[e.data.chainIdx].validURL = false;
@@ -275,7 +275,8 @@ export const VisOutputEngine = class {
             if (this.engines[e.data.chainIdx] && this.engines[e.data.chainIdx].videoSrc !== e.data.videoFile) {
               this.engines[e.data.chainIdx].videoSrc = e.data.videoFile;
               this.engines[e.data.chainIdx].validURL = true;
-              // TODO - figure out how to move this to creator. js, it has no plaece here
+              // TODO - figure out how to move this to creator. js, it has no place here
+              // maybe use Signal?
               if (URLinput) URLinput.classList.remove('invalidURL');
               return;
             }
@@ -288,7 +289,7 @@ export const VisOutputEngine = class {
   getExtFrames = async ({ worker, resizeWidth, resizeHeight }) => {
     let extFrames = [];
     this.engines.map((engine, idx) => {
-      if (engine?.videoReady)
+      if (engine?.engineReady)
         extFrames[idx] = engine.getFrame({
           worker: worker,
           resizeWidth: resizeWidth,
@@ -306,7 +307,7 @@ export const VisOutputEngine = class {
     const drawFrame = async (timestamp) => {
       let enginesReady = true;
       for (let engine of this.engines) {
-        if (engine && !engine?.videoReady) enginesReady = false;
+        if (engine && !engine?.engineReady) enginesReady = false;
       }
       this.enginesReady = enginesReady;
       if (this.visReady) {
@@ -323,9 +324,9 @@ export const VisOutputEngine = class {
             resizeHeight: subcnvParams.drawHeight,
             resizeQuality: 'low',
           });
-          let extVideoFrames;
+          let extFrames;
           if (this.enginesReady)
-            extVideoFrames = await this.getExtFrames({
+            extFrames = await this.getExtFrames({
               worker: i,
               resizeWidth: this.cnv.width,
               resizeHeight: subcnvParams.drawHeight,
@@ -338,7 +339,7 @@ export const VisOutputEngine = class {
                 data: {
                   index: (this.frameCount + i) % 4,
                   videoFrame: videoFrame,
-                  extVideoFrames: extVideoFrames,
+                  extFrames: extFrames,
                   videoPixels: videoPixels,
                   dyn: dyn,
                   rand: rand,

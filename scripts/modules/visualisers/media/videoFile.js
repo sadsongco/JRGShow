@@ -62,11 +62,11 @@ export const videoFile = class extends Visualiser {
       this.doesMediaExist();
     }
     if (this.mediaLoaded) {
-      const { extVideoFrame } = kwargs;
-      if (extVideoFrame) {
+      const { extFrame } = kwargs;
+      if (extFrame) {
         const { compMethod = 'source-over' } = kwargs;
         context.cnvContext.globalCompositeOperation = compMethod;
-        context.cnvContext.drawImage(extVideoFrame, 0, context.drawStart);
+        context.cnvContext.drawImage(extFrame, 0, context.drawStart);
         context.cnvContext.globalCompositeOperation = 'source-over';
       }
     }

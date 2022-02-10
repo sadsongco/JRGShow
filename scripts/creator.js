@@ -78,6 +78,17 @@ const createParamSelect = (param, paramVal, name) => {
   return selecter;
 };
 
+const createTextArea = (param, paramVal, name) => {
+  const textarea = document.createElement('textarea');
+  textarea.name = name;
+  textarea.rows = 10;
+  textarea.cols = 40;
+  textarea.autofocus = true;
+  textarea.addEventListener('change', updateParameter);
+  textarea.placeholder = paramVal || 'Enter text for display here';
+  return textarea;
+};
+
 /**
  * Display parameters for visualiser in selected module
  * @param {string} modName - module to show params of
@@ -138,6 +149,9 @@ const showParams = (visIdx) => {
       case 'select':
         paramEntry = createParamSelect(param, paramVals[param.name], `${modName}-${param.name}`);
         break;
+      case 'textarea':
+        paramEntry = createTextArea(param, paramVals[param.name], `${modName}-${param.name}`);
+        break;
       case 'text':
         paramEntry.type = 'text';
         if (param.name === 'mediaURL') paramEntry.classList.add('invalidURL');
@@ -151,6 +165,9 @@ const showParams = (visIdx) => {
     switch (param.type) {
       case 'colour':
         break;
+      case 'textarea':
+        if (paramVals[param.name]) paramVal.innerText = '[text]';
+        else break;
       default:
         paramVal.innerText = paramVals[param.name];
     }
@@ -180,8 +197,11 @@ const updateParameter = (e) => {
   const paramType = paramName.split('_')[paramName.split('_').length - 1];
   if (paramType === 'col') {
     // if it's a colour, convert back to hex before adding as the input value
-    newValue = rgbToHex(...newValue);
+    // newValue = rgbToHex(...newValue);
     return;
+  }
+  if (e.target.tagName.toLowerCase() === 'textarea') {
+    newValue = '[text]';
   }
   document.getElementById(`${e.target.name}-value`).innerText = newValue;
 };
@@ -199,8 +219,9 @@ const getParameterValue = (e) => {
     case 'color':
       return hexToRgb(e.target.value);
       break;
-    case 'select-one':
+    case 'textarea':
     case 'text':
+    case 'select-one':
       return e.target.value;
       break;
     default:

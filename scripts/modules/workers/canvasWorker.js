@@ -121,8 +121,8 @@ class ProcessCanvas {
       kwargs.idx = i;
       kwargs.dyn = data.dyn;
       kwargs.audioInfo = data.audioInfo;
-      if (data.extVideoFrames) {
-        kwargs.extVideoFrame = data.extVideoFrames[i];
+      if (data.extFrames) {
+        kwargs.extFrame = data.extFrames[i];
       }
       currVis.processFramePre(data.videoFrame, kwargs, this);
     }
