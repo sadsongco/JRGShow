@@ -80,11 +80,6 @@ export const VisOutputEngine = class {
         }
       }
     });
-    // const workerVisChain = [...currentVisChain.filter((vis) => vis != undefined)];
-    // if (workerVisChain.length > 0) this.doDraw = true;
-    // else this.doDraw = false;
-    // console.log(this.currentVisChain);
-    // console.log(this.engines);
   };
 
   setParameters = (idx, params) => {
@@ -136,6 +131,16 @@ export const VisOutputEngine = class {
         this.engines[idx] = null;
         this.engines[idx] = new ExtMediaEngine(this.numWorkers, this.cnv.width, idx);
         this.enginesReady = false;
+        this.workers.map((worker) =>
+          worker.postMessage({
+            task: 'updateVisData',
+            data: {
+              idx: idx,
+              data: vis.params.mediaURL,
+            },
+          })
+        );
+
         break;
     }
   };
@@ -263,7 +268,6 @@ export const VisOutputEngine = class {
             // TODO - figure out how to move this to creator. js, it has no plaece here
             if (URLinput) URLinput.classList.add('invalidURL');
             this.engines[e.data.chainIdx].videoSrc = '';
-            console.log(`visOutputEngine calling validURL ${e.data.chainIdx} with false`);
             this.engines[e.data.chainIdx].validURL = false;
             this.enginesReady = false;
             return;
@@ -300,7 +304,6 @@ export const VisOutputEngine = class {
    */
   drawCanvas = async () => {
     const drawFrame = async (timestamp) => {
-      // console.log(this.engines);
       let enginesReady = true;
       for (let engine of this.engines) {
         if (engine && !engine?.videoReady) enginesReady = false;
@@ -353,9 +356,10 @@ export const VisOutputEngine = class {
         this.frametimes.push(timestamp);
         this.frameRate = this.frametimes.length;
         this.fr.innerText = this.frameRate;
+        let activeVis = this.currentVisChain.filter(Boolean).length;
         this.info.innerText = `workers: ${this.numWorkers}
         canvas dimensions ${this.cnv.width} x ${this.cnv.height}
-        vis chain length ${this.currentVisChain.length}
+        vis chain length ${activeVis}
         visReady = ${this.visReady}
         enginesReady = ${this.enginesReady}`;
       }

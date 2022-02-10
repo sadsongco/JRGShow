@@ -1,6 +1,5 @@
 import { importModules } from '../common/importModules.js';
 import getPixelValues from '../util/getPixelValues.js';
-import parseParams from '../common/parseParams.js';
 
 /**
  * @class Class for drawing to a canvas each frame
@@ -49,7 +48,7 @@ class ProcessCanvas {
 
   instantiateVis = (vis, idx) => {
     this.currentVisChain[idx] = new this.visualiserModules[vis.name][vis.name]();
-    parseParams(this.currentVisChain[idx], true);
+    this.currentVisChain[idx].params = vis.params;
 
     if (this.currentVisChain[idx].setup) {
       this.currentVisChain[idx].setup({

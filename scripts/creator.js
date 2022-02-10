@@ -132,7 +132,8 @@ const showParams = (visIdx) => {
         break;
       case 'colour':
         paramEntry.type = 'color';
-        paramEntry.value = paramVals[param.name];
+        if (Array.isArray(paramVals[param.name])) paramEntry.value = rgbToHex(...paramVals[param.name]);
+        else paramEntry.value = paramVals[param.name];
         break;
       case 'select':
         paramEntry = createParamSelect(param, paramVals[param.name], `${modName}-${param.name}`);
