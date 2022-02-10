@@ -165,11 +165,13 @@ const showParams = (visIdx) => {
     switch (param.type) {
       case 'colour':
         break;
-      case 'textarea':
-        if (paramVals[param.name]) paramVal.innerText = '[text]';
-        else break;
       default:
         paramVal.innerText = paramVals[param.name];
+    }
+    if (paramEntry.tagName.toLowerCase() === 'textarea') {
+      paramEntry.innerText = paramVals[param.name];
+      if (paramVals[param.name]) paramVal.innerText = '[text]';
+      else paramVal.innerText = '';
     }
     paramContainer.appendChild(paramVal);
   }
@@ -538,4 +540,13 @@ window.onload = async () => {
   loading.ontransitionend = () => {
     loading.style.visibility = 'hidden';
   };
+};
+
+window.onkeydown = function (e) {
+  const key = e.key ? e.key : e.which;
+  if (key === 'Enter') {
+    if (document.activeElement.name.split('-')[0] === 'textDisplay') {
+      updateParameter({ target: document.activeElement });
+    }
+  }
 };

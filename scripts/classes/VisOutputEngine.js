@@ -54,11 +54,6 @@ export const VisOutputEngine = class {
    * @param {Array} currentVisChain - objects of visualiser processors
    */
   setCurrentVisChain = (currentVisChain) => {
-    // const messageBody = { task: 'setCurrentVisChain', data: currentVisChain };
-    // this.currentVisChain = currentVisChain;
-    // for (let i = 0; i < this.numWorkers; i++) {
-    //   this.workers[i].postMessage(messageBody);
-    // }
     // initialise engines
     this.engines = [];
     currentVisChain.map((vis, idx) => {
@@ -71,7 +66,7 @@ export const VisOutputEngine = class {
   setParameters = (idx, params) => {
     this.currentVisChain[idx].params = params;
     // ugly hack to get around the subcnv limitations of text display
-    if (this.currentVisChain[idx].name === 'textDisplay') this.engines[idx].setText(params.text);
+    if (this.currentVisChain[idx].name === 'textDisplay') this.engines[idx].setParams(params);
     const messageBody = { task: 'setParameters', data: { idx: idx, params: params } };
     for (let i = 0; i < this.numWorkers; i++) {
       this.workers[i].postMessage(messageBody);
@@ -132,9 +127,9 @@ export const VisOutputEngine = class {
       case 'textDisplay':
         // easiest for this one to just bypass the canvas workers completely
         this.engines[idx] = null;
-        this.engines[idx] = new TextDisplayEngine({ numworkers: this.numWorkers, width: this.cnv.width, height: this.cnv.height });
-        document.body.appendChild(this.engines[idx].debugCanvas);
+        this.engines[idx] = new TextDisplayEngine({ numworkers: this.numWorkers, width: this.cnv.width, height: this.cnv.height }, this.previewSize);
         this.enginesReady = false;
+        this.engines[idx].setParams(vis.params);
         this.workers.map((worker) =>
           worker.postMessage({
             task: 'updateVisData',
@@ -338,6 +333,7 @@ export const VisOutputEngine = class {
                 task: 'draw',
                 data: {
                   index: (this.frameCount + i) % 4,
+                  frameCount: this.frameCount,
                   videoFrame: videoFrame,
                   extFrames: extFrames,
                   videoPixels: videoPixels,

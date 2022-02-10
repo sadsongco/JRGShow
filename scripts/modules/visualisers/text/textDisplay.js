@@ -26,9 +26,10 @@ export class textDisplay extends Visualiser {
     const { extFrame } = kwargs;
     if (extFrame) {
       const { compMethod = 'source-over' } = kwargs;
+      context.cnvContext.save();
       context.cnvContext.globalCompositeOperation = compMethod;
       context.cnvContext.drawImage(extFrame, 0, context.drawStart);
-      context.cnvContext.globalCompositeOperation = 'source-over';
+      context.cnvContext.restore();
     }
   };
 
@@ -42,20 +43,7 @@ export class textDisplay extends Visualiser {
    * @param {Object} kwargs - parameters passed to visualiser
    * @param {Object} context - methods and attributes of the parent web worker
    */
-  processPixels = function (pixIdx, pixVals, kwargs, context) {
-    const { bw } = kwargs;
-    const { lyrOpacity } = kwargs;
-    /* set input pixel values */
-    let [iR, iG, iB] = pixVals;
-    /* set processed pixel values */
-    const greyscale = greyscaleCalc(pixVals);
-    let [pR, pG, pB] = bw ? [greyscale, greyscale, greyscale] : [iR, iG, iB];
-    /* set output pixel values preserving alpha, put into pixel array */
-    let [oR, oG, oB] = alphaBlend([...context.cnvPixVals, 255], [pR, pG, pB, lyrOpacity]);
-    // context.cnvPixels.data[pixIdx + 0] = oR;
-    // context.cnvPixels.data[pixIdx + 1] = oG;
-    // context.cnvPixels.data[pixIdx + 2] = oB;
-  };
+  processPixels = function (pixIdx, pixVals, kwargs, context) {};
 
   /**
    * Manipulates the frame after the pixels have been processed.
@@ -85,6 +73,38 @@ export class textDisplay extends Visualiser {
       tooltip: 'How much the previous module, or background, will show through',
     },
     {
+      name: 'textSize',
+      displayName: 'Text Size',
+      type: 'val',
+      range: [3, 170],
+      value: 50,
+      tooltip: 'Font size in pixels of the text. If a line is wider than the screen it will be automatically shrunk to fit, affecting this width but not the height',
+    },
+    {
+      name: 'padL',
+      displayName: 'Left Padding',
+      type: 'val',
+      range: [0, 100],
+      value: 0,
+      tooltip: 'Space to the left before text starts',
+    },
+    {
+      name: 'padT',
+      displayName: 'Top Padding',
+      type: 'val',
+      range: [0, 100],
+      value: 0,
+      tooltip: 'Space at the top before text starts',
+    },
+    {
+      name: 'lineSpacing',
+      displayName: 'Line Spacing',
+      type: 'val',
+      range: [-100, 100],
+      value: 0,
+      tooltip: 'Space between each line of text',
+    },
+    {
       name: 'textCol',
       displayName: 'Text Colour',
       type: 'colour',
@@ -96,6 +116,14 @@ export class textDisplay extends Visualiser {
       type: 'textarea',
       value: '',
       tooltip: '<TODO: Some tips on how to format text for display here>',
+    },
+    {
+      name: 'compMethod',
+      displayName: 'Compositing Method',
+      type: 'select',
+      options: ['source-over', 'source-in', 'source-out', 'source-atop', 'destination-over', 'destination-in', 'destination-out', 'destination-atop', 'lighter', 'copy', 'xor', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference', 'exclusion', 'hue', 'saturation', 'color', 'luminosity'],
+      value: 'source-over',
+      tooltip: 'How the text is composited over existing visualisers.',
     },
   ];
 }
