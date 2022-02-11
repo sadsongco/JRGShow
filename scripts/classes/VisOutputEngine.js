@@ -303,6 +303,8 @@ export const VisOutputEngine = class {
       let enginesReady = true;
       for (let engine of this.engines) {
         if (engine && !engine?.engineReady) enginesReady = false;
+        if (engine?.setFrameCount) engine.setFrameCount(this.frameCount);
+        if (engine?.draw) engine.draw();
       }
       this.enginesReady = enginesReady;
       if (this.visReady) {

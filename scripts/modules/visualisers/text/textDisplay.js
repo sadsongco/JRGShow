@@ -118,6 +118,21 @@ export class textDisplay extends Visualiser {
       tooltip: '<TODO: Some tips on how to format text for display here>',
     },
     {
+      name: 'typing',
+      displayName: 'Typing Text',
+      type: 'toggle',
+      value: false,
+      tooltip: 'Type out the text character by character',
+    },
+    {
+      name: 'typingSpeed',
+      displayName: 'Typing Slowness',
+      type: 'val',
+      range: [1, 60],
+      value: 1,
+      tooltip: 'How slowly the text types out',
+    },
+    {
       name: 'compMethod',
       displayName: 'Compositing Method',
       type: 'select',

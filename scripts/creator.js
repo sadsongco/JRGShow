@@ -85,7 +85,7 @@ const createTextArea = (param, paramVal, name) => {
   textarea.cols = 40;
   textarea.autofocus = true;
   textarea.addEventListener('change', updateParameter);
-  textarea.placeholder = paramVal || 'Enter text for display here';
+  textarea.placeholder = 'Enter text for display here';
   return textarea;
 };
 
@@ -169,7 +169,7 @@ const showParams = (visIdx) => {
         paramVal.innerText = paramVals[param.name];
     }
     if (paramEntry.tagName.toLowerCase() === 'textarea') {
-      paramEntry.innerText = paramVals[param.name];
+      paramEntry.value = paramVals[param.name];
       if (paramVals[param.name]) paramVal.innerText = '[text]';
       else paramVal.innerText = '';
     }
