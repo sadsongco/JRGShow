@@ -310,6 +310,7 @@ export const VisOutputEngine = class {
         if (engine && !engine?.engineReady) enginesReady = false;
         if (engine?.setFrameCount) engine.setFrameCount(this.frameCount);
         if (engine?.draw) engine.draw();
+        if (engine?.setAudioInfo) engine.setAudioInfo(this.audioAnalysis);
       }
       this.enginesReady = enginesReady;
       if (this.visReady) {

@@ -34,27 +34,6 @@ export class textDisplay extends Visualiser {
   };
 
   /**
-   * Manipulate a specific pixel in the pixel array.
-   * Pixel array is iterated in the web worker and this method is called for each.
-   * Don't destructure the kwargs before they arrive in the method, performance is much worse.
-   * Some common parameters are included and destructured
-   * @param {Integer} pixIdx - index of current pixel in the canvas pixel array
-   * @param {Array} pixVals - pre-calculated red, green and blue 8 bit integer values for current pixel
-   * @param {Object} kwargs - parameters passed to visualiser
-   * @param {Object} context - methods and attributes of the parent web worker
-   */
-  processPixels = function (pixIdx, pixVals, kwargs, context) {};
-
-  /**
-   * Manipulates the frame after the pixels have been processed.
-   * Save loop-dependent attributes, paint to the canvas.
-   * @param {ImageData} vidPixels - image data for the current frame of the video input
-   * @param {Object} kwargs - parameters passed to visualiser
-   * @param {Object} context - methods and attributes of the parent web worker
-   */
-  processFramePost = function (vidPixels, kwargs = {}, context) {};
-
-  /**
    * Parameters that can be set and adjusted on the creator page,
    * then fed back to the methods as kwargs. Some common ones are included.
    * Tooltips will show when the parameter name is hovered over
@@ -131,6 +110,33 @@ export class textDisplay extends Visualiser {
       range: [1, 60],
       value: 1,
       tooltip: 'How slowly the text types out',
+    },
+    {
+      name: 'selectedFont',
+      displayName: 'Text font',
+      type: 'select',
+      options: ['CourierPrime', 'VT323', 'Montserrat', 'Monoton', 'Bowlby'],
+      value: 'vol',
+    },
+    {
+      name: 'audioMod',
+      displayName: 'Linespacing Audio Modulation',
+      type: 'toggle',
+      value: false,
+    },
+    {
+      name: 'audioModSource',
+      displayName: 'Audio Modulation Source',
+      type: 'select',
+      options: ['bass', 'loMid', 'hiMid', 'treble', 'vol'],
+      value: 'vol',
+    },
+    {
+      name: 'audioSens',
+      displayName: 'Audio Modulation Sensitivity',
+      type: 'val',
+      range: [0, 255],
+      value: 0,
     },
     {
       name: 'compMethod',

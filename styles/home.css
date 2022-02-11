@@ -6,6 +6,19 @@
   font-family: Montserrat;
   src: url(../assets/fonts/Montserrat-VariableFont_wght.ttf);
 }
+/* extra fonts for TextDisplayEngine */
+@font-face {
+  font-family: VT323;
+  src: url(../assets//fonts/VT323-Regular.ttf);
+}
+@font-face {
+  font-family: Monoton;
+  src: url(../assets/fonts/Monoton-Regular.ttf);
+}
+@font-face{
+  font-family: Bowlby;
+  src: url(../assets/fonts/BowlbyOneSC-Regular.ttf);
+}
 
 html {
   box-sizing: border-box;
