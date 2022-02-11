@@ -93,8 +93,8 @@ const keyEvent = function(e, currVisState, currSetState, currSourceState, currFe
             e.preventDefault()
             run = !run
             channel.postMessage({
-                toggleScriptText: run
-            })
+              runAnimation: run,
+            });
         }  
     return [currSetState, currSourceState, currFeatState, currVisState, run]
 }

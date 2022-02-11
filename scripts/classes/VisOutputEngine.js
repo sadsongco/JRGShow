@@ -14,15 +14,15 @@ export const VisOutputEngine = class {
   /**
    * Initialise class properties
    */
-  constructor({ debug = false }) {
+  constructor({ debug = false, runAnimation = true }) {
     // visualiser settings
     this.currentVisChain = []; // will hold the chain of visualiser processors
     this.vidPos = {}; // for scaling video input
     this.vignetteMask = []; // will hold pixel opacity mask for vignette - global because calculated on whole canvas
     this.previewSize = 1; // relative size of output canvas to desired output size
-    // this.extMediaEngine = null; // class instance for managing external media
     this.engines = []; // to hold external class engines for special cases that can't be processed within workers
     this.enginesReady = true; // to stop render when engines are initialising
+    this.runAnimation = runAnimation; // boolean for whether stoppable animations are running
 
     // processing
     this.audioAnalysis = []; // will hold frequency and volume analysis for each frame
@@ -81,6 +81,11 @@ export const VisOutputEngine = class {
     for (const worker of this.workers) worker.postMessage({ task: 'setOutputSettings', data: outputSettings });
   };
 
+  setRunAnimation = (runAnimation) => {
+    this.runAnimation = runAnimation;
+    for (let engine of this.engines) if (engine?.setRunAnimation) engine.setRunAnimation(this.runAnimation);
+  };
+
   /**
    * Loads all registered visualiser modules as an Object of Classes
    * @returns {Object}
@@ -127,7 +132,7 @@ export const VisOutputEngine = class {
       case 'textDisplay':
         // easiest for this one to just bypass the canvas workers completely
         this.engines[idx] = null;
-        this.engines[idx] = new TextDisplayEngine({ numworkers: this.numWorkers, width: this.cnv.width, height: this.cnv.height }, this.previewSize);
+        this.engines[idx] = new TextDisplayEngine({ numworkers: this.numWorkers, width: this.cnv.width, height: this.cnv.height, runAnimation: this.runAnimation }, this.previewSize);
         this.enginesReady = false;
         this.engines[idx].setParams(vis.params);
         this.workers.map((worker) =>

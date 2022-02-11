@@ -3,7 +3,7 @@
  * Solves problems related to web workers and sub canvases
  */
 export const TextDisplayEngine = class {
-  constructor({ numworkers, width, height }, previewSize = 1) {
+  constructor({ numworkers, width, height, runAnimation }, previewSize = 1) {
     this.canvas = document.createElement('canvas');
     this.ctx = this.canvas.getContext('2d');
     this.canvas.width = width;
@@ -23,6 +23,7 @@ export const TextDisplayEngine = class {
     this.padL = 0;
     this.padT = 0;
     this.lineSpacing = 0;
+    this.runAnimation = runAnimation;
   }
 
   setParams = function ({ text, textCol, lyrOpacity, textSize, padL, padT, lineSpacing, typing = true, typingSpeed = 1, typingSpacing = 5 }) {
@@ -52,9 +53,13 @@ export const TextDisplayEngine = class {
     this.prevFrame = 0;
   };
 
-  setFrameCount = function(frameCount) {
+  setFrameCount = function (frameCount) {
     this.frameCount = frameCount;
-  }
+  };
+
+  setRunAnimation = function (runAnimation) {
+    this.runAnimation = runAnimation;
+  };
 
   getFrame = async function ({ worker, resizeWidth, resizeHeight }) {
     return await createImageBitmap(this.canvas, 0, worker * this.subCnvHeight, this.canvas.width, this.subCnvHeight, {
@@ -78,7 +83,7 @@ export const TextDisplayEngine = class {
         this.showText();
       }
     }
-  }
+  };
 
   showText = function () {
     this.ctx.fillStyle = `rgba(${this.textCol[0]}, ${this.textCol[1]}, ${this.textCol[2]}, ${this.lyrOpacity})`;
@@ -93,8 +98,8 @@ export const TextDisplayEngine = class {
   };
 
   typeText = async function () {
-    if (this.frameCount % this.typingSpeed !== 0) {
-      if (this.textToType.length > 0) this.updateText = true;
+    if (this.textToType.length > 0) this.updateText = true;
+    if (this.frameCount % this.typingSpeed !== 0 || !this.runAnimation) {
       return;
     }
     this.ctx.fillStyle = `rgba(${this.textCol[0]}, ${this.textCol[1]}, ${this.textCol[2]}, ${this.lyrOpacity})`;
@@ -123,12 +128,12 @@ export const TextDisplayEngine = class {
       }
     }
     const charMetrics = await this.ctx.measureText(currChar);
-    this.ctx.fillText(this.textToType.charAt(0), this.typingX, this.typingY)
+    this.ctx.fillText(this.textToType.charAt(0), this.typingX, this.typingY);
     this.typingX += (charMetrics.width + this.typingSpacing) << 0;
     this.textToType = this.textToType.slice(1);
     if (this.textToType.length > 0) {
       this.updateText = true;
     }
     this.prevFrame = this.frameCount;
-  }
+  };
 };
