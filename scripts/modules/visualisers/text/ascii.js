@@ -7,7 +7,7 @@ export const ascii = class extends Visualiser {
   constructor() {
     super();
     /* https://marmelab.com/blog/2018/02/20/convert-image-to-ascii-art-masterpiece.html */
-    const weightString = '$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/|()1{}[]?-_+~<>i!lI;:,"^`\'. ';
+    const weightString = '$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/|()1{}[]?-_+~<>i!lI;:,"^`\'.                 ';
     this.asciiDict = [...weightString];
     this.dictLen = this.asciiDict.length;
     this.currRowNum = 0;

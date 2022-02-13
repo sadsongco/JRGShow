@@ -105,6 +105,11 @@ export const VisOutputEngine = class {
     this.debug = debug;
   };
 
+  /**
+   * Add a visualiser to the visualiser chain
+   * @param {Object} vis - the visualiser to be added to the visualiser chain
+   * @param {Integer} idx - the index in the chain where the visualiser should be added
+   */
   addVis = (vis, idx) => {
     this.currentVisChain[idx] = vis;
     this.workers.map((worker) => worker.postMessage({ task: 'setCurrentVisChain', data: this.currentVisChain }));
@@ -118,12 +123,20 @@ export const VisOutputEngine = class {
     }
   };
 
+  /**
+   * Remove a visuliser from the visualiser chain
+   * @param {Integer} idx - the index in the visualiser chain of the visualiser to be removed
+   */
   removeVis = (idx) => {
     this.currentVisChain[idx] = null;
     this.engines[idx] = null;
     this.workers.map((worker) => worker.postMessage({ task: 'setCurrentVisChain', data: this.currentVisChain }));
   };
 
+  /**
+   * Create and initialiser web workers for drawing the canvas
+   * @returns {Promise}
+   */
   setupWorkers = async () => {
     // setup workers and subcanvases
     const cnvTarget = document.getElementById('canvasContainer');
@@ -195,9 +208,7 @@ export const VisOutputEngine = class {
     // set up canvas and video contexts
     this.cnvContext = this.cnv.getContext('2d');
     this.vidContext = this.vidCnv.getContext('2d');
-    // TODO - instatiate media and text engines per module of this type
-    // as is, only one module will work in a chain
-    // this.extMediaEngine = new ExtMediaEngine(this.numWorkers, this.cnv.width);
+    // instantiate hacky global engines for working on the main thread with access to the DOM
     this.textDisplayEngine = new TextDisplayEngine({ numWorkers: this.numWorkers, width: this.cnv.width, height: this.cnv.height });
 
     // setup audio context and engine
