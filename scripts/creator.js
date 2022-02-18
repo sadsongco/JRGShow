@@ -7,6 +7,7 @@ import { visList } from './modules/visualisers/registeredVis.js';
 // import utilities and generators
 import { outputParameters, outputParamVals } from './modules/parameters/outputParameters.js';
 import { rgbToHex, hexToRgb } from './modules/util/utils.js';
+import parseParams from './modules/common/parseParams.js';
 
 // import visualiser engine for preview
 import { VisOutputEngine } from './classes/VisOutputEngine.js';
@@ -22,7 +23,9 @@ const addModule = (e) => {
   const visObj = {};
   visObj.name = visualiserSelector.value;
   const paramsObj = {};
-  Object.values(visualiserModules[visualiserSelector.value].params).map((param) => (paramsObj[param.name] = param.value));
+  visualiserClasses[visualiserSelector.value] = new visualiserModules[visualiserSelector.value][visualiserSelector.value]();
+  parseParams(visualiserClasses[visualiserSelector.value]);
+  Object.values(visualiserClasses[visualiserSelector.value].params).map((param) => (paramsObj[param.name] = param.value));
   visObj.params = paramsObj;
   currentVisChain[selectedSlot.dataset.visIdx] = visObj;
   visOutputEngine.addVis(visObj, selectedSlot.dataset.visIdx);
@@ -75,6 +78,17 @@ const createParamSelect = (param, paramVal, name) => {
   return selecter;
 };
 
+const createTextArea = (param, paramVal, name) => {
+  const textarea = document.createElement('textarea');
+  textarea.name = name;
+  textarea.rows = 10;
+  textarea.cols = 40;
+  textarea.autofocus = true;
+  textarea.addEventListener('change', updateParameter);
+  textarea.placeholder = 'Enter text for display here';
+  return textarea;
+};
+
 /**
  * Display parameters for visualiser in selected module
  * @param {string} modName - module to show params of
@@ -94,7 +108,7 @@ const showParams = (visIdx) => {
   while (paramsEl.firstChild) paramsEl.removeChild(paramsEl.firstChild);
   const paramTitle = document.getElementById('parameters-title');
   paramTitle.innerText = `${modName} Parameters`;
-  const params = modName === 'Output' ? outputParameters : visualiserModules[modName].params;
+  const params = modName === 'Output' ? outputParameters : visualiserClasses[modName].params;
   let paramContainer;
   paramContainer = document.createElement('div');
   if (params.length === 0) {
@@ -129,10 +143,14 @@ const showParams = (visIdx) => {
         break;
       case 'colour':
         paramEntry.type = 'color';
-        paramEntry.value = paramVals[param.name];
+        if (Array.isArray(paramVals[param.name])) paramEntry.value = rgbToHex(...paramVals[param.name]);
+        else paramEntry.value = paramVals[param.name];
         break;
       case 'select':
         paramEntry = createParamSelect(param, paramVals[param.name], `${modName}-${param.name}`);
+        break;
+      case 'textarea':
+        paramEntry = createTextArea(param, paramVals[param.name], `${modName}-${param.name}`);
         break;
       case 'text':
         paramEntry.type = 'text';
@@ -150,6 +168,11 @@ const showParams = (visIdx) => {
       default:
         paramVal.innerText = paramVals[param.name];
     }
+    if (paramEntry.tagName.toLowerCase() === 'textarea') {
+      paramEntry.value = paramVals[param.name];
+      if (paramVals[param.name]) paramVal.innerText = '[text]';
+      else paramVal.innerText = '';
+    }
     paramContainer.appendChild(paramVal);
   }
   paramsEl.appendChild(paramContainer);
@@ -163,11 +186,12 @@ const updateParameter = (e) => {
   const names = e.target.name.split('-');
   const moduleName = names[0],
     paramName = names[1];
-  const visIdx = selectedSlot.dataset.visIdx;
+  let visIdx;
   let newValue = getParameterValue(e);
   if (moduleName === 'Output') {
     outputSettings[paramName] = newValue;
   } else {
+    visIdx = selectedSlot.dataset.visIdx;
     currentVisChain[visIdx].params[paramName] = newValue;
   }
   moduleName === 'Output' ? visOutputEngine.setOutputSettings(outputSettings) : visOutputEngine.setParameters(visIdx, currentVisChain[visIdx].params);
@@ -175,8 +199,11 @@ const updateParameter = (e) => {
   const paramType = paramName.split('_')[paramName.split('_').length - 1];
   if (paramType === 'col') {
     // if it's a colour, convert back to hex before adding as the input value
-    newValue = rgbToHex(...newValue);
+    // newValue = rgbToHex(...newValue);
     return;
+  }
+  if (e.target.tagName.toLowerCase() === 'textarea') {
+    newValue = '[text]';
   }
   document.getElementById(`${e.target.name}-value`).innerText = newValue;
 };
@@ -194,8 +221,9 @@ const getParameterValue = (e) => {
     case 'color':
       return hexToRgb(e.target.value);
       break;
-    case 'select-one':
+    case 'textarea':
     case 'text':
+    case 'select-one':
       return e.target.value;
       break;
     default:
@@ -472,7 +500,6 @@ const buildCreatorUI = () => {
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 let currentVisChain = [];
-let visChainLength = 0;
 let currFilledSlots = [];
 
 // global variables
@@ -480,7 +507,9 @@ let visualiserSelector,
   modSlots,
   selectedSlot = false,
   outSlot;
-let visualiserModules, visOutputEngine;
+let visualiserModules,
+  visualiserClasses = {},
+  visOutputEngine;
 let outputSettings;
 
 window.onload = async () => {
@@ -493,6 +522,9 @@ window.onload = async () => {
   if (urlParams.get('edit')) {
     const existingSetItem = await editExisting(urlParams.get('track'));
     currentVisChain = existingSetItem.visChain;
+    currentVisChain.map((vis) => {
+      if (vis) visualiserClasses[vis.name] = new visualiserModules[vis.name][vis.name]();
+    });
     outputSettings = existingSetItem.outputSettings;
     visOutputEngine.setOutputSettings(outputSettings);
     if (currentVisChain.length > 0 || existingSetItem) {
@@ -508,4 +540,13 @@ window.onload = async () => {
   loading.ontransitionend = () => {
     loading.style.visibility = 'hidden';
   };
+};
+
+window.onkeydown = function (e) {
+  const key = e.key ? e.key : e.which;
+  if (key === 'Enter') {
+    if (document.activeElement.name.split('-')[0] === 'textDisplay') {
+      updateParameter({ target: document.activeElement });
+    }
+  }
 };

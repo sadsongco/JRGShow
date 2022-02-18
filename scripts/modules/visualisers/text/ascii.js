@@ -62,7 +62,6 @@ export const ascii = class extends Visualiser {
     }
     const grayscale = greyscaleCalc(pixVals);
     let symbolIdx = Math.round(map(grayscale, 0, 255, this.dictLen - 1, 0));
-    // console.log(this.currRow);
     this.currRow.push({
       symbol: this.asciiDict[symbolIdx],
       x: kwargs.vx,

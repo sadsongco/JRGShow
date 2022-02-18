@@ -18,8 +18,6 @@ let currTrack = {
     visChain: []
 }
 
-let debug = false;
-
 // TARGET HTML ELEMENTS
 const visTitle = document.getElementById('visTitle');
 const visSource = document.getElementById('visSource');
@@ -98,6 +96,9 @@ channel.addEventListener('message', (e) => {
     canvasContainer.style.transition = `opacity ${transTime}s ease-in-out`;
     canvasContainer.style.opacity = 0;
   }
+  if ('runAnimation' in e.data) {
+    visOutputEngine.setRunAnimation(e.data.runAnimation);
+  }
 });
 
 const displayTrackTitle = function (currTrack) {
@@ -141,7 +142,7 @@ window.onkeydown = function (e) {
 let visOutputEngine, visualiserModules;
 
 window.onload = async () => {
-  visOutputEngine = new VisOutputEngine({ debug: false });
+  visOutputEngine = new VisOutputEngine({ debug: false, runAnimation: false });
   visualiserModules = await visOutputEngine.loadVisModules();
   await visOutputEngine.setupCanvas();
   visOutputEngine.drawCanvas();

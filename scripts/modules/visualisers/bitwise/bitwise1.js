@@ -2,7 +2,7 @@ import { Visualiser } from '../Visualiser.js';
 
 export const bitwise1 = class extends Visualiser {
   processPixels = function (pixIdx, pixVals, kwargs = {}, context) {
-    const { threshold = 10 } = kwargs;
+    const { threshold = 255 } = kwargs;
     const { lyrOpacity = 1 } = kwargs;
     const { rShift = 0, gShift = 0, bShift = 0 } = kwargs;
     const { ander = 0b00110001 } = kwargs;

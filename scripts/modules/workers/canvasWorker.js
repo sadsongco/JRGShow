@@ -22,6 +22,7 @@ class ProcessCanvas {
     // local copies of global parameters
     this.outputSettings = {};
     this.vignetteMask = [];
+    this.numWorkers = 0; // total number of workers in use by the app, to calculate canvas sizes
 
     // visualiser properties
     this.visualiserModules = {}; // will hold the registered visualiser modules
@@ -35,17 +36,41 @@ class ProcessCanvas {
    * @param {Array} currentVisChain - objects of visualiser processors
    */
   setCurrentVisChain = (currentVisChain) => {
-    this.currentVisChain = currentVisChain;
+    currentVisChain.map((vis, idx) => {
+      if (vis) this.instantiateVis(vis, idx);
+    });
     this.visChainLength = this.currentVisChain.length;
   };
 
+  addVis = ({ vis, idx }) => {
+    this.instantiateVis(vis, idx);
+  };
+
+  instantiateVis = (vis, idx) => {
+    this.currentVisChain[idx] = new this.visualiserModules[vis.name][vis.name]();
+    this.currentVisChain[idx].params = vis.params;
+
+    if (this.currentVisChain[idx].setup) {
+      this.currentVisChain[idx].setup({
+        cnv: { width: this.cnv.width, height: this.cnv.height },
+        numWorkers: this.numWorkers,
+        previewSize: this.previewSize,
+      });
+      if (this.currentVisChain[idx].setPixelArraySize) this.currentVisChain[idx].setPixelArraySize(this.cnv.width * this.cnv.height);
+      if (this.currentVisChain[idx].setVignetteMask) this.currentVisChain[idx].setVignetteMask(this.vignetteMask);
+    }
+  };
   /**
    * Update parameters of visualiser in the chain
    * @param {Object} params - index of visualiser in chain to update, parameters
    */
-  setParameters = ({idx, params}) => {
+  setParameters = ({ idx, params }) => {
     this.currentVisChain[idx].params = params;
-  }
+  };
+
+  updateVisData = ({ idx, data }) => {
+    this.currentVisChain[idx].updateData(idx, data);
+  };
 
   /**
    * Setter for this.outputSettings
@@ -68,21 +93,13 @@ class ProcessCanvas {
     this.cnv = data.canvas;
     this.cnvContext = this.cnv.getContext('2d');
     this.previewSize = data.previewSize || 1;
+    this.vignetteMask = data.vignetteMask;
+    this.numWorkers = data.numWorkers;
     // initialise output settings
     this.outputSettings = { bg_opacity: 255, bg_col: [0, 0, 0] };
     // collect registered visualiser modules
     this.visualiserModules = await importModules();
-    Object.values(this.visualiserModules).map((module) => {
-      if (module.setup)
-        module.setup({
-          cnv: { width: this.cnv.width, height: this.cnv.height },
-          numWorkers: data.numWorkers,
-          previewSize: this.previewSize,
-        });
-      if (module.setPixelArraySize) module.setPixelArraySize(this.cnv.width * this.cnv.height);
-      if (module.setVignetteMask) module.setVignetteMask(data.vignetteMask);
-    });
-    postMessage({setupComplete: true});
+    postMessage({ setupComplete: true });
   }
 
   /**
@@ -94,21 +111,20 @@ class ProcessCanvas {
     const filledVisModules = [];
     this.currentVisChain.map((visModule, idx) => {
       if (visModule) filledVisModules.push(idx);
-    })
+    });
     // set params, once per frame, included in processFramePre loop
     const visParams = [];
     for (let i of filledVisModules) {
-      const module = this.currentVisChain[i];
-      visParams[i] = { ...module.params };
+      const currVis = this.currentVisChain[i];
+      visParams[i] = { ...currVis.params };
       const kwargs = visParams[i];
       kwargs.idx = i;
       kwargs.dyn = data.dyn;
       kwargs.audioInfo = data.audioInfo;
-      if (data.extVideoFrames) {
-        // console.log(data.extVideoFrames);
-        kwargs.extVideoFrame = data.extVideoFrames[i];
+      if (data.extFrames) {
+        kwargs.extFrame = data.extFrames[i];
       }
-      this.visualiserModules[module.name].processFramePre(data.videoFrame, kwargs, this);
+      currVis.processFramePre(data.videoFrame, kwargs, this);
     }
     this.vidPixels = data.videoPixels;
     this.cnvPixels = this.cnvContext.getImageData(0, 0, this.cnv.width, this.cnv.height);
@@ -119,27 +135,28 @@ class ProcessCanvas {
         let pixVals = getPixelValues(pixIdx, this.vidPixels.data);
         this.cnvPixVals = getPixelValues(pixIdx, this.cnvPixels.data);
         for (let i of filledVisModules) {
-          const module = this.currentVisChain[i];
+          const currVis = this.currentVisChain[i];
           // include module parameters in arguments
-          const kwargs = visParams[i];
+          const kwargs = {};
+          Object.assign(kwargs, currVis.params);
           // include common parameters in arguments
           kwargs.vx = vx;
           kwargs.vy = vy;
           kwargs.rand = data.rand[randIdx];
           kwargs.dyn = data.dyn;
           kwargs.audioInfo = data.audioInfo;
-          this.visualiserModules[module.name].processPixels(pixIdx, pixVals, kwargs, this);
+          currVis.processPixels(pixIdx, pixVals, kwargs, this);
         }
       }
     }
     this.cnvContext.putImageData(this.cnvPixels, 0, 0);
     for (let i of filledVisModules) {
-      const module = this.currentVisChain[i];
-      visParams[i] = { ...module.params };
+      const currVis = this.currentVisChain[i];
+      visParams[i] = { ...currVis.params };
       const kwargs = visParams[i];
       kwargs.dyn = data.dyn;
       // kwargs.audioInfo = this.audioEngine;
-      this.visualiserModules[module.name].processFramePost(this.vidPixels.data, kwargs, this);
+      currVis.processFramePost(this.vidPixels.data, kwargs, this);
     }
     this.cnvContext.clearRect(0, 0, this.cnv.width, this.drawStart);
     data.videoFrame.close();
@@ -153,7 +170,6 @@ class ProcessCanvas {
     // set background
     const { bg_opacity = 255, bg_col = [0, 0, 0] } = this.outputSettings;
     const bgCol = `rgba(${bg_col[0]}, ${bg_col[1]}, ${bg_col[2]}, ${bg_opacity / 255})`;
-    // console.log(bgCol)
     this.cnvContext.save();
     this.cnvContext.fillStyle = bgCol;
     this.cnvContext.fillRect(0, this.drawStart, this.cnv.width, this.drawHeight);

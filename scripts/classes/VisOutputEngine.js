@@ -14,7 +14,7 @@ export const VisOutputEngine = class {
   /**
    * Initialise class properties
    */
-  constructor({ debug = false }) {
+  constructor({ debug = false, runAnimation = true }) {
     // visualiser settings
     this.currentVisChain = []; // will hold the chain of visualiser processors
     this.vidPos = {}; // for scaling video input
@@ -22,6 +22,7 @@ export const VisOutputEngine = class {
     this.previewSize = 1; // relative size of output canvas to desired output size
     this.engines = []; // to hold external class engines for special cases that can't be processed within workers
     this.enginesReady = true; // to stop render when engines are initialising
+    this.runAnimation = runAnimation; // boolean for whether stoppable animations are running
 
     // processing
     this.audioAnalysis = []; // will hold frequency and volume analysis for each frame
@@ -58,6 +59,13 @@ export const VisOutputEngine = class {
     for (let i = 0; i < this.numWorkers; i++) {
       this.workers[i].postMessage(messageBody);
     }
+    // initialise engines
+    this.engines = [];
+    currentVisChain.map((vis, idx) => {
+      if (vis) {
+        this.addVis(vis, idx);
+      }
+    });
   };
 
   /**
@@ -67,6 +75,8 @@ export const VisOutputEngine = class {
    */
   setParameters = (idx, params) => {
     this.currentVisChain[idx].params = params;
+    // ugly hack to get around the subcnv limitations of text display
+    if (this.currentVisChain[idx].name === 'textDisplay') this.engines[idx].setParams(params);
     const messageBody = { task: 'setParameters', data: { idx: idx, params: params } };
     for (let i = 0; i < this.numWorkers; i++) {
       this.workers[i].postMessage(messageBody);
@@ -79,6 +89,11 @@ export const VisOutputEngine = class {
    */
   setOutputSettings = (outputSettings) => {
     for (const worker of this.workers) worker.postMessage({ task: 'setOutputSettings', data: outputSettings });
+  };
+
+  setRunAnimation = (runAnimation) => {
+    this.runAnimation = runAnimation;
+    for (let engine of this.engines) if (engine?.setRunAnimation) engine.setRunAnimation(this.runAnimation);
   };
 
   /**
@@ -112,14 +127,38 @@ export const VisOutputEngine = class {
    */
   addVis = (vis, idx) => {
     this.currentVisChain[idx] = vis;
-    this.workers.map((worker) => worker.postMessage({ task: 'setCurrentVisChain', data: this.currentVisChain }));
+    this.workers.map((worker) => worker.postMessage({ task: 'addVis', data: { vis: vis, idx: idx } }));
     switch (vis.name) {
       case 'videoFile':
         // make sure garbage collector cleans up any previous engine instances
         this.engines[idx] = null;
         this.engines[idx] = new ExtMediaEngine(this.numWorkers, this.cnv.width, idx);
         this.enginesReady = false;
+        this.workers.map((worker) =>
+          worker.postMessage({
+            task: 'updateVisData',
+            data: {
+              idx: idx,
+              data: vis.params.mediaURL,
+            },
+          })
+        );
         break;
+      case 'textDisplay':
+        // easiest for this one to just bypass the canvas workers completely
+        this.engines[idx] = null;
+        this.engines[idx] = new TextDisplayEngine({ numworkers: this.numWorkers, width: this.cnv.width, height: this.cnv.height, runAnimation: this.runAnimation }, this.previewSize);
+        this.enginesReady = false;
+        this.engines[idx].setParams(vis.params);
+        this.workers.map((worker) =>
+          worker.postMessage({
+            task: 'updateVisData',
+            data: {
+              idx: idx,
+              data: vis.params.text,
+            },
+          })
+        );
     }
   };
 
@@ -208,8 +247,7 @@ export const VisOutputEngine = class {
     // set up canvas and video contexts
     this.cnvContext = this.cnv.getContext('2d');
     this.vidContext = this.vidCnv.getContext('2d');
-    // instantiate hacky global engines for working on the main thread with access to the DOM
-    this.textDisplayEngine = new TextDisplayEngine({ numWorkers: this.numWorkers, width: this.cnv.width, height: this.cnv.height });
+    // this.textDisplayEngine = new TextDisplayEngine({ numWorkers: this.numWorkers, width: this.cnv.width, height: this.cnv.height });
 
     // setup audio context and engine
     this.audioContext = new AudioContext();
@@ -249,18 +287,20 @@ export const VisOutputEngine = class {
         if (Object.keys(e.data).includes('videoFile')) {
           const URLinput = document.getElementById('videoFile-mediaURL');
           if (e.data.videoFile === false) {
-            URLinput.classList.add('invalidURL');
+            // TODO - figure out how to move this to creator. js, it has no place here
+            // maybe use Signal?
+            if (URLinput) URLinput.classList.add('invalidURL');
             this.engines[e.data.chainIdx].videoSrc = '';
-            console.log(`visOutputEngine calling validURL ${e.data.chainIdx} with false`);
             this.engines[e.data.chainIdx].validURL = false;
             this.enginesReady = false;
             return;
           } else {
-            if (this.engines[e.data.chainIdx].videoSrc !== e.data.videoFile) {
+            if (this.engines[e.data.chainIdx] && this.engines[e.data.chainIdx].videoSrc !== e.data.videoFile) {
               this.engines[e.data.chainIdx].videoSrc = e.data.videoFile;
-              console.log(`visOutputEngine calling validURL ${e.data.chainIdx} with true`);
               this.engines[e.data.chainIdx].validURL = true;
-              URLinput.classList.remove('invalidURL');
+              // TODO - figure out how to move this to creator. js, it has no place here
+              // maybe use Signal?
+              if (URLinput) URLinput.classList.remove('invalidURL');
               return;
             }
           }
@@ -277,7 +317,7 @@ export const VisOutputEngine = class {
   getExtFrames = async ({ worker, resizeWidth, resizeHeight }) => {
     let extFrames = [];
     this.engines.map((engine, idx) => {
-      if (engine?.videoReady)
+      if (engine?.engineReady)
         extFrames[idx] = engine.getFrame({
           worker: worker,
           resizeWidth: resizeWidth,
@@ -295,7 +335,10 @@ export const VisOutputEngine = class {
     const drawFrame = async (timestamp) => {
       let enginesReady = true;
       for (let engine of this.engines) {
-        if (engine && !engine?.videoReady) enginesReady = false;
+        if (engine && !engine?.engineReady) enginesReady = false;
+        if (engine?.setFrameCount) engine.setFrameCount(this.frameCount);
+        if (engine?.draw) engine.draw();
+        if (engine?.setAudioInfo) engine.setAudioInfo(this.audioAnalysis);
       }
       this.enginesReady = enginesReady;
       if (this.visReady) {
@@ -312,9 +355,9 @@ export const VisOutputEngine = class {
             resizeHeight: subcnvParams.drawHeight,
             resizeQuality: 'low',
           });
-          let extVideoFrames;
+          let extFrames;
           if (this.enginesReady)
-            extVideoFrames = await this.getExtFrames({
+            extFrames = await this.getExtFrames({
               worker: i,
               resizeWidth: this.cnv.width,
               resizeHeight: subcnvParams.drawHeight,
@@ -326,8 +369,9 @@ export const VisOutputEngine = class {
                 task: 'draw',
                 data: {
                   index: (this.frameCount + i) % 4,
+                  frameCount: this.frameCount,
                   videoFrame: videoFrame,
-                  extVideoFrames: extVideoFrames,
+                  extFrames: extFrames,
                   videoPixels: videoPixels,
                   dyn: dyn,
                   rand: rand,
@@ -345,9 +389,10 @@ export const VisOutputEngine = class {
         this.frametimes.push(timestamp);
         this.frameRate = this.frametimes.length;
         this.fr.innerText = this.frameRate;
+        let activeVis = this.currentVisChain.filter(Boolean).length;
         this.info.innerText = `workers: ${this.numWorkers}
         canvas dimensions ${this.cnv.width} x ${this.cnv.height}
-        vis chain length ${this.currentVisChain.length}
+        vis chain length ${activeVis}
         visReady = ${this.visReady}
         enginesReady = ${this.enginesReady}`;
       }

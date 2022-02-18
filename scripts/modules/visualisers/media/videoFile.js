@@ -3,7 +3,7 @@ import { Visualiser } from '/scripts/modules/visualisers/Visualiser.js';
 export const videoFile = class extends Visualiser {
   // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Synchronous_and_Asynchronous_Requests
   doesMediaExist = async function () {
-    console.log(`videoFile ${this.chainIdx} doesMediaExist for ${this.mediaPath + this.mediaURL}`);
+    // console.log(`videoFile ${this.chainIdx} doesMediaExist for ${this.mediaPath + this.mediaURL}`);
     const xhr = new XMLHttpRequest();
     xhr.open('GET', this.mediaPath + this.mediaURL, true);
     xhr.onload = (e) => {
@@ -13,7 +13,7 @@ export const videoFile = class extends Visualiser {
           return true;
         } else {
           this.mediaLoaded = false;
-          console.log(`videoFile ${this.chainIdx} posting message false`);
+          // console.log(`videoFile ${this.chainIdx} posting message false`);
           postMessage({
             videoFile: false,
             chainIdx: this.chainIdx,
@@ -23,7 +23,7 @@ export const videoFile = class extends Visualiser {
     };
     xhr.onerror = function (e) {
       this.mediaLoaded = false;
-      console.log(`videoFile ${this.chainIdx} posting message false`);
+      // console.log(`videoFile ${this.chainIdx} posting message false`);
       postMessage({
         videoFile: false,
         chainIdx: this.chainIdx,
@@ -33,7 +33,7 @@ export const videoFile = class extends Visualiser {
   };
 
   initialiseVideo = async function () {
-    console.log(`videoFile ${this.chainIdx} posting message true`);
+    // console.log(`videoFile ${this.chainIdx} posting message true`);
     postMessage({
       videoFile: this.mediaPath + this.mediaURL,
       chainIdx: this.chainIdx,
@@ -48,6 +48,12 @@ export const videoFile = class extends Visualiser {
     this.mediaLoaded = false;
   }
 
+  updateData(idx, data) {
+    this.chainIdx = idx;
+    this.mediaURL = data;
+    this.doesMediaExist();
+  }
+
   processFramePre = function (vidPix, kwargs = {}, context) {
     this.chainIdx = kwargs.idx;
     const { mediaURL = '' } = kwargs;
@@ -56,11 +62,11 @@ export const videoFile = class extends Visualiser {
       this.doesMediaExist();
     }
     if (this.mediaLoaded) {
-      const { extVideoFrame } = kwargs;
-      if (extVideoFrame) {
+      const { extFrame } = kwargs;
+      if (extFrame) {
         const { compMethod = 'source-over' } = kwargs;
         context.cnvContext.globalCompositeOperation = compMethod;
-        context.cnvContext.drawImage(extVideoFrame, 0, context.drawStart);
+        context.cnvContext.drawImage(extFrame, 0, context.drawStart);
         context.cnvContext.globalCompositeOperation = 'source-over';
       }
     }
