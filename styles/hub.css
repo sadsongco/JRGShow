@@ -23,17 +23,8 @@
   background: #bababa;
 }
 
-.slist li.hint {
-  background: #fea;
-}
-.slist li.active {
-  background: #ffd4d4;
-}
-.slist li.grabbed {
-  background: #999;
-  color: red;
-  font-weight: 800;
-  width: 50%;
+.sortable-ghost {
+  opacity: 0;
 }
 
 .slist li .optButton {
