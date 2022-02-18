@@ -20,7 +20,6 @@ export const VisOutputEngine = class {
     this.vidPos = {}; // for scaling video input
     this.vignetteMask = []; // will hold pixel opacity mask for vignette - global because calculated on whole canvas
     this.previewSize = 1; // relative size of output canvas to desired output size
-    // this.extMediaEngine = null; // class instance for managing external media
     this.engines = []; // to hold external class engines for special cases that can't be processed within workers
     this.enginesReady = true; // to stop render when engines are initialising
 
@@ -54,10 +53,6 @@ export const VisOutputEngine = class {
    * @param {Array} currentVisChain - objects of visualiser processors
    */
   setCurrentVisChain = (currentVisChain) => {
-    // console.log(currentVisChain);
-    // const workerVisChain = [...currentVisChain.filter((vis) => vis != undefined)];
-    // if (workerVisChain.length > 0) this.doDraw = true;
-    // else this.doDraw = false;
     const messageBody = { task: 'setCurrentVisChain', data: currentVisChain };
     this.currentVisChain = currentVisChain;
     for (let i = 0; i < this.numWorkers; i++) {
@@ -65,6 +60,11 @@ export const VisOutputEngine = class {
     }
   };
 
+  /**
+   * Set the parameters of a visualiser
+   * @param {Integer} idx - index of the visualiser in the visualiser chain to set the parameters for
+   * @param {Object} params - visualiser parameters tp be set
+   */
   setParameters = (idx, params) => {
     this.currentVisChain[idx].params = params;
     const messageBody = { task: 'setParameters', data: { idx: idx, params: params } };
@@ -269,6 +269,11 @@ export const VisOutputEngine = class {
     });
   };
 
+  /**
+   * Gets imageBitMap objects from engines and passes them to workers
+   * @param {Object} params
+   * @returns {Promise}
+   */
   getExtFrames = async ({ worker, resizeWidth, resizeHeight }) => {
     let extFrames = [];
     this.engines.map((engine, idx) => {
@@ -288,7 +293,6 @@ export const VisOutputEngine = class {
    */
   drawCanvas = async () => {
     const drawFrame = async (timestamp) => {
-      // console.log(this.engines);
       let enginesReady = true;
       for (let engine of this.engines) {
         if (engine && !engine?.videoReady) enginesReady = false;

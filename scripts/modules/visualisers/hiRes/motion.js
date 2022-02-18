@@ -80,6 +80,7 @@ export class motion extends Visualiser {
       range: [0, 1],
       value: 0.71,
       step: 0.005,
+      tooltip: 'Smaller number = more smoothing of the motion detection',
     },
     {
       name: 'lyrOpacity',
