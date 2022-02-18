@@ -154,7 +154,12 @@ class ProcessCanvas {
       const currVis = this.currentVisChain[i];
       visParams[i] = { ...currVis.params };
       const kwargs = visParams[i];
+      kwargs.idx = i;
       kwargs.dyn = data.dyn;
+      kwargs.audioInfo = data.audioInfo;
+      if (data.extFrames) {
+        kwargs.extFrame = data.extFrames[i];
+      }
       // kwargs.audioInfo = this.audioEngine;
       currVis.processFramePost(this.vidPixels.data, kwargs, this);
     }

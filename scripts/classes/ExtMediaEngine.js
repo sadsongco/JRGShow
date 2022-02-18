@@ -85,9 +85,6 @@ export const ExtMediaEngine = class {
    * @returns {Promise<ImageBitmap>}
    */
   getFrame = async function ({ worker, resizeWidth, resizeHeight }) {
-    // console.log(worker, resizeWidth, resizeHeight);
-    // console.log(this.videoSrc);
-    // console.log(this.engineReady);
     if (this.engineReady) {
       const vid = await createImageBitmap(this.videoEl, 0, worker * this.subCnvHeight, this.videoEl.videoWidth, this.subCnvHeight, {
         resizeWidth: resizeWidth,

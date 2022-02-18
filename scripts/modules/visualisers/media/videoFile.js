@@ -51,7 +51,8 @@ export const videoFile = class extends Visualiser {
   updateData(idx, data) {
     this.chainIdx = idx;
     this.mediaURL = data;
-    this.doesMediaExist();
+    if (this.mediaURL != '')
+      this.doesMediaExist();
   }
 
   processFramePre = function (vidPix, kwargs = {}, context) {
@@ -61,6 +62,9 @@ export const videoFile = class extends Visualiser {
       this.mediaURL = mediaURL;
       this.doesMediaExist();
     }
+  };
+
+  processFramePost = function (vidPix, kwargs = {}, context) {
     if (this.mediaLoaded) {
       const { extFrame } = kwargs;
       if (extFrame) {
