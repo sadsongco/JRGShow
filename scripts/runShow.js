@@ -64,6 +64,7 @@ const launchSetlistItem = function (e) {
   channel.postMessage({
     changeTrack: true,
     track: setlist[e.target.id],
+    bumpChange: setlist[e.target.id].outputSettings.bumpChange,
   });
   currSetId = e.target.id;
   currSetState = 0;

@@ -41,6 +41,21 @@ channel.addEventListener('message', (e) => {
     if (currTrack.name !== e.data.track.name) {
       currTrack = e.data.track;
     }
+    if (e.data.bumpChange) {
+      const transTimeIn = currTrack.outputSettings.hasOwnProperty('transitionInTime') ? currTrack.outputSettings.transitionInTime : 5;
+      canvasContainer.style.transition = `opacity ${transTimeIn}s ease-in-out`;
+      const transTimeOut = currTrack.outputSettings.hasOwnProperty('transitionOutTime') ? currTrack.outputSettings.transitionOutTime : 5;
+      canvasContainer.style.transition = `opacity ${transTimeOut}s ease-in-out`;
+      canvasContainer.style.opacity = 1;
+      visTitle.style.opacity = 0;
+      visSource.style.opacity = 0;
+      visFeat.style.opacity = 0;
+      displayTrackTitle(currTrack);
+      displayTrackSource(currTrack);
+      displayTrackFeat(currTrack);
+      updateVis(currTrack);
+      return;
+    }
     // fade out title, source and featuring if visible before changing values
     if (visTitle.style.opacity != 0 || visSource.style.opacity != 0 || visFeat.style.opacity != 0) {
       visTitle.style.opacity = 0;
