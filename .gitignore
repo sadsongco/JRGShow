@@ -3,5 +3,6 @@
 .vscode
 _prototype
 _sandbox
+node_modules/
 /userMedia/*
 /out/*
