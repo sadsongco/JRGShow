@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: classes/TextDisplayEngine.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: classes/TextDisplayEngine.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @class Class that displays text to a canvas.
+ * Solves problems related to web workers and sub canvases
+ */
+export const TextDisplayEngine = class {
+  constructor({ numworkers, width, height, runAnimation }, previewSize = 1) {
+    this.canvas = document.createElement('canvas');
+    this.ctx = this.canvas.getContext('2d');
+    this.canvas.width = width;
+    this.canvas.height = height;
+    this.numworkers = numworkers;
+    this.subCnvHeight = (this.canvas.height / this.numworkers) &lt;&lt; 0;
+    this.engineReady = false;
+    this.updateText = false;
+    this.text = '';
+    this.textToType = '';
+    this.textCol = [255, 255, 255];
+    this.lyrOpacity = 1;
+    this.textSize = 30;
+    this.textHeight = 0;
+    this.workersServiced = 0;
+    this.previewSize = previewSize;
+    this.padL = 0;
+    this.padT = 0;
+    this.lineSpacing = 0;
+    this.runAnimation = runAnimation;
+  }
+
+  setParams = function ({ text, textCol, lyrOpacity, textSize, padL, padT, lineSpacing, typing = true, typingSpeed = 1, typingSpacing = 5, selectedFont = 'CourierPrime', ...params }) {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.updateText = true;
+    this.text = text;
+    this.textToType = text;
+    this.typingCol = 0;
+    this.typingRow = 0;
+    this.textCol = textCol;
+    // this.selectedFont = selectedFont;
+    this.textSize = (textSize * this.previewSize) &lt;&lt; 0;
+    this.lyrOpacity = lyrOpacity;
+    this.ctx.font = `${this.textSize}px "${selectedFont}"`;
+    const textMetrics = this.ctx.measureText('M');
+    this.textHeight = textMetrics.fontBoundingBoxAscent + textMetrics.fontBoundingBoxDescent;
+    this.padL = (padL * this.previewSize) &lt;&lt; 0;
+    this.padT = (padT * this.previewSize) &lt;&lt; 0;
+    this.lineSpacing = (lineSpacing * this.previewSize) &lt;&lt; 0;
+    this.drawLineSpacing = this.lineSpacing;
+    this.typing = typing;
+    this.typingX = this.padL;
+    this.typingY = this.padT + this.textHeight;
+    this.typingSpacing = typingSpacing;
+    this.typingSpeed = typingSpeed;
+    this.frameCount = 0;
+    this.prevFrame = 0;
+    const { audioMod = false } = params;
+    this.audioMod = audioMod;
+    const { audioSens = 0 } = params;
+    this.audioSens = audioSens;
+    const { audioModSource = 'vol' } = params;
+    this.audioModSource = audioModSource;
+  };
+
+  setFrameCount = function (frameCount) {
+    this.frameCount = frameCount;
+  };
+
+  setRunAnimation = function (runAnimation) {
+    this.runAnimation = runAnimation;
+  };
+
+  setAudioInfo = function (audioInfo) {
+    this.audioInfo = audioInfo;
+    this.engineReady = true;
+  };
+
+  getFrame = async function ({ worker, resizeWidth, resizeHeight }) {
+    return await createImageBitmap(this.canvas, 0, worker * this.subCnvHeight, this.canvas.width, this.subCnvHeight, {
+      resizeWidth: resizeWidth,
+      resizeHeight: resizeHeight,
+      resizeQuality: 'low',
+    });
+  };
+
+  draw = function () {
+    if (this.engineReady &amp;&amp; (this.updateText || this.audioMod)) {
+      this.workersServiced++;
+      // this.ctx.fillStyle = 'black';
+      if (this.workersServiced === this.numworkers) {
+        this.workersServiced = 0;
+        this.updateText = false;
+      }
+      if (this.audioMod) {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.drawLineSpacing = this.lineSpacing + this.audioSens * (this.audioInfo[this.audioModSource] / 255);
+      }
+      if (this.typing) {
+        this.typeText();
+      } else {
+        this.showText();
+      }
+    }
+  };
+
+  showText = function () {
+    this.ctx.fillStyle = `rgba(${this.textCol[0]}, ${this.textCol[1]}, ${this.textCol[2]}, ${this.lyrOpacity})`;
+    const textLines = this.text.split('\n');
+    const numLines = textLines.length;
+    for (let i = 0; i &lt; numLines; i++) {
+      const currLine = textLines[i];
+      const x = this.padL;
+      const y = this.padT + this.textHeight + this.textHeight * i + this.drawLineSpacing * i;
+      this.ctx.fillText(currLine, x, y, this.canvas.width - x);
+    }
+  };
+
+  typeText = async function () {
+    if (this.textToType.length > 0) this.updateText = true;
+    if (this.frameCount % this.typingSpeed !== 0 || !this.runAnimation) {
+      return;
+    }
+    this.ctx.fillStyle = `rgba(${this.textCol[0]}, ${this.textCol[1]}, ${this.textCol[2]}, ${this.lyrOpacity})`;
+    let currChar = this.textToType.charAt(0);
+    if (currChar === '\n') {
+      this.typingY += this.textHeight + this.drawLineSpacing;
+      this.typingX = this.padL;
+      this.textToType = this.textToType.slice(1);
+      currChar = this.textToType.charAt(0);
+      return;
+    }
+    if (currChar === '\\') {
+      this.textToType = this.textToType.slice(1);
+      currChar = this.textToType.charAt(0);
+      if (currChar === 'p') {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.typingX = this.padL;
+        this.typingY = this.padT + this.textHeight;
+        this.textToType = this.textToType.slice(1);
+        currChar = this.textToType.charAt(0);
+        if (currChar === '\n') {
+          this.textToType = this.textToType.slice(1);
+          currChar = this.textToType.charAt(0);
+        }
+        return;
+      }
+    }
+    const charMetrics = await this.ctx.measureText(currChar);
+    this.ctx.fillText(this.textToType.charAt(0), this.typingX, this.typingY);
+    this.typingX += (charMetrics.width + this.typingSpacing) &lt;&lt; 0;
+    this.textToType = this.textToType.slice(1);
+    if (this.textToType.length > 0) {
+      this.updateText = true;
+    }
+    this.prevFrame = this.frameCount;
+  };
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AudioEngine.html">AudioEngine</a></li><li><a href="ExtMediaEngine.html">ExtMediaEngine</a></li><li><a href="ProcessCanvas.html">ProcessCanvas</a></li><li><a href="TextDisplayEngine.html">TextDisplayEngine</a></li><li><a href="VisOutputEngine.html">VisOutputEngine</a></li><li><a href="VisualiserTemplate.html">VisualiserTemplate</a></li></ul><h3>Global</h3><ul><li><a href="global.html#activateOutput">activateOutput</a></li><li><a href="global.html#activatePath">activatePath</a></li><li><a href="global.html#addModule">addModule</a></li><li><a href="global.html#buildCreatorUI">buildCreatorUI</a></li><li><a href="global.html#clearParams">clearParams</a></li><li><a href="global.html#clearSlot">clearSlot</a></li><li><a href="global.html#d2b">d2b</a></li><li><a href="global.html#deleteSetlistItem">deleteSetlistItem</a></li><li><a href="global.html#deselectAll">deselectAll</a></li><li><a href="global.html#dynamicGenerator">dynamicGenerator</a></li><li><a href="global.html#editExisting">editExisting</a></li><li><a href="global.html#editSetlistItem">editSetlistItem</a></li><li><a href="global.html#fillDetails">fillDetails</a></li><li><a href="global.html#getAudioSource">getAudioSource</a></li><li><a href="global.html#getInputDevice">getInputDevice</a></li><li><a href="global.html#getOutputResolution">getOutputResolution</a></li><li><a href="global.html#getParameterValue">getParameterValue</a></li><li><a href="global.html#getPixelValues">getPixelValues</a></li><li><a href="global.html#getResolution">getResolution</a></li><li><a href="global.html#getSetlist">getSetlist</a></li><li><a href="global.html#getSettings">getSettings</a></li><li><a href="global.html#gotDevices">gotDevices</a></li><li><a href="global.html#hideAllOutputPaths">hideAllOutputPaths</a></li><li><a href="global.html#htmlToElement">htmlToElement</a></li><li><a href="global.html#importModules">importModules</a></li><li><a href="global.html#keyEvent">keyEvent</a></li><li><a href="global.html#launchVis">launchVis</a></li><li><a href="global.html#map">map</a></li><li><a href="global.html#processVisMessage">processVisMessage</a></li><li><a href="global.html#pseudoRandomGenerator">pseudoRandomGenerator</a></li><li><a href="global.html#resetActiveVis">resetActiveVis</a></li><li><a href="global.html#resetApp">resetApp</a></li><li><a href="global.html#resetPixels">resetPixels</a></li><li><a href="global.html#resizeCanvas">resizeCanvas</a></li><li><a href="global.html#saveSetlist">saveSetlist</a></li><li><a href="global.html#saveSettings">saveSettings</a></li><li><a href="global.html#selectSlot">selectSlot</a></li><li><a href="global.html#setOutputPath">setOutputPath</a></li><li><a href="global.html#setupVisualiserCanvas">setupVisualiserCanvas</a></li><li><a href="global.html#showParams">showParams</a></li><li><a href="global.html#sortSetlistByOrder">sortSetlistByOrder</a></li><li><a href="global.html#updateParameter">updateParameter</a></li><li><a href="global.html#updateSlots">updateSlots</a></li><li><a href="global.html#vignetteMask">vignetteMask</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.7</a> on Fri Feb 18 2022 14:04:10 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

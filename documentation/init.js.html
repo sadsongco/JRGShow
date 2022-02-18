@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: init.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: init.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>window.onload = () => {
+    // setup persistent storage
+    let openRequest = indexedDB.open('visDB', 1);
+    openRequest.onupgradeneeded = () => {
+        console.log('onupgradeneeded');
+        console.log(openRequest);
+        let db = openRequest.result;
+        if (!db.objectStoreNames.contains('outputResolution'))
+            db.createObjectStore('outputResolution', {keyPath: 'id'});
+        if (!db.objectStoreNames.contains('inputDevice'))
+            db.createObjectStore('inputDevice', {keyPath: 'id'});
+        if (!db.objectStoreNames.contains('audioSource'))
+            db.createObjectStore('audioSource', {keyPath: 'id'});
+            if (!db.objectStoreNames.contains('visChains'))
+            db.createObjectStore('visChains', {keyPath: 'id'});
+        if (!db.objectStoreNames.contains('setlist')) {
+            let setlist = db.createObjectStore('setlist', {keyPath: 'name'});
+            let setPosIdx = setlist.createIndex('setpos', 'position', { unique:true });
+        }
+    }
+    openRequest.onerror = () => {
+        console.log('onerror');
+        console.log(openRequest);
+    }
+    openRequest.onsuccess = () => {
+        let db = openRequest.result;
+        console.log(`Database opened:`);
+        console.log(db);
+    }
+}
+
+
+// helper function for capturing from specific video source
+// https://editor.p5js.org/codingtrain/sketches/JjRoa1lWO
+const devices = [], audioSources = [];
+const deviceTarget = document.getElementById('vidsrc');
+const deviceSelector = document.createElement('select');
+const audioTarget = document.getElementById('audiosrc');
+const audioSelector = document.createElement('select');
+
+/**
+ * Creates variables and HTML selector from available video input devices
+ * @param {array} deviceInfos - available video input devices
+ */
+const gotDevices = (deviceInfos) => {
+  for (let deviceInfo of deviceInfos) {
+    if (deviceInfo.kind == 'videoinput') {
+      devices.push({
+        label: deviceInfo.label,
+        id: deviceInfo.deviceId,
+      });
+    }
+    if (deviceInfo.kind == 'audioinput') {
+      console.log(deviceInfo);
+      audioSources.push({
+        label: deviceInfo.label,
+        id: deviceInfo.deviceId,
+      });
+    }
+  }
+  for (let deviceIdx in devices) {
+    const device = devices[deviceIdx];
+    let supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
+    device.constraints = {
+      video: {
+        deviceId: {
+          exact: device.id,
+        },
+      },
+      resize: supportedConstraints['height'] &amp;&amp; supportedConstraints['width'],
+    };
+    const option = document.createElement('option');
+    option.value = deviceIdx;
+    option.text = device.label;
+    deviceSelector.add(option);
+  }
+  deviceTarget.appendChild(deviceSelector);
+  for (let audioIdx in audioSources) {
+    const device = audioSources[audioIdx];
+    device.constraints = {
+      audio: {
+        devideId: {
+          exact: device.id,
+        },
+      },
+    };
+    const option = document.createElement('option');
+    option.value = audioIdx;
+    option.text = device.label;
+    audioSelector.add(option);
+  }
+  audioTarget.appendChild(audioSelector);
+  const loading = document.getElementById('loading');
+  loading.style.opacity = 0;
+  loading.ontransitionend = (e) => {
+    loading.style.visibility = 'hidden';
+  };
+};
+
+const gotSources = (deviceList) => {
+  console.log(deviceList);
+};
+
+/**
+ * Writes resolution and input device to database, redirects to hub page
+ */
+const launchVis = () => {
+  console.log(resolutions[resSelector.value]);
+  console.log(devices[deviceSelector.value]);
+  console.log(audioSources[audioSelector.value]);
+  let openRequest = indexedDB.open('visDB', 1);
+  openRequest.onerror = () => {
+    throw new Error('Database error');
+  };
+  openRequest.onsuccess = () => {
+    let db = openRequest.result;
+    // write output resolution to db
+    let transaction = db.transaction('outputResolution', 'readwrite');
+    let writeSettings = transaction.objectStore('outputResolution');
+    let outputSettings = {
+      id: 1,
+      outputResolution: resolutions[resSelector.value],
+    };
+    writeSettings.put(outputSettings);
+    // write video input settings to db
+    transaction = db.transaction('inputDevice', 'readwrite');
+    writeSettings = transaction.objectStore('inputDevice');
+    let inputDevice = {
+      id: 1,
+      inputDevice: devices[deviceSelector.value],
+    };
+    writeSettings.put(inputDevice);
+    // write audio input settings to db
+    transaction = db.transaction('audioSource', 'readwrite');
+    writeSettings = transaction.objectStore('audioSource');
+    let audioDevice = {
+      id: 1,
+      sources: audioSources,
+      sourceIdx: parseInt(audioSelector.value),
+      source: audioSources[audioSelector.value],
+    };
+    writeSettings.put(audioDevice);
+  };
+  window.location.href = 'hub.html';
+};
+
+// get video and audio sources
+// TODO selected device doesn't carry over - look here: https://jsfiddle.net/bomzj/beap6n2g/
+const permissions = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+
+await navigator.mediaDevices.enumerateDevices().then(gotDevices);
+
+// create dropbown selector for output options
+const resolutions = [
+    {
+        label: 'SD',
+        name: '480p',
+        w: 640,
+        h: 480
+    },
+    {
+        label: 'HD',
+        name: '720p',
+        w: 1280,
+        h: 720
+    },
+    {
+        label: 'Full HD',
+        name: '1080p',
+        w: 1920,
+        h: 1080
+    }
+];
+
+const resTarget = document.getElementById('vidres');
+const resSelector = document.createElement('select');
+
+for (let resIdx in resolutions) {
+    const res = resolutions[resIdx]
+    const option = document.createElement('option');
+    option.value = resIdx;
+    option.text = `${res.label} ${res.name} (${res.w} x ${res.h})`;
+    resSelector.add(option);
+}
+
+resTarget.appendChild(resSelector)
+
+// set up launch button
+const launchTarget = document.getElementById('launch');
+const launcher = document.createElement('button');
+launcher.innerText = "Launch";
+launchTarget.appendChild(launcher);
+launcher.addEventListener('click', launchVis);</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AudioEngine.html">AudioEngine</a></li><li><a href="ExtMediaEngine.html">ExtMediaEngine</a></li><li><a href="ProcessCanvas.html">ProcessCanvas</a></li><li><a href="TextDisplayEngine.html">TextDisplayEngine</a></li><li><a href="VisOutputEngine.html">VisOutputEngine</a></li><li><a href="VisualiserTemplate.html">VisualiserTemplate</a></li></ul><h3>Global</h3><ul><li><a href="global.html#activateOutput">activateOutput</a></li><li><a href="global.html#activatePath">activatePath</a></li><li><a href="global.html#addModule">addModule</a></li><li><a href="global.html#buildCreatorUI">buildCreatorUI</a></li><li><a href="global.html#clearParams">clearParams</a></li><li><a href="global.html#clearSlot">clearSlot</a></li><li><a href="global.html#d2b">d2b</a></li><li><a href="global.html#deleteSetlistItem">deleteSetlistItem</a></li><li><a href="global.html#deselectAll">deselectAll</a></li><li><a href="global.html#dynamicGenerator">dynamicGenerator</a></li><li><a href="global.html#editExisting">editExisting</a></li><li><a href="global.html#editSetlistItem">editSetlistItem</a></li><li><a href="global.html#fillDetails">fillDetails</a></li><li><a href="global.html#getAudioSource">getAudioSource</a></li><li><a href="global.html#getInputDevice">getInputDevice</a></li><li><a href="global.html#getOutputResolution">getOutputResolution</a></li><li><a href="global.html#getParameterValue">getParameterValue</a></li><li><a href="global.html#getPixelValues">getPixelValues</a></li><li><a href="global.html#getResolution">getResolution</a></li><li><a href="global.html#getSetlist">getSetlist</a></li><li><a href="global.html#getSettings">getSettings</a></li><li><a href="global.html#gotDevices">gotDevices</a></li><li><a href="global.html#hideAllOutputPaths">hideAllOutputPaths</a></li><li><a href="global.html#htmlToElement">htmlToElement</a></li><li><a href="global.html#importModules">importModules</a></li><li><a href="global.html#keyEvent">keyEvent</a></li><li><a href="global.html#launchVis">launchVis</a></li><li><a href="global.html#map">map</a></li><li><a href="global.html#processVisMessage">processVisMessage</a></li><li><a href="global.html#pseudoRandomGenerator">pseudoRandomGenerator</a></li><li><a href="global.html#resetActiveVis">resetActiveVis</a></li><li><a href="global.html#resetApp">resetApp</a></li><li><a href="global.html#resetPixels">resetPixels</a></li><li><a href="global.html#resizeCanvas">resizeCanvas</a></li><li><a href="global.html#saveSetlist">saveSetlist</a></li><li><a href="global.html#saveSettings">saveSettings</a></li><li><a href="global.html#selectSlot">selectSlot</a></li><li><a href="global.html#setOutputPath">setOutputPath</a></li><li><a href="global.html#setupVisualiserCanvas">setupVisualiserCanvas</a></li><li><a href="global.html#showParams">showParams</a></li><li><a href="global.html#sortSetlistByOrder">sortSetlistByOrder</a></li><li><a href="global.html#updateParameter">updateParameter</a></li><li><a href="global.html#updateSlots">updateSlots</a></li><li><a href="global.html#vignetteMask">vignetteMask</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.7</a> on Fri Feb 18 2022 14:04:10 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

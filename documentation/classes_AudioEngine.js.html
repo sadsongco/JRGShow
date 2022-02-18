@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: classes/AudioEngine.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: classes/AudioEngine.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @class Class to implement Web Audio API and analyse incoming audio from selected input
+ */
+export const AudioEngine = class {
+  /**
+   * Instantiate AudioEngine class with surrounding context and desired audio source
+   * @param {AudioContext} context - application audio context
+   * @param {Object} audioSource - audio source info
+   */
+  constructor(context, audioSource) {
+    this.audioContext = context;
+    this.audioSource = audioSource;
+  }
+
+  /**
+   * Initialise audio engine, get input stream
+   */
+  init = async () => {
+    let stream = await navigator.mediaDevices.getUserMedia(this.audioSource.constraints);
+    this.audioIn = this.audioContext.createMediaStreamSource(stream);
+    // setup analyser
+    this.analyser = this.audioContext.createAnalyser();
+    this.analyser.fftSize = 32;
+    this.bufferLength = this.analyser.frequencyBinCount;
+    this.audioArray = new Uint8Array(this.bufferLength);
+    this.analyser.getByteTimeDomainData(this.audioArray);
+    // connect audio in to analyser
+    this.audioIn.connect(this.analyser);
+    // names for frequency bands
+    this.freqBands = ['bass', 'loMid', 'hiMid', 'treble'];
+    this.freqEnergy = {};
+  };
+
+  /**
+   * Getter for audio engine frequency bands
+   * @returns {Array}
+   */
+  getFreqBands = () => {
+    return [...this.freqBands, 'vol'];
+  };
+
+  /**
+   * Calculates average volume from array of frequency energies
+   * @returns {Integer}
+   */
+  getAverageVolume = () => {
+    return Object.values(this.freqEnergy).reduce((c, p, i) => ((c * i + p) / (i + 1)) &lt;&lt; 0);
+  };
+
+  /**
+   * Analyse level and frequency bands of current audio input
+   */
+  getAudioAnalysis = () => {
+    this.analyser.getByteFrequencyData(this.audioArray);
+    this.level = this.audioArray.reduce((a, b) => a + b, 0) / this.audioArray.length;
+    for (let i = 0; i &lt; this.bufferLength; i += 4) {
+      this.freqEnergy[this.freqBands[i / 4]] = ((this.audioArray[i + 0] + this.audioArray[i + 1] + this.audioArray[i + 2] + this.audioArray[i + 3]) / 4) &lt;&lt; 0;
+    }
+    this.freqEnergy['vol'] = this.getAverageVolume();
+    return this.freqEnergy;
+  };
+
+  /**
+   * Debug method to draw frequency plot onto current canvas
+   * @param {CanvasRenderingContext2D} cnvContext - canvas context
+   * @param {Element} cnv - HTML canvas element
+   */
+  draw = async (cnvContext, cnv) => {
+    let barWidth = (cnv.width / this.freqBands.length) &lt;&lt; 0;
+    let barHeight;
+    let x = 0;
+    cnvContext.save();
+    for (let i = 0; i &lt; this.freqBands.length; i++) {
+      barHeight = this.freqEnergy[this.freqBands[i]];
+      cnvContext.fillStyle = `rgb(${barHeight + 100}, 50, 50)`;
+      cnvContext.fillRect(x, cnv.height - barHeight, barWidth - 1, barHeight);
+      x += barWidth + 1;
+    }
+    cnvContext.restore();
+  };
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AudioEngine.html">AudioEngine</a></li><li><a href="ExtMediaEngine.html">ExtMediaEngine</a></li><li><a href="ProcessCanvas.html">ProcessCanvas</a></li><li><a href="TextDisplayEngine.html">TextDisplayEngine</a></li><li><a href="VisOutputEngine.html">VisOutputEngine</a></li><li><a href="VisualiserTemplate.html">VisualiserTemplate</a></li></ul><h3>Global</h3><ul><li><a href="global.html#activateOutput">activateOutput</a></li><li><a href="global.html#activatePath">activatePath</a></li><li><a href="global.html#addModule">addModule</a></li><li><a href="global.html#buildCreatorUI">buildCreatorUI</a></li><li><a href="global.html#clearParams">clearParams</a></li><li><a href="global.html#clearSlot">clearSlot</a></li><li><a href="global.html#d2b">d2b</a></li><li><a href="global.html#deleteSetlistItem">deleteSetlistItem</a></li><li><a href="global.html#deselectAll">deselectAll</a></li><li><a href="global.html#dynamicGenerator">dynamicGenerator</a></li><li><a href="global.html#editExisting">editExisting</a></li><li><a href="global.html#editSetlistItem">editSetlistItem</a></li><li><a href="global.html#fillDetails">fillDetails</a></li><li><a href="global.html#getAudioSource">getAudioSource</a></li><li><a href="global.html#getInputDevice">getInputDevice</a></li><li><a href="global.html#getOutputResolution">getOutputResolution</a></li><li><a href="global.html#getParameterValue">getParameterValue</a></li><li><a href="global.html#getPixelValues">getPixelValues</a></li><li><a href="global.html#getResolution">getResolution</a></li><li><a href="global.html#getSetlist">getSetlist</a></li><li><a href="global.html#getSettings">getSettings</a></li><li><a href="global.html#gotDevices">gotDevices</a></li><li><a href="global.html#hideAllOutputPaths">hideAllOutputPaths</a></li><li><a href="global.html#htmlToElement">htmlToElement</a></li><li><a href="global.html#importModules">importModules</a></li><li><a href="global.html#keyEvent">keyEvent</a></li><li><a href="global.html#launchVis">launchVis</a></li><li><a href="global.html#map">map</a></li><li><a href="global.html#processVisMessage">processVisMessage</a></li><li><a href="global.html#pseudoRandomGenerator">pseudoRandomGenerator</a></li><li><a href="global.html#resetActiveVis">resetActiveVis</a></li><li><a href="global.html#resetApp">resetApp</a></li><li><a href="global.html#resetPixels">resetPixels</a></li><li><a href="global.html#resizeCanvas">resizeCanvas</a></li><li><a href="global.html#saveSetlist">saveSetlist</a></li><li><a href="global.html#saveSettings">saveSettings</a></li><li><a href="global.html#selectSlot">selectSlot</a></li><li><a href="global.html#setOutputPath">setOutputPath</a></li><li><a href="global.html#setupVisualiserCanvas">setupVisualiserCanvas</a></li><li><a href="global.html#showParams">showParams</a></li><li><a href="global.html#sortSetlistByOrder">sortSetlistByOrder</a></li><li><a href="global.html#updateParameter">updateParameter</a></li><li><a href="global.html#updateSlots">updateSlots</a></li><li><a href="global.html#vignetteMask">vignetteMask</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.7</a> on Fri Feb 18 2022 14:04:10 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

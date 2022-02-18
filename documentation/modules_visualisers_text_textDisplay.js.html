@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: modules/visualisers/text/textDisplay.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: modules/visualisers/text/textDisplay.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { Visualiser } from '/scripts/modules/visualisers/Visualiser.js';
+import { greyscaleCalc } from '/scripts/modules/util/utils.js';
+import alphaBlend from '/scripts/modules/util/alphaBlend.js';
+
+export class textDisplay extends Visualiser {
+  constructor() {
+    super();
+    this.text = '';
+  }
+
+  updateData = function (idx, data) {
+    this.chainIdx = idx;
+    this.text = data;
+  };
+
+  /**
+   * Manipulate the frame before the pixels have been processed.
+   * Draw general images and graphics to the canvas.
+   * Can improve performance to save class attributes here rather than destructure them
+   * for every pixel in processPixels
+   * @param {ImageData} vidPixels - image data for the current frame of video input
+   * @param {Object} kwargs - parameters passed to visualiser
+   * @param {Object} context - methods and attributes of the parent web worker
+   */
+  processFramePre = function (vidPixels, kwargs = {}, context) {
+    const { extFrame } = kwargs;
+    if (extFrame) {
+      const { compMethod = 'source-over' } = kwargs;
+      context.cnvContext.save();
+      context.cnvContext.globalCompositeOperation = compMethod;
+      context.cnvContext.drawImage(extFrame, 0, context.drawStart);
+      context.cnvContext.restore();
+    }
+  };
+
+  /**
+   * Parameters that can be set and adjusted on the creator page,
+   * then fed back to the methods as kwargs. Some common ones are included.
+   * Tooltips will show when the parameter name is hovered over
+   */
+  params = [
+    /**
+     * sets the opacity of the layer
+     */
+    {
+      name: 'lyrOpacity',
+      displayName: 'Layer Opacity',
+      type: 'val',
+      range: [0, 1],
+      step: 0.1,
+      value: 1,
+      tooltip: 'How much the previous module, or background, will show through',
+    },
+    {
+      name: 'textSize',
+      displayName: 'Text Size',
+      type: 'val',
+      range: [3, 170],
+      value: 50,
+      tooltip: 'Font size in pixels of the text. If a line is wider than the screen it will be automatically shrunk to fit, affecting this width but not the height',
+    },
+    {
+      name: 'padL',
+      displayName: 'Left Padding',
+      type: 'val',
+      range: [0, 100],
+      value: 0,
+      tooltip: 'Space to the left before text starts',
+    },
+    {
+      name: 'padT',
+      displayName: 'Top Padding',
+      type: 'val',
+      range: [0, 100],
+      value: 0,
+      tooltip: 'Space at the top before text starts',
+    },
+    {
+      name: 'lineSpacing',
+      displayName: 'Line Spacing',
+      type: 'val',
+      range: [-100, 100],
+      value: 0,
+      tooltip: 'Space between each line of text',
+    },
+    {
+      name: 'textCol',
+      displayName: 'Text Colour',
+      type: 'colour',
+      value: '#ffffff',
+    },
+    {
+      name: 'text',
+      displayName: 'Display Text',
+      type: 'textarea',
+      value: '',
+      tooltip: '&lt;TODO: Some tips on how to format text for display here>',
+    },
+    {
+      name: 'typing',
+      displayName: 'Typing Text',
+      type: 'toggle',
+      value: false,
+      tooltip: 'Type out the text character by character',
+    },
+    {
+      name: 'typingSpeed',
+      displayName: 'Typing Slowness',
+      type: 'val',
+      range: [1, 60],
+      value: 1,
+      tooltip: 'How slowly the text types out',
+    },
+    {
+      name: 'selectedFont',
+      displayName: 'Text font',
+      type: 'select',
+      options: ['CourierPrime', 'VT323', 'Montserrat', 'Monoton', 'Bowlby'],
+      value: 'vol',
+    },
+    {
+      name: 'audioMod',
+      displayName: 'Linespacing Audio Modulation',
+      type: 'toggle',
+      value: false,
+    },
+    {
+      name: 'audioModSource',
+      displayName: 'Audio Modulation Source',
+      type: 'select',
+      options: ['bass', 'loMid', 'hiMid', 'treble', 'vol'],
+      value: 'vol',
+    },
+    {
+      name: 'audioSens',
+      displayName: 'Audio Modulation Sensitivity',
+      type: 'val',
+      range: [0, 255],
+      value: 0,
+    },
+    {
+      name: 'compMethod',
+      displayName: 'Compositing Method',
+      type: 'select',
+      options: ['source-over', 'source-in', 'source-out', 'source-atop', 'destination-over', 'destination-in', 'destination-out', 'destination-atop', 'lighter', 'copy', 'xor', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference', 'exclusion', 'hue', 'saturation', 'color', 'luminosity'],
+      value: 'source-over',
+      tooltip: 'How the text is composited over existing visualisers.',
+    },
+  ];
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AudioEngine.html">AudioEngine</a></li><li><a href="ExtMediaEngine.html">ExtMediaEngine</a></li><li><a href="ProcessCanvas.html">ProcessCanvas</a></li><li><a href="TextDisplayEngine.html">TextDisplayEngine</a></li><li><a href="VisOutputEngine.html">VisOutputEngine</a></li><li><a href="VisualiserTemplate.html">VisualiserTemplate</a></li></ul><h3>Global</h3><ul><li><a href="global.html#activateOutput">activateOutput</a></li><li><a href="global.html#activatePath">activatePath</a></li><li><a href="global.html#addModule">addModule</a></li><li><a href="global.html#buildCreatorUI">buildCreatorUI</a></li><li><a href="global.html#clearParams">clearParams</a></li><li><a href="global.html#clearSlot">clearSlot</a></li><li><a href="global.html#d2b">d2b</a></li><li><a href="global.html#deleteSetlistItem">deleteSetlistItem</a></li><li><a href="global.html#deselectAll">deselectAll</a></li><li><a href="global.html#dynamicGenerator">dynamicGenerator</a></li><li><a href="global.html#editExisting">editExisting</a></li><li><a href="global.html#editSetlistItem">editSetlistItem</a></li><li><a href="global.html#fillDetails">fillDetails</a></li><li><a href="global.html#getAudioSource">getAudioSource</a></li><li><a href="global.html#getInputDevice">getInputDevice</a></li><li><a href="global.html#getOutputResolution">getOutputResolution</a></li><li><a href="global.html#getParameterValue">getParameterValue</a></li><li><a href="global.html#getPixelValues">getPixelValues</a></li><li><a href="global.html#getResolution">getResolution</a></li><li><a href="global.html#getSetlist">getSetlist</a></li><li><a href="global.html#getSettings">getSettings</a></li><li><a href="global.html#gotDevices">gotDevices</a></li><li><a href="global.html#hideAllOutputPaths">hideAllOutputPaths</a></li><li><a href="global.html#htmlToElement">htmlToElement</a></li><li><a href="global.html#importModules">importModules</a></li><li><a href="global.html#keyEvent">keyEvent</a></li><li><a href="global.html#launchVis">launchVis</a></li><li><a href="global.html#map">map</a></li><li><a href="global.html#processVisMessage">processVisMessage</a></li><li><a href="global.html#pseudoRandomGenerator">pseudoRandomGenerator</a></li><li><a href="global.html#resetActiveVis">resetActiveVis</a></li><li><a href="global.html#resetApp">resetApp</a></li><li><a href="global.html#resetPixels">resetPixels</a></li><li><a href="global.html#resizeCanvas">resizeCanvas</a></li><li><a href="global.html#saveSetlist">saveSetlist</a></li><li><a href="global.html#saveSettings">saveSettings</a></li><li><a href="global.html#selectSlot">selectSlot</a></li><li><a href="global.html#setOutputPath">setOutputPath</a></li><li><a href="global.html#setupVisualiserCanvas">setupVisualiserCanvas</a></li><li><a href="global.html#showParams">showParams</a></li><li><a href="global.html#sortSetlistByOrder">sortSetlistByOrder</a></li><li><a href="global.html#updateParameter">updateParameter</a></li><li><a href="global.html#updateSlots">updateSlots</a></li><li><a href="global.html#vignetteMask">vignetteMask</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.7</a> on Fri Feb 18 2022 14:04:10 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: modules/util/generators.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: modules/util/generators.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { d2b } from "./utils.js";
+
+/**
+ * Generate time-based values for dynamic modulation
+ * @returns {array} - sinusoidal values at different wavelengths in range 0 - 1
+ */
+const dynamicGenerator = (frameCount) => {
+    let modCof = 20
+    return [
+        (Math.sin(frameCount/(modCof / 0.25)) + 1) / 2,
+        (Math.sin(frameCount/(modCof / 0.5)) + 1) / 2,
+        (Math.sin(frameCount/(modCof / 1)) + 1) / 2,
+        (Math.sin(frameCount/(modCof / 2)) + 1) / 2,
+        (Math.sin(frameCount/(modCof / 3)) + 1) / 2, 
+        (Math.sin(frameCount/(modCof / 4)) + 1) / 2, 
+        (Math.sin(frameCount/(modCof / 5)) + 1) / 2, 
+        (Math.sin(frameCount/(modCof / 7)) + 1) / 2,
+    ];
+}
+
+/**
+ * Generate a pseudo-random binary string
+ * TODO update https://stackoverflow.com/questions/38702724/math-floor-vs-math-trunc-javascript
+ * @returns {string} - binary string of variable length
+ */
+const pseudoRandomGenerator = () => {
+    return  d2b(Math.trunc(Math.random()*2147483647*2*2)+1);
+}
+
+export { dynamicGenerator, pseudoRandomGenerator }</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AudioEngine.html">AudioEngine</a></li><li><a href="ExtMediaEngine.html">ExtMediaEngine</a></li><li><a href="ProcessCanvas.html">ProcessCanvas</a></li><li><a href="TextDisplayEngine.html">TextDisplayEngine</a></li><li><a href="VisOutputEngine.html">VisOutputEngine</a></li><li><a href="VisualiserTemplate.html">VisualiserTemplate</a></li></ul><h3>Global</h3><ul><li><a href="global.html#activateOutput">activateOutput</a></li><li><a href="global.html#activatePath">activatePath</a></li><li><a href="global.html#addModule">addModule</a></li><li><a href="global.html#buildCreatorUI">buildCreatorUI</a></li><li><a href="global.html#clearParams">clearParams</a></li><li><a href="global.html#clearSlot">clearSlot</a></li><li><a href="global.html#d2b">d2b</a></li><li><a href="global.html#deleteSetlistItem">deleteSetlistItem</a></li><li><a href="global.html#deselectAll">deselectAll</a></li><li><a href="global.html#dynamicGenerator">dynamicGenerator</a></li><li><a href="global.html#editExisting">editExisting</a></li><li><a href="global.html#editSetlistItem">editSetlistItem</a></li><li><a href="global.html#fillDetails">fillDetails</a></li><li><a href="global.html#getAudioSource">getAudioSource</a></li><li><a href="global.html#getInputDevice">getInputDevice</a></li><li><a href="global.html#getOutputResolution">getOutputResolution</a></li><li><a href="global.html#getParameterValue">getParameterValue</a></li><li><a href="global.html#getPixelValues">getPixelValues</a></li><li><a href="global.html#getResolution">getResolution</a></li><li><a href="global.html#getSetlist">getSetlist</a></li><li><a href="global.html#getSettings">getSettings</a></li><li><a href="global.html#gotDevices">gotDevices</a></li><li><a href="global.html#hideAllOutputPaths">hideAllOutputPaths</a></li><li><a href="global.html#htmlToElement">htmlToElement</a></li><li><a href="global.html#importModules">importModules</a></li><li><a href="global.html#keyEvent">keyEvent</a></li><li><a href="global.html#launchVis">launchVis</a></li><li><a href="global.html#map">map</a></li><li><a href="global.html#processVisMessage">processVisMessage</a></li><li><a href="global.html#pseudoRandomGenerator">pseudoRandomGenerator</a></li><li><a href="global.html#resetActiveVis">resetActiveVis</a></li><li><a href="global.html#resetApp">resetApp</a></li><li><a href="global.html#resetPixels">resetPixels</a></li><li><a href="global.html#resizeCanvas">resizeCanvas</a></li><li><a href="global.html#saveSetlist">saveSetlist</a></li><li><a href="global.html#saveSettings">saveSettings</a></li><li><a href="global.html#selectSlot">selectSlot</a></li><li><a href="global.html#setOutputPath">setOutputPath</a></li><li><a href="global.html#setupVisualiserCanvas">setupVisualiserCanvas</a></li><li><a href="global.html#showParams">showParams</a></li><li><a href="global.html#sortSetlistByOrder">sortSetlistByOrder</a></li><li><a href="global.html#updateParameter">updateParameter</a></li><li><a href="global.html#updateSlots">updateSlots</a></li><li><a href="global.html#vignetteMask">vignetteMask</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.7</a> on Fri Feb 18 2022 14:04:10 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

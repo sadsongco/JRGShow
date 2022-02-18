@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: modules/common/setupVisualisers.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: modules/common/setupVisualisers.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>// async indexeddb wrapper https://github.com/jakearchibald/idb
+import { openDB } from '../../../lib/openDB.js';
+
+/**
+ * Creates and initialises HTML Canvas, initialises audio and video input
+ * @returns {Promise&lt;Array>} - Canvas, Video Canvas, Video In, Audio In objects, and preview size float
+ */
+const setupVisualiserCanvas = async () => {
+  const cnvTarget = document.getElementById('canvasContainer');
+  const [inputDevice, audioSource, outputRes] = await getSettings();
+  // create canvas
+  const cnv = document.createElement('canvas');
+  const previewSize = await resizeCanvas(cnvTarget, outputRes, cnv);
+  // cnvTarget.appendChild(cnv);
+  // window.onresize = () => resizeCanvas(cnvTarget, outputRes, cnv);
+  // create video node, attach to video input stream
+  const vidIn = await getVideoInput(inputDevice);
+  vidIn.play();
+  // create video canvas to read video pixels into
+  const vidCnv = document.createElement('canvas');
+  resizeCanvas(cnvTarget, outputRes, vidCnv);
+  // TODO - create audio in
+  return [cnv, vidCnv, vidIn, audioSource, previewSize];
+};
+
+const getVideoInput = (inputDevice) => {
+  return new Promise((resolve) => {
+    const vidIn = document.createElement('video');
+    navigator.mediaDevices.getUserMedia(inputDevice.constraints).then((src) => (vidIn.srcObject = src));
+    vidIn.addEventListener('loadedmetadata', () => {
+      resolve(vidIn);
+    });
+  });
+};
+
+/**
+ * Sizes the canvas to fit the containing DOM element
+ * @param {HTMLElement} cnvTarget - DOM element that holds the canvas
+ * @param {Object} outputRes - user selected width and height for visualiser output
+ * @param {Promise&lt;HTMLElement>} cnv - HTML5 canvas
+ */
+const resizeCanvas = async (cnvTarget, outputRes, cnv) => {
+  try {
+    const scaledRes = await getResolution(outputRes, cnvTarget);
+    cnv.width = scaledRes.w;
+    cnvTarget.style.width = `${scaledRes.w}px`;
+    cnv.height = scaledRes.h;
+    cnvTarget.style.height = `${scaledRes.h}px`;
+    return scaledRes.w / outputRes.w;
+  } catch (err) {
+    throw new Error(`Error resizing the canvas: ${err.message}`);
+  }
+};
+
+/**
+ * Calculates the size for a canvas in a DOM element, retaining aspect ratio
+ * @param {Object} outputRes - user selected width and height for visualiser output
+ * @param {HTMLElement} cnvTarget - DOM element that holds the canvas
+ * @returns {Object} scaledRes - width and height for canvas
+ */
+const getResolution = async (outputRes, cnvTarget) => {
+  cnvTarget.w = parseFloat(window.getComputedStyle(cnvTarget).width);
+  const scaledRes = {
+    w: cnvTarget.w &lt;&lt; 0,
+    h: (outputRes.h * (cnvTarget.w / outputRes.w)) &lt;&lt; 0,
+  };
+  return scaledRes;
+};
+
+/**
+ * Retreives user settings for input and output from the database
+ * @returns {Promise&lt;Array>} - video input device Object audio input device Object, user selected width and height for visualiser output
+ */
+const getSettings = async () => {
+  try {
+    let db = await openDB('visDB', 1, (db) => {
+      if (db.oldVersion == 0) {
+        console.log(`Error opening database: ${err.message}`);
+        return null;
+      }
+    });
+    const inputDevice = await getInputDevice(db);
+    const audioSource = await getAudioSource(db);
+    const outputRes = await getOutputResolution(db);
+    return [inputDevice, audioSource, outputRes];
+  } catch (err) {
+    throw new Error(`Error retrieving settings from database: ${err.message}`);
+  }
+};
+
+/**
+ * Retrieves user selected video input device from the database
+ * @param {IDBOpenDBRequest} db - open database request
+ * @returns {IDBObjectStore}
+ */
+const getInputDevice = async (db) => {
+  try {
+    const result = await db.get('inputDevice', 1);
+    return result.inputDevice;
+  } catch (err) {
+    throw new Error(`Error retrieving input device: ${err}`);
+  }
+};
+
+/**
+ * Retrieves user selected audio input device from the database
+ * @param {IDBOpenDBRequest} db - open database request
+ * @returns {IDBObjectStore}
+ */
+const getAudioSource = async (db) => {
+  try {
+    const result = await db.get('audioSource', 1);
+    return result.source;
+  } catch (err) {
+    throw new Error(`error retrieving input device: ${err}`);
+  }
+};
+
+/**
+ * Retrieves user selected output resolution from the database
+ * @param {IDBOpenDBRequest} db - open database request
+ * @returns {IDBObjectStore}
+ */
+const getOutputResolution = async (db) => {
+  try {
+    const result = await db.get('outputResolution', 1);
+    return result.outputResolution;
+  } catch (err) {
+    throw new Error(`error retrieving output resolutions: ${err}`);
+  }
+};
+export { setupVisualiserCanvas };
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AudioEngine.html">AudioEngine</a></li><li><a href="ExtMediaEngine.html">ExtMediaEngine</a></li><li><a href="ProcessCanvas.html">ProcessCanvas</a></li><li><a href="TextDisplayEngine.html">TextDisplayEngine</a></li><li><a href="VisOutputEngine.html">VisOutputEngine</a></li><li><a href="VisualiserTemplate.html">VisualiserTemplate</a></li></ul><h3>Global</h3><ul><li><a href="global.html#activateOutput">activateOutput</a></li><li><a href="global.html#activatePath">activatePath</a></li><li><a href="global.html#addModule">addModule</a></li><li><a href="global.html#buildCreatorUI">buildCreatorUI</a></li><li><a href="global.html#clearParams">clearParams</a></li><li><a href="global.html#clearSlot">clearSlot</a></li><li><a href="global.html#d2b">d2b</a></li><li><a href="global.html#deleteSetlistItem">deleteSetlistItem</a></li><li><a href="global.html#deselectAll">deselectAll</a></li><li><a href="global.html#dynamicGenerator">dynamicGenerator</a></li><li><a href="global.html#editExisting">editExisting</a></li><li><a href="global.html#editSetlistItem">editSetlistItem</a></li><li><a href="global.html#fillDetails">fillDetails</a></li><li><a href="global.html#getAudioSource">getAudioSource</a></li><li><a href="global.html#getInputDevice">getInputDevice</a></li><li><a href="global.html#getOutputResolution">getOutputResolution</a></li><li><a href="global.html#getParameterValue">getParameterValue</a></li><li><a href="global.html#getPixelValues">getPixelValues</a></li><li><a href="global.html#getResolution">getResolution</a></li><li><a href="global.html#getSetlist">getSetlist</a></li><li><a href="global.html#getSettings">getSettings</a></li><li><a href="global.html#gotDevices">gotDevices</a></li><li><a href="global.html#hideAllOutputPaths">hideAllOutputPaths</a></li><li><a href="global.html#htmlToElement">htmlToElement</a></li><li><a href="global.html#importModules">importModules</a></li><li><a href="global.html#keyEvent">keyEvent</a></li><li><a href="global.html#launchVis">launchVis</a></li><li><a href="global.html#map">map</a></li><li><a href="global.html#processVisMessage">processVisMessage</a></li><li><a href="global.html#pseudoRandomGenerator">pseudoRandomGenerator</a></li><li><a href="global.html#resetActiveVis">resetActiveVis</a></li><li><a href="global.html#resetApp">resetApp</a></li><li><a href="global.html#resetPixels">resetPixels</a></li><li><a href="global.html#resizeCanvas">resizeCanvas</a></li><li><a href="global.html#saveSetlist">saveSetlist</a></li><li><a href="global.html#saveSettings">saveSettings</a></li><li><a href="global.html#selectSlot">selectSlot</a></li><li><a href="global.html#setOutputPath">setOutputPath</a></li><li><a href="global.html#setupVisualiserCanvas">setupVisualiserCanvas</a></li><li><a href="global.html#showParams">showParams</a></li><li><a href="global.html#sortSetlistByOrder">sortSetlistByOrder</a></li><li><a href="global.html#updateParameter">updateParameter</a></li><li><a href="global.html#updateSlots">updateSlots</a></li><li><a href="global.html#vignetteMask">vignetteMask</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.7</a> on Fri Feb 18 2022 14:04:10 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
