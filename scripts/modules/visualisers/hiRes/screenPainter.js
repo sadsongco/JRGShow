@@ -1,4 +1,4 @@
-import { Visualiser } from '../../../_prototype/modules/visualisers/Visualiser.js';
+import { Visualiser } from '../../visualisers/Visualiser.js';
 import { greyscaleCalc } from '../../util/utils.js';
 import Vector from '../../../classes/Vector.js';
 

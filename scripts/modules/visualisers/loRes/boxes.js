@@ -1,4 +1,4 @@
-import { Visualiser } from '../../../_prototype/modules/visualisers/Visualiser.js';
+import { Visualiser } from '../../visualisers/Visualiser.js';
 import LoResObj from './LoResObj.js';
 
 class Box extends LoResObj {

@@ -1,4 +1,4 @@
-import { Visualiser } from '../../../_prototype/modules/visualisers/Visualiser.js';
+import { Visualiser } from '../../visualisers/Visualiser.js';
 import alphaBlend from '../../util/alphaBlend.js';
 
 export const vignette = class extends Visualiser {

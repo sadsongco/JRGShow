@@ -1,4 +1,4 @@
-import { Visualiser } from '/scripts/modules/visualisers/Visualiser.js';
+import { Visualiser } from '../../visualisers/Visualiser.js';
 
 export const videoFile = class extends Visualiser {
   // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Synchronous_and_Asynchronous_Requests
@@ -51,8 +51,7 @@ export const videoFile = class extends Visualiser {
   updateData(idx, data) {
     this.chainIdx = idx;
     this.mediaURL = data;
-    if (this.mediaURL != '')
-      this.doesMediaExist();
+    if (this.mediaURL != '') this.doesMediaExist();
   }
 
   processFramePre = function (vidPix, kwargs = {}, context) {

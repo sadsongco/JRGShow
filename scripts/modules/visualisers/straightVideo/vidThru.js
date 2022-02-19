@@ -1,4 +1,4 @@
-import { Visualiser } from '../../../_prototype/modules/visualisers/Visualiser.js';
+import { Visualiser } from '../../visualisers/Visualiser.js';
 
 export class vidThru extends Visualiser {
   processFramePre = function (vidIn, kwargs = {}, context) {

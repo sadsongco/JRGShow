@@ -1,5 +1,5 @@
 import { getSetlist, sortSetlistByOrder } from './modules/common/getSetlist.js';
-import { Sortable } from '../../lib/sortable.core.esm.js';
+import { Sortable } from '../lib/sortable.core.esm.js';
 
 let setlist, setlistContainer;
 

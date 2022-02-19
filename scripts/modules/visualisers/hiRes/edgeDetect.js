@@ -1,6 +1,6 @@
-import { Visualiser } from "/scripts/modules/visualisers/Visualiser.js"
-import alphaBlend from "/scripts/modules/util/alphaBlend.js";
-import { greyscaleCalc } from "/scripts/modules/util/utils.js";
+import { Visualiser } from '../../visualisers/Visualiser.js';
+import alphaBlend from '../../util/alphaBlend.js';
+import { greyscaleCalc } from '../../util/utils.js';
 
 export class edgeDetect extends Visualiser {
   constructor() {

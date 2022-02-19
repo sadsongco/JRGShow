@@ -1,6 +1,4 @@
-import { Visualiser } from '/scripts/modules/visualisers/Visualiser.js';
-import { greyscaleCalc } from '/scripts/modules/util/utils.js';
-import alphaBlend from '/scripts/modules/util/alphaBlend.js';
+import { Visualiser } from '../../visualisers/Visualiser.js';
 
 export class textDisplay extends Visualiser {
   constructor() {

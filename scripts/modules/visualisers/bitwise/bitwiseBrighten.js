@@ -1,6 +1,6 @@
 import { Visualiser } from '../Visualiser.js';
 import { greyscaleCalc } from '../../util/utils.js';
-import alphaBlend from '/scripts/modules/util/alphaBlend.js';
+import alphaBlend from '../../util/alphaBlend.js';
 
 export const bitwiseBrighten = class extends Visualiser {
   processPixels = function (pixIdx, pixVals, kwargs, context) {
