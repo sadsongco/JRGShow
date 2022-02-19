@@ -36,6 +36,11 @@ class ProcessCanvas {
    * @param {Array} currentVisChain - objects of visualiser processors
    */
   setCurrentVisChain = (currentVisChain) => {
+    // clear the existing vis chain
+    for (let idx in this.currentVisChain) {
+      this.currentVisChain[idx] = null;
+    }
+    this.cnvContext.clearRect(0, 0, this.cnv.width, this.cnv.height);
     currentVisChain.map((vis, idx) => {
       if (vis) this.instantiateVis(vis, idx);
     });

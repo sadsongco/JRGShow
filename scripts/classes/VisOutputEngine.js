@@ -173,6 +173,13 @@ export const VisOutputEngine = class {
   };
 
   /**
+   * Clear all visualiser modules from visualiser chain
+   */
+  clearVis = () => {
+    for (let idx in this.currentVisChain) this.removeVis(idx);
+  };
+
+  /**
    * Create and initialiser web workers for drawing the canvas
    * @returns {Promise}
    */

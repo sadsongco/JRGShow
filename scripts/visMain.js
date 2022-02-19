@@ -138,6 +138,7 @@ const displayTrackFeat = function (currTrack) {
 };
 
 const updateVis = function (currTrack) {
+  visOutputEngine.clearVis();
   channel.postMessage({
     visTransition: false,
   });
