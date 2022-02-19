@@ -35,7 +35,7 @@ export const videoFile = class extends Visualiser {
   initialiseVideo = async function () {
     // console.log(`videoFile ${this.chainIdx} posting message true`);
     postMessage({
-      videoFile: this.mediaPath + this.mediaURL,
+      videoFile: this.mediaURL,
       chainIdx: this.chainIdx,
     });
     this.mediaLoaded = true;
@@ -44,7 +44,7 @@ export const videoFile = class extends Visualiser {
   constructor() {
     super();
     this.mediaURL = '';
-    this.mediaPath = '/userMedia/';
+    this.mediaPath = '../../../userMedia/';
     this.mediaLoaded = false;
   }
 

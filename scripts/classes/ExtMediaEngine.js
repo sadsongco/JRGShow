@@ -21,6 +21,7 @@ export const ExtMediaEngine = class {
     this.numWorkers = numWorkers;
     this.targetWidth = targetWidth;
     this.subCnvHeight = 0;
+    this.mediaPath = './userMedia/';
     this.videoEl.addEventListener(
       'loadedmetadata',
       (e) => {
@@ -52,7 +53,7 @@ export const ExtMediaEngine = class {
    */
   set videoSrc(url) {
     this.engineReady = false;
-    this.videoEl.setAttribute('src', url);
+    this.videoEl.setAttribute('src', this.mediaPath + url);
   }
 
   /**
