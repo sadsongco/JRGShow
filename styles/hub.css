@@ -19,6 +19,14 @@
   align-items: center;
 }
 
+.slist li:hover {
+  cursor: grab;
+}
+
+.slist li:active {
+  cursor: grabbing;
+}
+
 .slist li:nth-child(even) {
   background: #bababa;
 }

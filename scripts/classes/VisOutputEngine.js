@@ -34,7 +34,7 @@ export const VisOutputEngine = class {
     this.subcnvOverlap = 4; // overlap subcanvases for convolution effects
     this.subcnvParams = []; // hold the settings locally for each subcanvas
     this.cnvParams = {}; // equivalent settings for the canvas when rendering in main thread
-    this.workerPath = '/scripts/modules/workers/canvasWorker.js';
+    this.workerPath = './scripts/modules/workers/canvasWorker.js'; // relative to working directory
 
     // debugging
     this.frameCount = 0; // keep track of the number of frames rendered

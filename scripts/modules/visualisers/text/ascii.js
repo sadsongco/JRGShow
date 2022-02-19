@@ -21,8 +21,8 @@ export const ascii = class extends Visualiser {
   setup({ cnv, numWorkers, previewSize }) {
     /* https://stackoverflow.com/questions/53808106/chrome-offscreencanvas-custom-fonts */
     /* https://developer.mozilla.org/en-US/docs/Web/API/FontFace */
-    const CourierPrime = new FontFace('CourierPrime', "local('CourierPrime-Regular'), url(/assets/fonts/CourierPrime-Regular.ttf)");
-    const VT323 = new FontFace('VT323', 'url(/assets/fonts/VT323-Regular.ttf)');
+    const CourierPrime = new FontFace('CourierPrime', "local('CourierPrime-Regular'), url(../../../assets/fonts/CourierPrime-Regular.ttf)");
+    const VT323 = new FontFace('VT323', 'url(../../../assets/fonts/VT323-Regular.ttf)');
     Promise.all([CourierPrime.load(), VT323.load()]).then(() => {
       self.fonts.add(CourierPrime);
       self.fonts.add(VT323);
