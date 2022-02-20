@@ -1,5 +1,5 @@
 import { Visualiser } from '../Visualiser.js';
-import { greyscaleCalc } from '../../util/utils.js';
+import { getRandGrey, getRandRGB } from '../../util/randGenerator.js';
 import alphaBlend from '../../util/alphaBlend.js';
 
 export class noise extends Visualiser {
@@ -32,11 +32,13 @@ export class noise extends Visualiser {
     /* set processed pixel values */
     let pR, pG, pB;
     if (bw) {
-      pR = pG = pB = (Math.random() * 255) << 0;
+      pR = pG = pB = getRandGrey();
+      // pR = pG = pB = (Math.random() * 255) << 0;
     } else {
-      pR = (Math.random() * 255) << 0;
-      pG = (Math.random() * 255) << 0;
-      pB = (Math.random() * 255) << 0;
+      [pR, pG, pB] = getRandRGB();
+      // pR = (Math.random() * 255) << 0;
+      // pG = (Math.random() * 255) << 0;
+      // pB = (Math.random() * 255) << 0;
     }
     /* set output pixel values preserving alpha, put into pixel array */
     let [oR, oG, oB] = alphaBlend([iR, iG, iB, 255], [pR, pG, pB, lyrOpacity]);
