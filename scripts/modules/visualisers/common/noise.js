@@ -1,31 +1,14 @@
-import { Visualiser } from '/scripts/modules/visualisers/Visualiser.js';
-import { greyscaleCalc } from '/scripts/modules/util/utils.js';
-import alphaBlend from '/scripts/modules/util/alphaBlend.js';
+import { Visualiser } from '../Visualiser.js';
+import { greyscaleCalc } from '../../util/utils.js';
+import alphaBlend from '../../util/alphaBlend.js';
 
-/**
- * Dummy class to act as documentation / guide on building a visualiser.
- * Class name must match the filename exactly, minus the .js filename extension.
- * To activate it, register the class in registeredVis.js.
- * Remove this comment when you create your new visualiser!
- */
-export class VisualiserTemplate extends Visualiser {
+export class noise extends Visualiser {
   /**
    * Initialise the attributes of the visualiser
    */
   constructor() {
     super();
   }
-
-  /**
-   * Manipulate the frame before the pixels have been processed.
-   * Draw general images and graphics to the canvas.
-   * Can improve performance to save frame class attributes here rather than destructure them
-   * for every pixel in processPixels
-   * @param {ImageData} vidPixels - image data for the current frame of video input
-   * @param {Object} kwargs - parameters passed to visualiser
-   * @param {Object} context - methods and attributes of the parent web worker
-   */
-  processFramePre = function (vidPixels, kwargs = {}, context) {};
 
   /**
    * Manipulate a specific pixel in the pixel array.
@@ -47,8 +30,14 @@ export class VisualiserTemplate extends Visualiser {
       [iR, iG, iB] = [context.cnvPixels.data[pixIdx + 0], context.cnvPixels.data[pixIdx + 1], context.cnvPixels.data[pixIdx + 2]];
     }
     /* set processed pixel values */
-    const greyscale = greyscaleCalc(pixVals);
-    let [pR, pG, pB] = bw ? [greyscale, greyscale, greyscale] : [iR, iG, iB];
+    let pR, pG, pB;
+    if (bw) {
+      pR = pG = pB = (Math.random() * 255) << 0;
+    } else {
+      pR = (Math.random() * 255) << 0;
+      pG = (Math.random() * 255) << 0;
+      pB = (Math.random() * 255) << 0;
+    }
     /* set output pixel values preserving alpha, put into pixel array */
     let [oR, oG, oB] = alphaBlend([iR, iG, iB, 255], [pR, pG, pB, lyrOpacity]);
     context.cnvPixels.data[pixIdx + 0] = oR;

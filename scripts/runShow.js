@@ -33,9 +33,21 @@ window.onload = function () {
     const outputResQuery = outputResos.get(1);
     outputResQuery.onsuccess = () => {
       const outputRes = outputResQuery.result.outputResolution;
-      // window.open('./vis.html', '_blank', `width=${outputRes.w}, height=${outputRes.h}`);
+      visWindow = window.open(
+        './vis.html',
+        'vis',
+        `
+        toolbar=no,
+        location=no,
+        status=no,
+        menubar=no,
+        scrollbars=no,
+        resizable=no,
+        width=${outputRes.w},
+        height=${outputRes.h}
+        `
+      );
       //   https://stackoverflow.com/questions/67687288/how-to-prevent-resize-and-maximize-of-javascript-window
-      visWindow = window.open('./vis.html', 'vis', `toolbar=no, menubar=no, scrollbars=no, resizable=no, width=${outputRes.w}, height=${outputRes.h}`);
     };
     outputResQuery.onerror = () => {
       console.log(`Database error: ${outputResQuery.error}`);
@@ -55,7 +67,7 @@ window.onload = function () {
       setlistContainer.appendChild(newEl);
     }
   });
-};
+};;
 
 const launchSetlistItem = function (e) {
   if (e.target.id === currSetId) return;

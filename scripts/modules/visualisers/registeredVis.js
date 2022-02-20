@@ -15,6 +15,7 @@ export const visList = [
     visualisers: [
       //         {name: "randomBoxes"},
       { name: 'vignette' },
+      { name: 'noise' },
     ],
   },
   {
