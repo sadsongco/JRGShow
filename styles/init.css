@@ -1,11 +1,12 @@
 section {
   display: flex;
   justify-content: space-around;
-  align-items: center;
+  align-items: flex-end;
   flex-wrap: wrap;
   margin: 3em 0;
 }
 
 .vidSelector {
   padding: 0 5em;
+  max-width: 40%;
 }

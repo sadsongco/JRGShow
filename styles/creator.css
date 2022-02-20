@@ -17,31 +17,6 @@ main {
   z-index: 1;
 }
 
-select {
-  margin: 0;
-  font-family: inherit;
-  outline: none;
-  width: 100%;
-  min-width: 15ch;
-  max-width: 30ch;
-  border: 1px solid #0a0a0a;
-  border-radius: 0.25em;
-  padding: 0.25em 0.5em;
-  font-size: 0.9rem;
-  cursor: pointer;
-  line-height: 1;
-  background-color: #eee;
-}
-
-option {
-  font-family: inherit;
-  font-size: 0.9em;
-}
-
-input {
-  font: 0.8em Montserrat, sans-serif;
-}
-
 input.invalidURL {
   color: #6e0000;
   border: 2px solid #6e0000;

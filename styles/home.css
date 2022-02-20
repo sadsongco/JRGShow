@@ -75,17 +75,33 @@ a.button:hover {
   cursor: pointer;
 }
 
-select,
-input {
-  font-size: 1.2em;
+input, option {
+  font: 0.8em Montserrat, sans-serif;
   padding: 5px;
   margin: 3px;
 }
 
-input {
-  font-size: 0.8em;
-  font-family: "CourierPrime", "Courier New", Courier, monospace;
+select {
+  margin: 0;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+  min-width: 15ch;
+  max-width: 30ch;
+  border: 1px solid #0a0a0a;
+  border-radius: 0.25em;
+  padding: 0.25em 0.5em;
+  font-size: 0.9rem;
+  cursor: pointer;
+  line-height: 1;
+  background-color: #eee;
 }
+
+/* option {
+  font-family: inherit;
+  font-size: 0.9em;
+} */
+
 
 .loading {
   display: flex;
