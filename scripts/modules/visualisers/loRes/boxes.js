@@ -73,7 +73,7 @@ export class boxes extends Visualiser {
       name: 'dynResSpeed',
       displayName: 'Dynamic Resolution Speed',
       type: 'val',
-      range: [0, 7],
+      range: [0, 8],
       value: 0,
     },
     {
@@ -102,7 +102,7 @@ export class boxes extends Visualiser {
       name: 'dynSpaceSpeed',
       displayName: 'Dynamic Spcing Speed',
       type: 'val',
-      range: [0, 7],
+      range: [0, 8],
       value: 0,
     },
     {

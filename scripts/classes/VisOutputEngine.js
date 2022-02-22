@@ -339,7 +339,12 @@ export const VisOutputEngine = class {
    * Draw loop - called every frame
    */
   drawCanvas = async () => {
+    this.now = 0;
+    this.deltaTime = 0;
     const drawFrame = async (timestamp) => {
+      this.deltaTime = timestamp - this.now;
+      this.now = timestamp;
+      // console.log(this.now);
       let enginesReady = true;
       for (let engine of this.engines) {
         if (engine && !engine?.engineReady) enginesReady = false;
@@ -349,7 +354,7 @@ export const VisOutputEngine = class {
       }
       this.enginesReady = enginesReady;
       if (this.visReady) {
-        const dyn = dynamicGenerator(this.frameCount);
+        const dyn = dynamicGenerator(this.now << 0);
         const rand = pseudoRandomGenerator();
         this.audioAnalysis = this.audioEngine.getAudioAnalysis();
         this.vidContext.drawImage(this.vidIn, 0, 0, this.cnv.width, this.cnv.height);

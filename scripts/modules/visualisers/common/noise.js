@@ -48,15 +48,6 @@ export class noise extends Visualiser {
   };
 
   /**
-   * Manipulates the frame after the pixels have been processed.
-   * Save loop-dependent attributes, paint to the canvas.
-   * @param {ImageData} vidPixels - image data for the current frame of the video input
-   * @param {Object} kwargs - parameters passed to visualiser
-   * @param {Object} context - methods and attributes of the parent web worker
-   */
-  processFramePost = function (vidPixels, kwargs = {}, context) {};
-
-  /**
    * Parameters that can be set and adjusted on the creator page,
    * then fed back to the methods as kwargs. Some common ones are included.
    * Tooltips will show when the parameter name is hovered over

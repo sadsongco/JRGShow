@@ -108,7 +108,7 @@ export const threshold = class extends Visualiser {
       name: 'dynThreshSpeed',
       displayName: 'Dynamic Threshold Speed',
       type: 'val',
-      range: [0, 7],
+      range: [0, 8],
       value: 0,
     },
     {
