@@ -146,7 +146,16 @@ const deleteSetlistItem = (e) => {
       };
       transaction.oncomplete = () => {
         console.log(`${e.target.id} deleted`);
-        slist(setlistContainer);
+        // setlistContainer = document.getElementById('setlist');
+        getSetlist()
+          .then((res) => {
+            setlist = res;
+            createSetlistUI(setlist, setlistContainer);
+            // setDownloadButton(setlist);
+          })
+          .catch((err) => {
+            throw new Error(err);
+          });
       };
     };
   }
@@ -215,14 +224,17 @@ const loadSetlistFromDisk = async (e) => {
 
 // create load file from disk button, to trigger file input element
 // https://developer.mozilla.org/en-US/docs/Web/API/File/Using_files_from_web_applications
-const fileButton = document.createElement('a')
+const fileButton = document.createElement('a');
 fileButton.classList.add('button');
 fileButton.innerText = 'Load Setlist From Disk';
 document.getElementById('files').appendChild(fileButton);
-fileButton.addEventListener('click', ()=>{
-    if (fileLoad)
-        fileLoad.click()
-}, false);
+fileButton.addEventListener(
+  'click',
+  () => {
+    if (fileLoad) fileLoad.click();
+  },
+  false
+);
 const fileLoad = document.createElement('input');
 fileLoad.type = 'file';
 fileLoad.addEventListener('change', loadSetlistFromDisk, false);

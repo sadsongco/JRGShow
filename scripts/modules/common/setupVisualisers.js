@@ -1,5 +1,5 @@
 // async indexeddb wrapper https://github.com/jakearchibald/idb
-import { openDB } from '../../../lib/openDB.js';
+import { openDB } from '/lib/openDB.js';
 
 /**
  * Creates and initialises HTML Canvas, initialises audio and video input

@@ -262,7 +262,7 @@ const updateSlots = () => {
       currSlot.innerText = 'Empty Slot';
     }
   }
-  currSlot.classList.add('slot-selected');
+  if (currSlot) currSlot.classList.add('slot-selected');
   setOutputPath();
   showParams(selectedSlot.dataset.visIdx);
 };

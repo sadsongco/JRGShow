@@ -1,7 +1,7 @@
 let randGrey, randRgb, malloc, free, mem;
 
 (async () => {
-  const fetchPromise = fetch('../../wasm/randomCols.wasm');
+  const fetchPromise = fetch('./scripts/wasm/randomCols.wasm');
   const { instance } = await WebAssembly.instantiateStreaming(fetchPromise, {
     env: {
       malloc: (len) => wasmMalloc(len),
